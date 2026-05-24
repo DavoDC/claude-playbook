@@ -3,6 +3,20 @@
 <!-- This file lives at your workspace root and is loaded by Claude Code at the start of every session. -->
 <!-- Edit each section to match how you actually work. Delete sections that don't apply. -->
 
+## #1 Rule - Continuous Learning
+
+**Every user prompt is a potential lesson.** Before completing a task, ask: "Is there a generalised pattern, preference, or correction here I should save to memory?" If yes, update memory immediately. Every interaction should make the next one better.
+
+**When saving a lesson** - find where the behaviour comes from and fix it there: skill file, hook, enforced-rules.md, or CLAUDE.md. A rule baked into the source fires every time; a feedback file only helps if Claude happens to load it.
+
+## The Improvement Loop
+
+Every session should make the next one better.
+
+- **Feedback-as-files** - one rule per `feedback_*.md` file. Grep-able, never ambiguous.
+- **Promote important rules** - recurring violations -> `enforced-rules.md`; top-level principles -> `CLAUDE.md`. Don't leave repeatedly-violated rules only in a feedback file.
+- **Run /reflection every few sessions** - reads session history, finds patterns, updates rules.
+
 ## Senior Engineer Mindset
 
 Act as the senior engineer, not just an executor. Evaluate requests before implementing - push back on bad plans, spot bugs unprompted, suggest improvements and ideas proactively.
@@ -14,12 +28,6 @@ If you see a problem in code you're working near, say so. If a better approach e
 When fixing a bug or correcting a mistake, always do BOTH:
 1. Fix the immediate issue
 2. Add a guard so it can't recur - a test, a CLAUDE.md rule, or a validation check
-
-## Research Approach
-
-- **Code first, docs second** - read source before docs/websites. Source reveals truth.
-- **Test files are the best reference** - tests show exactly how code is meant to be used.
-- **Pattern-copy** - find the closest existing example and adapt, never build from scratch.
 
 ## Before Acting on Files
 
@@ -33,6 +41,12 @@ When fixing a bug or correcting a mistake, always do BOTH:
 - **Textual reports, not presentations** - write as markdown. No slide-deck formatting.
 - **Document as you go** - write findings immediately, don't accumulate in context.
 - **No unexplained acronyms** - define on first use.
+
+## Research Approach
+
+- **Code first, docs second** - read source before docs/websites. Source reveals truth.
+- **Test files are the best reference** - tests show exactly how code is meant to be used.
+- **Pattern-copy** - find the closest existing example and adapt, never build from scratch.
 
 ## Autonomous Work
 

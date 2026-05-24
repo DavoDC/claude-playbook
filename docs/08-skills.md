@@ -170,4 +170,11 @@ Quick codebase summary: language, purpose, key files, tests, entry points, open 
 Undo the last N commits via `git reset --soft`, show what's staged, help recommit cleanly. Safe - never rebases, never force-pushes.
 
 ### /health
-Workspace health check. Detects skill gaps, hook count anomalies, file bloat, stale SYNC, unindexed memory files.
+Workspace health check. Detects skill gaps, hook count anomalies, file bloat, stale peer-sync reviews, unindexed memory files.
+
+### /repo-status
+Multi-repo status overview. For each repo in a configured directory: current branch, uncommitted changes count, and unpushed commits count. Output as a compact table. Flags repos with dirty files, unpushed commits, or unexpected branches. Never fetches (no network requirement). Read-only.
+
+Run before container rebuilds, session ends, or switching between repos. Build your own: `git -C <repo> status --short`, `git -C <repo> rev-list --count @{upstream}..HEAD`, output as a table.
+
+Starter skill in `skills/repo-status/SKILL.md`.

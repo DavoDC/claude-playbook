@@ -4,6 +4,19 @@ Use this to track which pieces of the system you've set up. Start with the top-l
 
 ---
 
+## Workspace Repo (foundation - do this first)
+
+- [ ] Create a dedicated workspace repo: `mkdir workspace && cd workspace && git init && git checkout -b main`
+- [ ] This is the repo you will ALWAYS run Claude from - not a project repo, a meta-repo
+- [ ] Copy `templates/CLAUDE_workspace.md` to the root as `CLAUDE.md`
+- [ ] Copy `templates/enforced-rules.md` to `.claude/rules/enforced-rules.md`
+- [ ] Create `memory/feedback/` folder for future feedback files
+- [ ] Make your first commit - the workspace is live
+
+See `docs/11-workspace-repo.md` for the full explanation of why this matters.
+
+---
+
 ## Environment Setup (do once, pays forever)
 
 - [ ] **Use Windows Terminal** (not cmd.exe or the default terminal) - you can paste images directly into the Claude Code chat window. Screenshot something, Ctrl+V, Claude sees it. This alone unlocks visual debugging.

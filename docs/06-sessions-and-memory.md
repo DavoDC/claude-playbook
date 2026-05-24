@@ -86,3 +86,38 @@ A memory that names a specific function, file, or flag is a claim that it existe
 ### Session History
 
 Every session gets a fragment written by `/end-session`. These are consolidated into `session-history.md` by the finalize script. This gives Claude a running history of what was done, what was learned, and what's pending. Claude reads this at session start to get context without you having to re-explain.
+
+---
+
+## Common Gotchas
+
+### Manual Edits Getting Overwritten
+
+When Claude reads a file, the content goes into its context window. If you manually edit that file later and then ask Claude to modify it, Claude writes edits on top of what it remembers - not what's currently on disk. Your manual changes get overwritten.
+
+The fix: **Tell Claude when you've manually edited a file.** "I just edited `main.py` manually - please re-read it before making any changes." That forces a fresh Read tool call from disk instead of using the stale context copy.
+
+If you notice Claude undoing your manual edits: it used its context memory. Tell it to re-read the file and it will see what you changed.
+
+### Python Is a Good Language Choice for Claude
+
+When you're building a new tool and have language flexibility, Python is the best choice for Claude-assisted development:
+
+- No compilation step - Claude runs, tests, and iterates in seconds
+- Readable output that Claude can parse and reason about
+- Vast standard library coverage means fewer dependencies to manage
+- Error messages are explicit and Claude handles them well
+
+For scripts, utilities, and automation tools, default to Python. Compiled languages (C++, Java, C#) work but the build friction slows iteration significantly - Claude has to wait for compilation between every change, and build errors are harder to diagnose than runtime errors.
+
+### Claude Isn't Aware of Its Own Features
+
+Claude Code has many features - hooks, MCP servers, custom slash commands, statusline config, remote control, thinking modes - but Claude has no awareness of them by default. Claude doesn't know what it can configure unless you tell it.
+
+A practical fix: clone the Claude Code documentation and give Claude access to it:
+
+```bash
+git clone https://github.com/ericbuess/claude-code-docs
+```
+
+Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.

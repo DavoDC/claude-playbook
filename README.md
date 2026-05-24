@@ -100,5 +100,3 @@ To install: copy a skill folder to `.claude/skills/<name>/` in your workspace. C
 See `skills/README.md` for the full list and descriptions.
 
 ---
-
-*Built from real daily use. No personal data, no private paths, no workspace internals.*

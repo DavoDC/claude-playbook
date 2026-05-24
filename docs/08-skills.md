@@ -82,11 +82,15 @@ The order matters. Delete before simplify. Simplify before accelerate. Automate 
 ### /end-session (148 uses)
 Close out a session: write session record, reconcile tasks, drain memory, commit everything. The crux of the improvement loop. Run at the end of every session. See [Part 6](06-sessions-and-memory.md) for full detail.
 
+No starter SKILL.md included - this skill calls workspace-specific scripts (session consolidation, finalize stages). Build it incrementally: start with a simple "write session summary + commit" skill, then add the consolidation scripts as your workspace matures. The design is fully documented in Part 6.
+
 ### /loop (85 uses)
-Run a skill or prompt on a repeating interval. Usage: `/loop 30m /dev-session myproject`. The overnight work loop. Set before bed, wake up to finished features. See [Part 7](07-overnight-loop.md) for the full workflow.
+Claude Code built-in. Runs a prompt on a repeating interval. Usage: `/loop 30m /dev-session myproject`. The overnight work loop - set before bed, wake up to finished features. See [Part 7](07-overnight-loop.md) for the full workflow. No SKILL.md needed.
 
 ### /dev-session (50 uses)
 Smart session composition with IDEAS.md orchestration, TDD gate, budget awareness, scope definition, and rule capture. The primary skill for actual project work. See [Part 4](04-dev-session.md) for full detail.
+
+No starter SKILL.md included - this skill integrates with IDEAS.md, budget awareness tools, and the git workflow. Build it after the workspace CLAUDE.md, IDEAS.md, and budget tools are set up. The design is fully documented in Part 4.
 
 ### /commit-chunks (32 uses)
 Commit changed files in logical chunks - one commit per feature/fix/topic. Analyses what's staged/unstaged and proposes a commit split with draft messages. Prevents the "committed everything in one giant blob" problem that makes git history unreadable.
@@ -105,6 +109,8 @@ Commit all changed files in one go. Less surgical than `/commit-chunks` - use wh
 
 ### /reflection (2 uses)
 Read recent session history and update CLAUDE.md, memory files, and workspace based on patterns found. Uses commit-anchored delta - only reads sessions added since the last reflection, stays fast. Run every few sessions or after a major block of work.
+
+Starter skill in `skills/reflection/SKILL.md`.
 
 ### /step-commits (2 uses)
 Plan changes as atomic commits upfront before implementing. Define the commit sequence first, then execute one commit at a time. Good for complex multi-step changes where getting the commit order right matters.
@@ -142,11 +148,11 @@ Check that enforced-rules.md and feedback files are internally consistent and no
 ### /pre-rebuild
 Pre-rebuild checklist before a major refactor or rebuild. Ensures you've captured the current state, understand what exists, and have a recovery plan before destroying anything.
 
-### /code-review
-Review the current diff for correctness bugs at configurable effort levels.
+### /code-review *(build your own)*
+Review the current diff for correctness bugs at configurable effort levels. No starter provided - straightforward to build: "read `git diff HEAD`, check for correctness issues, output findings."
 
-### /security-review
-Security-focused code review. Looks for OWASP top 10, credential leaks, injection vulnerabilities.
+### /security-review *(build your own)*
+Security-focused code review. Looks for OWASP top 10, credential leaks, injection vulnerabilities. No starter provided - can be as simple as: "read the diff, check for the OWASP top 10, report findings grouped by severity."
 
 ### /release
 Structured release process: version bump, changelog, tag, push.
@@ -154,8 +160,8 @@ Structured release process: version bump, changelog, tag, push.
 ### /make-public
 Pre-flight checklist before making a repo public. Checks for private paths, personal names, credentials, workspace-internal references.
 
-### /save-memory
-Manually save a piece of information to the memory system.
+### /save-memory *(build your own)*
+Manually save a piece of information to the memory system. No starter provided - straightforward: "write the fact to `memory/<category>/<name>.md`, add a pointer to `memory/MEMORY.md`, commit."
 
 ### /survey-repo
 Quick codebase summary: language, purpose, key files, tests, entry points, open TODOs. Use when starting work on an unfamiliar repo.

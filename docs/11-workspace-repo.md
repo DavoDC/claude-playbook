@@ -100,3 +100,11 @@ Over time, the workspace becomes a detailed model of how you work. Not because o
 The workspace repo syncs across machines the same way any git repo does: commit and push. On a new machine, clone the workspace repo and run Claude from it. Your entire context - preferences, corrections, session history, skills - is immediately available.
 
 This is the unsexy reason the workspace-repo pattern is non-negotiable: without it, each machine is a cold start. With it, every machine starts where you left off.
+
+---
+
+## GitHub Setup: Keep It Private
+
+Push the workspace repo to GitHub, but **set it to private**. The content that accumulates here is not suited for a public repo - session history mentions what you worked on, feedback files document your specific failure modes, memory files contain personal context and preferences. Even things that seem innocuous (project names, internal tooling, working patterns) add up over time into a detailed picture you probably don't want public.
+
+Private GitHub gives you all the sync benefits without the exposure risk. If you want to share your skills or config templates with others, the pattern for that is a separate public repo - exactly what this playbook is.

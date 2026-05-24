@@ -19,6 +19,8 @@ The guide covers what content is safe to add, skill sync approach, which skills 
 - No internal project/tool names from private work
 - No personal names
 - No workspace-specific folder names (PRIVATE_NOTES/, PRIVATE_LOGS/, etc.)
+- No private workflow names or ritual names - use generic terms instead
+- No attribution to private workflow sources in commit messages - describe content only
 
 If you're unsure whether something is safe to include: don't include it.
 

@@ -119,13 +119,98 @@ Wire it up in `.claude/settings.json`:
 
 The key design choice: warn (stderr, exit 0) rather than block (exit 1). Blocking file edits when a limit is exceeded prevents the very trimming that would fix the violation. Warn instead - Claude sees it and trims proactively.
 
-### Session Logger *(build your own)*
+### Lesson Detector (UserPromptSubmit)
 
-Records skill invocations to a log file so you can see which skills you actually use vs which you thought you'd use. Pattern: in a `Stop` or `UserPromptSubmit` hook, check if the input matches `/skill-name` and append a timestamped line to a log file. After a month you'll have real usage data to prune your skill set.
+Scans each user message for correction, lesson, and confirmation patterns. When a match fires, injects a reminder into Claude's context: "This looks like a correction - should it be saved to memory?"
+
+This is the mechanical implementation of the "#1 Rule" in every CLAUDE.md: every user prompt is a potential lesson. Without this hook, the lesson is only captured if Claude happens to notice the pattern. With the hook, it's never missed.
+
+```bash
+#!/bin/bash
+# lesson-detector.sh - UserPromptSubmit hook
+
+python3 -c "
+import sys, json
+
+d = json.loads(sys.stdin.buffer.read())
+msg = d.get('prompt', '').lower()
+
+corrections = ['don\'t do', 'stop doing', 'never do', 'should not', 'wrong approach', 'avoid that']
+lessons = ['remember', 'rmb', 'save this', 'always do', 'from now on', 'next time you']
+confirmations = ['yes exactly', 'keep doing that', 'good call', 'right call']
+
+kind = None
+for p in corrections:
+    if p in msg:
+        kind = 'correction'; break
+if not kind:
+    for p in lessons:
+        if p in msg:
+            kind = 'lesson/save-request'; break
+if not kind:
+    for p in confirmations:
+        if p in msg:
+            kind = 'positive-confirmation'; break
+
+if kind:
+    print(f'[MEMORY REMINDER] Message contains a {kind} pattern.')
+    print('Should this be saved to memory/ as a feedback file?')
+" 2>/dev/null
+exit 0
+```
+
+The confirmation branch matters as much as the correction branch. "Yes exactly, keep doing that" on a non-obvious approach is just as worth saving as a correction.
+
+### Compact Counter (PostToolUse)
+
+Counts tool calls this session and suggests `/compact` at a threshold. Solves the slow-boil problem: Claude doesn't know a session has run 80 tool calls; it just notices responses getting slower.
+
+```bash
+#!/bin/bash
+# compact-counter.sh - PostToolUse hook
+
+COUNTER_FILE="/tmp/claude-tool-count-$$"
+THRESHOLD=75
+
+COUNT=1
+[ -f "$COUNTER_FILE" ] && COUNT=$(( $(cat "$COUNTER_FILE") + 1 ))
+echo "$COUNT" > "$COUNTER_FILE"
+
+if [ "$COUNT" -eq "$THRESHOLD" ]; then
+    echo "[COMPACT SUGGESTION] $COUNT tool calls this session. Consider /compact to free context." >&2
+elif [ "$COUNT" -gt "$THRESHOLD" ] && [ $(( (COUNT - THRESHOLD) % 50 )) -eq 0 ]; then
+    echo "[COMPACT SUGGESTION] $COUNT tool calls. Session is getting long." >&2
+fi
+exit 0
+```
+
+Counter resets each session (uses `$$` - current process PID - in the temp file path).
 
 ### Feedback Folder Enforcer
 
 Blocks `feedback_*.md` files from being written outside the correct folder. Feedback files accumulate fast and if they spread across the repo they become unfindable.
+
+---
+
+## The Append-Only Log Pattern
+
+Several hooks above write to log files. The design pattern is worth naming because it applies to anything you want to audit over time.
+
+**The pattern:** append-only text files, committed to git, one file per concern.
+
+- `skill-usage.log` - one line per skill invocation
+- `bash-audit.log` - every bash command Claude runs (with credential redaction)
+- `session-timestamps.log` - session start/end + periodic checkpoints
+
+Each log file gets a single line appended per event. No truncation, no rotation (or slow rotation after 30 days to an archive file). The result: each git commit's diff shows exactly what happened in that session - green lines only, easy to audit.
+
+**Why commit them to git instead of ignoring them:**
+
+`git diff HEAD~1..HEAD -- skill-usage.log` shows every skill Claude used this session. After a few months you know which skills you actually use vs which sounded useful when you wrote them. The data is free - you just have to not gitignore it.
+
+**Auto-committing leftover dirty logs:** A `SessionStart` hook that runs `git add logs/ && git commit -m "log: session update"` at startup catches log files left dirty if the previous session crashed before running `/end-session`. Without this, logs accumulate as uncommitted changes indefinitely.
+
+**Analysis tools:** once you have log data, simple Python scripts can generate monthly summaries, burn-rate graphs, skill usage rankings for the Question/Delete pass. These are optional - but the data is worthless if you never look at it.
 
 ---
 

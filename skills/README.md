@@ -90,6 +90,9 @@ Claude Code makes it available as `/<name>` in any session run from that workspa
 | `skill-suggest/` | Context-aware skill recommendations based on your task description |
 | `validate-rules/` | Pre-commit validation - TDD ratio, em-dash check, rule file changes |
 | `process-feedback/` | Process a feedback file - product tasks AND Claude learnings (dual pass, both mandatory) |
+| `check-compact/` | Check if context is large enough to warrant compaction, skip if not |
+| `reflection/` | Read recent session history, extract patterns, update workspace config and memory |
+| `repo-status/` | Multi-repo status - branch, dirty count, unpushed commits per repo. Read-only, never fetches |
 
 ---
 
@@ -112,7 +115,6 @@ These are described in [docs/08-skills.md](../docs/08-skills.md) and are worth i
 - **`/dev-session`** - the structured session workflow from [docs/04-dev-session.md](../docs/04-dev-session.md)
 - **`/end-session`** - session drain, task reconcile, memory commit
 - **`/loop`** - repeat a command on a schedule (overnight automation)
-- **`/reflection`** - read recent session history, extract patterns, update rules
 - **`/health`** - workspace health check (hook counts, file bloat, etc.)
 
 ---

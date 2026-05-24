@@ -163,6 +163,11 @@ Pre-flight checklist before making a repo public. Checks for private paths, pers
 ### /save-memory *(build your own)*
 Manually save a piece of information to the memory system. No starter provided - straightforward: "write the fact to `memory/<category>/<name>.md`, add a pointer to `memory/MEMORY.md`, commit."
 
+### /check-compact
+Context size check: counts exchanges in the current session; replies with one line - "Context heavy - please run /compact now." if heavy, or "Context light - no compact needed (~N exchanges)." if light. Run when unsure if compaction is needed before a large task.
+
+Starter skill in `skills/check-compact/SKILL.md`.
+
 ### /survey-repo
 Quick codebase summary: language, purpose, key files, tests, entry points, open TODOs. Use when starting work on an unfamiliar repo.
 

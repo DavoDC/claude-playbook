@@ -47,6 +47,59 @@ except Exception as e:
 
 **Rule:** exit non-zero only when you have a specific, intentional reason to block. Every other exit path is exit 0.
 
+### The Silent Fail-Open Trap (SyntaxError)
+
+There is a failure mode worse than a hook crashing loudly: a hook that appears to run but does nothing.
+
+A Python SyntaxError inside a `-c "..."` block causes Python to exit 1. The `|| exit 0` wrapper converts that to exit 0 (allow). The hook is registered, it fires, it appears healthy - but it has never run a single check. This is the silent fail-open trap.
+
+The most common cause is indentation - an `if` statement that looks like it's inside a `try` block but isn't:
+
+```python
+# WRONG - SyntaxError: 'if' is outside try (inconsistent indentation)
+try:
+    config = {...}          # 12-space indent
+if key not in config:       # 8-space indent - NOT inside try
+    sys.exit(2)
+except SystemExit: raise
+
+# CORRECT - everything inside try
+try:
+    config = {...}
+    if key not in config:   # same indent level - inside try
+        sys.exit(2)
+except SystemExit:
+    raise   # MANDATORY: sys.exit(2) raises SystemExit - must re-raise to propagate
+except Exception:
+    pass    # swallow crashes -> fail open
+```
+
+**Prevention:** syntax-check every hook's Python block before committing:
+
+```bash
+python3 -c "
+import ast
+code = open('my-hook.sh').read()
+# Extract the Python block and parse it
+import re
+m = re.search(r\"-c '(.*?)'\", code, re.DOTALL)
+if m: ast.parse(m.group(1)); print('SYNTAX OK')
+"
+```
+
+One `ast.parse()` call catches the entire class of SyntaxError failures.
+
+**BLOCKED messages must go to stderr.** In PostToolUse hooks, stdout output is not surfaced to Claude - only stderr is shown. A `print('BLOCKED: ...')` going to stdout silently disappears:
+
+```python
+# Wrong - goes to stdout, Claude never sees it
+print(f'BLOCKED: {reason}')
+
+# Correct - stderr is surfaced
+print(f'BLOCKED: {reason}', file=sys.stderr)
+sys.exit(2)
+```
+
 ### The `if:` Field - Efficient Tool Matching
 
 The `matcher` field matches the tool name only - `"Bash"` matches every Bash call. To narrow further to specific subcommands or file patterns, use the `if:` field on individual hook handlers. `if:` uses permission rule syntax matching against tool name AND arguments together:

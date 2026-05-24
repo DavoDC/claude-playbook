@@ -98,6 +98,26 @@ The mixed case is important. Running Opus for the entire session when only the f
 
 **Opus planner + Sonnet executor (cross-session):** Opus designs the approach. User reviews the plan. Fresh Sonnet session executes it. Keeps judgment costs in one session, execution costs in another.
 
+### Parallel Foreground Tool Calls vs Background Agent
+
+These are not the same thing. A common mistake is reaching for a Background Agent when parallel foreground calls are what you need.
+
+**Parallel foreground tool calls** (one message, multiple tool calls): the harness runs all N calls concurrently, all results land in the same next turn. Full context sharing, immediate aggregation, zero orient overhead.
+
+```python
+# Right: parallel reads in one turn
+[Read("file_a.md"), Read("file_b.md"), Bash("git log --oneline")]
+
+# Wrong for this case: Background Agent for parallel reads
+Agent(run_in_background=True, ...)  # isolated context, 5-15K orient overhead each
+```
+
+**Background Agent** is only right when: the task is genuinely independent AND takes more than ~5 minutes wall-clock AND you have other useful work to do while it runs.
+
+Decision rule:
+- 2+ independent reads, greps, or research queries -> parallel foreground calls
+- Long-running task you can work in parallel with -> Background Agent
+
 ### When to Delegate vs Do It Directly
 
 Delegate to subagents when:

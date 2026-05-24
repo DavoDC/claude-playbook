@@ -77,6 +77,27 @@ The order matters. Delete before simplify. Simplify before accelerate. Automate 
 
 ---
 
+### /socrates (rule evaluator)
+
+Examines EXISTING rules backward - "should this still exist?" Complements `/aristotle` (which deconstructs forward when designing). Use when auditing enforced-rules.md, before adding yet another rule, or when a rule feels stale and you can't articulate why.
+
+**Five questions per principle:**
+1. Still true? (conditions, tools, paths current?)
+2. Justified from first principles? (real incident / system constraint, not convention)
+3. Best practice or just "what we've always done"?
+4. Still violated? (never-fires = zombie or success - check logs)
+5. Zombie? (already covered by a hook or higher-tier enforcement?)
+
+**Verdict scheme:** JUSTIFIED (keep) / VERBOSE (simplify) / WEAK (strengthen or move to hook) / ZOMBIE (delete) / DEAD-REF (fix the refs).
+
+Output: table of verdicts per principle (not prose), then a one-paragraph summary. Anti-pattern: zero zombies = you summarised, not questioned.
+
+Wire to a quarterly recurring task with your enforced-rules.md + CLAUDE.md as arguments. Pairs well with `/reflection` (which finds new rules to add) - `/socrates` is the trimmer.
+
+Starter skill in `skills/socrates/SKILL.md`.
+
+---
+
 ## Daily Workflow Skills
 
 ### /end-session (148 uses)

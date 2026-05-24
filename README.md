@@ -1,5 +1,7 @@
 # Claude Playbook
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G31WKOCN)
+
 Budget-aware, self-improving Claude Code. Built from hundreds of sessions of daily use across multiple projects. Not theory - distilled from what actually worked and what didn't.
 
 ---
@@ -59,7 +61,7 @@ The next time Claude does something you correct: write `memory/feedback/feedback
 | `docs/` | Full guide split by topic - start with `01-claude-md.md` |
 | `templates/` | Ready-to-use CLAUDE.md and enforced-rules starters |
 | `tools/` | statusline.py, check-budget.sh, session-status.sh |
-| `skills/` | /aristotle and /premortem skill files, plus a skills README |
+| `skills/` | 21 skill files - thinking, git, review, and workflow tools |
 
 ---
 
@@ -91,11 +93,11 @@ The templates don't compound. The habit does.
 
 ## Skill Files
 
-The `skills/` folder contains starter SKILL.md files for `/aristotle` and `/premortem`. These are the two highest-value thinking tools in the system - every use matters even if the count is low.
+The `skills/` folder contains 21 SKILL.md files - from first-principles thinking (`/aristotle`, `/think`) to git workflow (`/commit-chunks`, `/step-commits`, `/undo-commits`) to code review (`/deep-dive`, `/survey-repo`, `/cross-synth`) to writing (`/human-voice`) and more.
 
 To install: copy a skill folder to `.claude/skills/<name>/` in your workspace. Claude Code makes it available as `/<name>`.
 
-See `skills/README.md` for how skill files work and what else is worth building.
+See `skills/README.md` for the full list and descriptions.
 
 ---
 

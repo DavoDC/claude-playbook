@@ -24,6 +24,29 @@ Without a priority queue, Claude works on whatever is in front of it - often the
 
 ---
 
+## The Workspace Repo
+
+Everything in this playbook assumes you run Claude from one dedicated git repo - a "workspace repo." Not a project repo. A meta-repo that holds your config, memory, and skills.
+
+```
+workspace/          <- you always run Claude from here
+  CLAUDE.md         <- your rules, loaded every session automatically
+  .claude/
+    rules/
+      enforced-rules.md
+    skills/         <- your custom slash commands
+  memory/
+    feedback/       <- accumulated corrections, one rule per file
+    session-history.md
+    MEMORY.md
+```
+
+**Why not just use a project repo?** If your preferences live in a project repo, they disappear when you start a new project. With a workspace repo, every session starts with your rules loaded, your skills available, and context from past sessions. Every correction you make to Claude compounds across all future sessions and all projects.
+
+The whole system depends on this one structural choice. See `docs/11-workspace-repo.md` for the full setup guide.
+
+---
+
 ## Quick Start (15 minutes to first value)
 
 **Step 1 - Workspace CLAUDE.md (5 min)**
@@ -79,6 +102,7 @@ The next time Claude does something you correct: write `memory/feedback/feedback
 | [08 - Skills Reference](docs/08-skills.md) | All skills sorted by actual usage count |
 | [09 - Hooks](docs/09-hooks.md) | Write guard, budget monitor, session logger, settings split |
 | [10 - Advanced Patterns](docs/10-advanced.md) | Commit-anchored delta, worked examples |
+| [11 - The Workspace Repo](docs/11-workspace-repo.md) | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
 | [Checklist](docs/checklist.md) | Building the full system - what to build in what order |
 
 ---

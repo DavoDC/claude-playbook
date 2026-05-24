@@ -18,6 +18,27 @@ Keep hooks in `settings.json` and permissions in `settings.local.json`. Never mi
 
 ---
 
+## Size Discipline
+
+CLAUDE.md is loaded on every single session. Every line costs tokens every time. Bloated CLAUDE.md = a constant tax on your budget.
+
+Target:
+- Workspace CLAUDE.md (your rules, preferences, workflow): **100-150 lines max**
+- Per-repo CLAUDE.md (project-specific notes): **50-80 lines** is plenty
+
+If it's growing past 150 lines, move content out. Detailed explanations go in `feedback_*.md` files that only load on demand, not every session.
+
+**The key discipline:** CLAUDE.md holds principles and rules, not explanations. If you're writing paragraphs explaining WHY a rule exists, that belongs in a feedback file. CLAUDE.md says "do X" - the feedback file says "because Y happened." Keep them split.
+
+The `enforced-rules.md` pattern helps with this. Split the load:
+- `CLAUDE.md` - your core working style and principles (loaded every session)
+- `.claude/rules/enforced-rules.md` - hard rules distilled from past failures (also loaded every session, but separate file so you can audit each independently)
+- `feedback_*.md` - the WHY behind each rule (loaded only when relevant, on demand)
+
+Three files, three jobs. None of them should do another's job.
+
+---
+
 ## Workspace CLAUDE.md - Sections Worth Having
 
 ### 1. Senior Engineer Mindset

@@ -4,6 +4,37 @@ Claude Code reads `CLAUDE.md` from your repo root at the start of every session.
 
 There are two kinds:
 
+---
+
+## Which Files Are "Claude Files" vs Your Own Files
+
+New users often get confused about which files are special Claude configuration and which are just personal files that happen to be in the same repo. Here's the map:
+
+### Claude's Configuration Files (auto-loaded, special behavior)
+
+| File | What it is | Loaded when |
+|------|-----------|-------------|
+| `CLAUDE.md` (workspace root) | Your global working style, rules, preferences | Every session, automatically |
+| `CLAUDE.md` (inside a repo) | Project-specific context and constraints | When Claude's CWD is that repo |
+| `.claude/settings.json` | Hooks (shell scripts triggered by events) | Always active |
+| `.claude/settings.local.json` | Permissions and MCP server config | Always active |
+| `.claude/rules/enforced-rules.md` | Hard rules that override casual defaults | Read at session start (add to CLAUDE.md's session checklist) |
+
+### Your Personal Files (not auto-loaded, just tracked data)
+
+| File | What it is | Notes |
+|------|-----------|-------|
+| `memory/MEMORY.md` | Navigation index to all your memory files | Read it manually or add to session start checklist |
+| `memory/pending-actions.md` | Your task list | Not special - just a markdown file you and Claude use |
+| `memory/session-history.md` | Log of past sessions | Not special - written by `/end-session`, read for context |
+| `memory/feedback/feedback_*.md` | Your rules library | Demand-loaded when relevant - not auto-loaded |
+
+**The key distinction:** CLAUDE.md files load *automatically* and shape every response. Your memory files are just markdown - Claude reads them when you tell it to, or when skills like `/dev-session` read them as part of their workflow.
+
+MEMORY.md and enforced-rules.md are closer to "extended CLAUDE.md" - they're not technically auto-loaded by Claude Code, but you add them to CLAUDE.md's session start checklist so they effectively are. That lets you offload detailed rules from CLAUDE.md (keeping it under 150 lines) into enforced-rules.md without losing coverage.
+
+---
+
 - **Workspace CLAUDE.md** - loaded globally for all sessions. Covers your working style, universal rules, how you want Claude to behave across everything.
 - **Project CLAUDE.md** - inside each individual repo. Covers what that specific project does, its architecture, constraints, and how to build/run it.
 

@@ -50,6 +50,36 @@ This prevents the worst outcome: starting a large piece of work at 75% context, 
 
 ---
 
+## Model Choice
+
+Claude Code lets you choose which model powers your sessions. The practical rule:
+
+**Use Sonnet for most work. Opus burns budget too fast for daily use.**
+
+Sonnet handles 95%+ of real engineering work well: writing code, debugging, reading files, making commits, running the improvement loop. The quality difference for typical tasks is small. The budget difference is large - Opus uses significantly more of your quota per session.
+
+Keep Opus for the genuinely hard problems: architecture decisions, complex debugging you've already tried to solve, anything where you need the extra reasoning depth. Don't burn it on routine feature work.
+
+If you're on a plan with rate limits, the session statusline (from `tools/`) shows which model is active and exactly how much of your 5-hour and 7-day budget you've used. Before starting a heavy Opus session, check the 7-day figure.
+
+---
+
+## Session Strategy - Shorter is Better
+
+Every prompt sends the entire conversation history. As a session grows, each exchange costs more tokens than the one before - early messages are re-sent every time.
+
+The most token-efficient approach:
+
+1. **One session per main feature or topic.** A focused 30-minute session costs far less than a 3-hour session that keeps compacting. When you hit compaction (~80% context), Claude loses memory of early work and re-explaining costs tokens.
+
+2. **Write ideas down before starting, not during.** Keep a doc with everything you want done. Work through a few items per session, run `/end-session`, close, open fresh. This keeps sessions short and context cheap.
+
+3. **Front-load your prompt.** Tell Claude everything you want in one message - it will figure out the best order and approach. One detailed 8-line prompt beats eight back-and-forth exchanges covering the same ground. Longer prompts, fewer rounds.
+
+4. **Short + focused wins.** Rarely hitting max context is a sign of good session hygiene - it means you're closing before compaction, not fighting through it.
+
+---
+
 ## Building the System
 
 The whole thing (statusline.py + check-budget.sh + session-status.sh) is under 200 lines total. Here is how it is wired:

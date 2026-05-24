@@ -73,6 +73,66 @@ This is a typical /aristotle outcome: the stated problem ("hardcoded path") diss
 
 ---
 
+## Multi-Agent Orchestration
+
+### Three-Model Decision
+
+Claude Code supports three model tiers. Picking the right one per task matters - Opus is roughly 25x the cost of Haiku for the same token count.
+
+| Signal | Model |
+|--------|-------|
+| Design / architecture / first-principles / open question | Opus |
+| Execute a scoped spec / follow a process doc / commit / pattern-copy | Sonnet |
+| Same mechanical operation repeated across many files, no judgment | Haiku |
+| Mixed: design then execute | Opus for the design turn, fresh Sonnet session to execute |
+
+The mixed case is important. Running Opus for the entire session when only the first 20% requires judgment wastes budget. Run Opus to design the approach, review the output, then start a fresh Sonnet session to execute.
+
+### Four Orchestration Patterns
+
+**Solo Sonnet (default):** One session plans, executes, and commits. Right for most work where items are scoped and judgment calls are few.
+
+**Solo Haiku (mechanical sweeps):** Em-dash removal, frontmatter normalization, format passes across many files. Haiku has 200K context but less judgment - use only for well-defined mechanical work.
+
+**Sonnet orchestrator + Haiku workers:** Sonnet runs the top-level loop, spawns Haiku subagents via `Agent(model="haiku", ...)` for mechanical subtasks. Sonnet sees plan and result summaries; Haiku pays the file-scanning tokens. On a 10-item loop where 8 items are mechanical, this can cut cost 60-70%.
+
+**Opus planner + Sonnet executor (cross-session):** Opus designs the approach. User reviews the plan. Fresh Sonnet session executes it. Keeps judgment costs in one session, execution costs in another.
+
+### When to Delegate vs Do It Directly
+
+Delegate to subagents when:
+- 50+ files to process with the same operation
+- Multiple independent tasks that can run in parallel
+- Clean-slate isolation is needed (subagent starts with no accumulated context)
+
+Do it directly when:
+- Fewer than ~20 files
+- Steps are sequential and depend on each other's outputs
+- Task requires shared context from earlier in the session
+
+**Orient overhead:** every `Agent()` call costs ~5-15K tokens to initialize the subagent regardless of task size. A 10-file check is cheaper done directly than via subagent.
+
+### Model Parameter Resolution
+
+When spawning subagents, the model resolves in this priority order:
+
+1. `CLAUDE_CODE_SUBAGENT_MODEL` environment variable
+2. `model=` parameter in the `Agent()` call
+3. Subagent definition's frontmatter
+4. Parent conversation's active model (lowest priority - often wrong)
+
+**Always pass `model=` explicitly.** Silently inheriting the parent model means a Haiku-appropriate sweep task runs on Opus and burns 25x the expected tokens.
+
+```python
+# Good - explicit model selection
+Agent(model="haiku", prompt="normalize frontmatter in these 40 files: ...")
+
+# Bad - inherits parent model (probably Sonnet or Opus)
+Agent(prompt="normalize frontmatter in these 40 files: ...")
+```
+
+---
+
 ## The Single Most Valuable Habit
 
 Keep a `memory/feedback/` folder. Every time Claude does something wrong, write one file: `feedback_<topic>.md`. Rule + why + how to apply. Commit it.

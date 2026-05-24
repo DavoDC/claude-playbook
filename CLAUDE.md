@@ -4,13 +4,13 @@ This repo is **public**. Every file here is visible to anyone on GitHub.
 
 ## Before making any changes
 
-Read the full maintenance guide in your workspace before editing anything in this repo. It covers:
-- What content is safe to add (and what isn't)
-- How to sync skills from workspace to playbook
-- Which skills to skip (too workspace/work-specific)
-- Ko-fi and public repo conventions
+Read the full maintenance guide before editing anything in this repo. To find it:
 
-The maintenance guide path is workspace-internal and not listed here intentionally.
+1. Check your workspace's `.claude/rules/enforced-rules.md` for the rule named **"claude-playbook updates - manual only"**
+2. That rule contains the exact path to `playbook-maintenance.md` in your workspace
+3. The maintenance guide starts with a backlink confirming it's the right file
+
+The guide covers what content is safe to add, skill sync approach, which skills to skip, and Ko-fi conventions.
 
 ## Core rule
 

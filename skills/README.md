@@ -10,6 +10,24 @@ When you type `/survey-repo`, Claude reads the `survey-repo/SKILL.md` file and f
 
 ---
 
+## Why Skills Beat Scripts
+
+A bash script can automate a fixed sequence of steps. A skill can do something a script never could: **exercise judgment**.
+
+Consider `/survey-repo`. A script version would run `ls`, `git log`, maybe `wc -l` - and dump raw output. The skill version reads the structure, identifies what matters, explains *why* the recent commits are significant, flags the missing test coverage, and tells you in plain English what the project does and where to start.
+
+The difference isn't speed or syntax - it's that Claude can:
+- Infer intent from incomplete or ambiguous inputs
+- Adapt the output based on what it finds (a C++ project needs different framing than a Python CLI)
+- Make judgment calls a deterministic script can't ("this TODO file looks stale - the items reference a feature that shipped 3 months ago")
+- Chain multiple reasoning steps the way a senior engineer would, not just the way a for-loop would
+
+Scripts are better when the task is genuinely mechanical and the exact steps are always the same. Skills are better when the task involves understanding context, making decisions, or producing output that requires human-level reading comprehension.
+
+Most real engineering tasks involve both - which is why the best skills use bash/python for the mechanical parts and Claude's judgment for the interpretation layer.
+
+---
+
 ## Skills vs Memories - Common Confusion
 
 People often mix these up. Here's the distinction:

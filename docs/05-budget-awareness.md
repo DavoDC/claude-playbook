@@ -1,8 +1,12 @@
 # Part 5: Budget Awareness
 
-> **This is not built in.**
->
-> Claude Code does not expose its rate-limit state to Claude by default. Claude has no awareness of whether it's at 5% or 95% of its 5-hour or 7-day quota. It will happily start a 3-hour overnight loop at 82% of its 5-hour quota and wonder why it gets throttled. The `tools/statusline.py`, `tools/check-budget.sh`, and `tools/session-status.sh` scripts in this repo are custom-built tooling to surface that data and make it actionable. Without this setup, your skills have no budget awareness.
+## The Problem
+
+Claude has no fuel gauge. It will confidently start a 3-hour refactor with 25 minutes of budget remaining, get cut off mid-implementation, and leave your codebase in a state that's worse than when it started - broken tests, half-written functions, uncommitted changes that need untangling. Context compaction is just as bad: at 80% context, Claude summarises its own working memory mid-task, losing the detailed understanding it built up. The files it touches after compaction are edited with a different mental model than the ones before.
+
+The damage from hitting limits mid-task isn't just lost time. It's a working tree you have to diagnose and fix.
+
+**This is not built in.** Claude Code does not expose its rate-limit state to Claude. The `tools/` scripts in this repo are custom-built to surface that data and make it actionable. With a fuel gauge, Claude makes active decisions before the limit hits: picks a smaller task, commits what it has, runs `/end-session` to preserve context, schedules a wakeup after the reset. Without one, it drives until it runs out - in the middle of your code.
 
 ---
 

@@ -53,6 +53,7 @@ When fixing a bug or correcting a mistake, always do BOTH:
 - **Keep working on directives** - work through goals autonomously. Don't stop unless truly blocked.
 - **Don't re-ask for things already granted** - reading files and writing to memory/ are always allowed.
 - **Use subagents for parallel research** - launch multiple Explore agents for independent tasks.
+- **Use TaskCreate for multi-step plans** - any task with 3+ distinct steps benefits from task tracking. Create tasks upfront, mark in_progress when starting, completed when done.
 
 ## Development Approach
 

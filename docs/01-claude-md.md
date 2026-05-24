@@ -138,6 +138,7 @@ When you want Claude to work through a task without interrupting you:
 - Keep working on directives - work through goals autonomously. Don't stop unless truly blocked.
 - Don't re-ask for things already granted.
 - Use subagents for parallel research - launch multiple Explore agents for independent tasks.
+- Use TaskCreate for multi-step plans - any task with 3+ distinct steps benefits from task tracking. Create tasks upfront, mark in_progress when starting, completed when done.
 ```
 
 **On permissions:** Do NOT put tool permissions in CLAUDE.md. They belong in `.claude/settings.local.json`. CLAUDE.md instructions like "always allowed to read files" are hints Claude can choose to follow - they don't grant permissions at the harness level. Use the settings files for real permission grants.

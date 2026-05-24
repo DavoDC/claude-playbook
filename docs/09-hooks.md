@@ -7,6 +7,10 @@ Hooks are shell scripts that run automatically on Claude Code events. They enfor
 - `PreToolUse` - before a tool call (Read, Edit, Write, Bash, etc.)
 - `PostToolUse` - after a tool call
 - `Stop` - when Claude stops a response
+- `UserPromptSubmit` - when the user sends a message (fires before Claude responds - good for per-message guards and workspace health checks)
+- `SessionStart` - once when the session begins (good for loading context, running status checks)
+- `SessionEnd` - when the session closes (good for cleanup, final logging)
+- `PreCompact` - just before context compaction (good for saving state before Claude loses prior context)
 
 ## Hooks Worth Having
 
@@ -67,19 +71,57 @@ fi
 exit 0
 ```
 
-### Session Logger
+### File Size Guard (PostToolUse on Edit/Write)
 
-Records skill invocations to a log file. Drives usage statistics so you can see which skills you actually use vs which you thought you'd use.
+Enforces line-count limits on configuration files after every edit. This is what makes the "keep CLAUDE.md under 150 lines" advice in Part 1 actually stick - without a hook, Claude will gradually bloat the file and forget it ever happened.
 
-```bash
-#!/bin/bash
-# skill-logger.sh - Stop hook
-# Log the command that just ran, if it was a skill invocation
-if echo "$CLAUDE_COMMAND" | grep -qE '^/(aristotle|premortem|dev-session|end-session|loop)'; then
-    echo "$(date -u +%Y-%m-%dT%H:%M:%S) $CLAUDE_COMMAND" >> /path/to/skill-usage.log
-fi
-exit 0
+```python
+#!/usr/bin/env python3
+# size-guard.py - called from a PostToolUse hook on Edit/Write
+import sys, json, os
+
+d = json.loads(sys.stdin.buffer.read())
+if d.get('tool_name') not in ('Write', 'Edit'):
+    sys.exit(0)
+
+fp = d.get('tool_input', {}).get('file_path', '')
+bn = os.path.basename(fp)
+
+# Adjust limits to match your targets from CLAUDE.md
+limits = {
+    'CLAUDE.md': 150,
+    'MEMORY.md': 200,
+    'enforced-rules.md': 250,
+}
+
+if bn in limits and os.path.isfile(fp):
+    lines = sum(1 for _ in open(fp))
+    if lines > limits[bn]:
+        # Warn to stderr (shown in terminal) but don't block
+        # Change sys.exit(1) to block Claude instead of just warning
+        print(f'WARNING: {bn} is {lines} lines (limit {limits[bn]}). '
+              f'Move explanations to feedback files - CLAUDE.md holds rules, not rationale.',
+              file=sys.stderr)
+
+sys.exit(0)
 ```
+
+Wire it up in `.claude/settings.json`:
+
+```json
+"PostToolUse": [
+  {
+    "matcher": "Write|Edit",
+    "hooks": [{ "type": "command", "command": "python3 /path/to/size-guard.py" }]
+  }
+]
+```
+
+The key design choice: warn (stderr, exit 0) rather than block (exit 1). Blocking file edits when a limit is exceeded prevents the very trimming that would fix the violation. Warn instead - Claude sees it and trims proactively.
+
+### Session Logger *(build your own)*
+
+Records skill invocations to a log file so you can see which skills you actually use vs which you thought you'd use. Pattern: in a `Stop` or `UserPromptSubmit` hook, check if the input matches `/skill-name` and append a timestamped line to a log file. After a month you'll have real usage data to prune your skill set.
 
 ### Feedback Folder Enforcer
 

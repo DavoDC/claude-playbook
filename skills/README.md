@@ -74,6 +74,7 @@ Claude Code makes it available as `/<name>` in any session run from that workspa
 | `aristotle/` | First principles deconstruction - strips assumptions, finds axioms, rebuilds from zero |
 | `premortem/` | Pre-mortem risk analysis - classifies risks as Tigers/Paper Tigers/Elephants, produces revised plan |
 | `think/` | Full build workflow - /aristotle + 5-step engineering algorithm + instantiation check |
+| `socrates/` | Rule evaluator - 5 questions per principle, verdict table, deletes zombies, strengthens weak rules |
 | `prioritise/` | Rank any list by leverage - Aristotle's "who benefits, are they a bottleneck?" lens |
 | `refine-ideas/` | Clarify IDEAS.md priorities - one question per item ("why necessary?"), groups by answer |
 | `survey-repo/` | Quick codebase summary - language, purpose, key files, tests, entry points, open TODOs |

@@ -4,6 +4,18 @@ Use this to track which pieces of the system you've set up. Start with the top-l
 
 ---
 
+## Environment Setup (do once, pays forever)
+
+- [ ] **Use Windows Terminal** (not cmd.exe or the default terminal) - you can paste images directly into the Claude Code chat window. Screenshot something, Ctrl+V, Claude sees it. This alone unlocks visual debugging.
+- [ ] **Clone the Claude Code docs** - Claude has no awareness of its own features by default. Clone the docs so Claude can read them and suggest things you didn't know existed:
+  ```bash
+  git clone https://github.com/ericbuess/claude-code-docs
+  ```
+  Then ask Claude to read the docs and suggest features that match your workflow. Works especially well for initial setup.
+- [ ] **Read the Claude Code docs yourself** - hooks, MCP servers, statusline config, remote control - most users discover these months late.
+
+---
+
 ## Top-Level CLAUDE.md
 
 - [ ] Senior engineer mindset instruction

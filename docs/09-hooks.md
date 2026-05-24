@@ -11,6 +11,75 @@ Hooks are shell scripts that run automatically on Claude Code events. They enfor
 - `SessionStart` - once when the session begins (good for loading context, running status checks)
 - `SessionEnd` - when the session closes (good for cleanup, final logging)
 - `PreCompact` - just before context compaction (good for saving state before Claude loses prior context)
+- `PostCompact` - after context compaction completes (good for logging what was compacted)
+- `PostToolUseFailure` - when a tool call fails (good for error logging and recovery)
+- `FileChanged` - when a watched file changes on disk (`matcher` specifies filenames to watch)
+- `CwdChanged` - when working directory changes (useful for reactive environment management)
+
+More events exist (`TeammateIdle`, `InstructionsLoaded`, `WorktreeCreate`, `PermissionRequest`, etc.) - check the official Claude Code hooks reference for the full list.
+
+## Hook Configuration Patterns
+
+### Exit Codes
+
+Two exits matter:
+
+- **Exit 0**: allow the tool call to proceed
+- **Exit non-zero**: block the tool call (Claude sees stderr message)
+
+This binary is more important than it looks. A hook that crashes with an unhandled exception exits non-zero and silently blocks your workflow. The fail-open pattern prevents this:
+
+```bash
+#!/bin/bash
+# Wrap the main logic - exit 0 on any internal error
+python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    # ... main logic ...
+    # sys.exit(1) to block with message on stderr
+    # sys.exit(0) to allow
+except Exception as e:
+    print(f'[HOOK] internal error: {e}', file=sys.stderr)
+    sys.exit(0)  # fail open - hook crashes must never block the workflow
+" || exit 0  # outer bash also catches Python startup failures
+```
+
+**Rule:** exit non-zero only when you have a specific, intentional reason to block. Every other exit path is exit 0.
+
+### The `if:` Field - Efficient Tool Matching
+
+The `matcher` field matches the tool name only - `"Bash"` matches every Bash call. To narrow further to specific subcommands or file patterns, use the `if:` field on individual hook handlers. `if:` uses permission rule syntax matching against tool name AND arguments together:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /path/to/guard-commit.sh",
+            "if": "Bash(git * commit*)"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Examples:
+- `"Bash(git * commit*)"` - only on git commit commands (any subcommand, leading `VAR=value` assignments stripped)
+- `"Edit(*.ts)"` - only when editing TypeScript files
+- `"Write(*/memory/*)"` - only writes inside a memory directory
+
+The `if:` field means an expensive hook (subprocess call, file I/O) costs zero on the 99% of tool calls it doesn't need to see.
+
+**One condition per handler.** There's no `&&` or `||` syntax. For multiple independent conditions, define separate hook handlers. For complex conditions that can't be expressed as a single permission rule, fall back to checking inside the hook script and exiting 0 early.
+
+---
 
 ## Hooks Worth Having
 
@@ -185,6 +254,107 @@ exit 0
 ```
 
 Counter resets each session (uses `$$` - current process PID - in the temp file path).
+
+### Session Auto-Title (UserPromptSubmit)
+
+Names each session automatically from the first prompt. Without this, every session in the session list is titled "New Session" and you can't navigate your history.
+
+```python
+#!/usr/bin/env python3
+"""UserPromptSubmit hook: auto-name session from first prompt."""
+import json, sys
+
+SKILL_NAMES = {
+    'end-session': 'EOD', 'reflection': 'Reflection',
+    'deep-dive': 'Deep Dive', 'dev-session': 'Dev Session',
+    'loop': 'Loop', 'checkpoint': 'Checkpoint',
+}
+
+try:
+    d = json.load(sys.stdin)
+    prompt = d.get('prompt', '').strip()
+    if not prompt:
+        sys.exit(0)
+
+    if prompt.startswith('/'):
+        skill = prompt[1:].split()[0]
+        title = SKILL_NAMES.get(skill, skill.replace('-', ' ').title()[:25])
+    else:
+        title = ' '.join(prompt.split()[:5])[:40]
+
+    print(json.dumps({
+        'hookSpecificOutput': {
+            'hookEventName': 'UserPromptSubmit',
+            'sessionTitle': title,
+        }
+    }))
+except Exception:
+    sys.exit(0)  # fail open
+```
+
+Register under `UserPromptSubmit`. Claude Code uses the `sessionTitle` value on the first prompt only - subsequent prompts don't rename the session. Add your own skill names to the mapping table.
+
+### PreCompact Hook - Save State Before Context Loss
+
+Fires just before context compaction begins. Without this, any state Claude has accumulated (learnings, notes, memory files) that hasn't been committed to disk yet is at risk.
+
+Two things worth doing in the PreCompact hook:
+
+1. **Commit dirty tracked files** - log files and daily notes that are append-only are often dirty when compaction hits
+2. **Drain internal Claude memory** - Claude Code stores auto-saved memory in `~/.claude/projects/<hash>/memory/`. If your workspace runs in a container or ephemeral environment, these files need rescuing before the context resets.
+
+```bash
+#!/bin/bash
+# PreCompact hook: commit dirty files before compaction
+
+WORKSPACE_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+TS=$(date +%H:%M)
+
+# Commit dirty log files (fail open - non-critical)
+cd "$WORKSPACE_ROOT" || exit 0
+git add -- memory/logs/ 2>/dev/null || true
+if ! git diff --cached --quiet 2>/dev/null; then
+    git commit -m "log: auto-commit before context compaction at $TS" \
+        -- memory/logs/ >/dev/null 2>&1 || true
+fi
+exit 0
+```
+
+Pair with a `PostCompact` hook that logs the compaction event (timestamp + why it triggered) to your audit log.
+
+### SessionStart Hook - Inject Live Context
+
+Fires once when a session begins. Output goes directly to Claude's context window before the first prompt. Use it to inject live workspace state so Claude never starts cold.
+
+```bash
+#!/bin/bash
+# SessionStart hook: inject live workspace state
+
+WORKSPACE_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+
+echo "=== Session Context ==="
+echo "Date: $(date '+%A %d %B %Y, %H:%M %Z')"
+
+if [ -n "$WORKSPACE_ROOT" ]; then
+    BRANCH=$(git -C "$WORKSPACE_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+    AHEAD=$(git -C "$WORKSPACE_ROOT" rev-list --count "@{upstream}..HEAD" 2>/dev/null || echo "?")
+    DIRTY=$(git -C "$WORKSPACE_ROOT" status --short 2>/dev/null | wc -l | tr -d ' ')
+    echo "Git: branch=$BRANCH | $AHEAD commits unpushed | $DIRTY dirty files"
+fi
+
+# Also auto-commit dirty log files left over from last session
+if [ -n "$WORKSPACE_ROOT" ]; then
+    git -C "$WORKSPACE_ROOT" add -- memory/logs/ 2>/dev/null || true
+    if ! git -C "$WORKSPACE_ROOT" diff --cached --quiet 2>/dev/null; then
+        git -C "$WORKSPACE_ROOT" commit -m "log: session update" \
+            -- memory/logs/ >/dev/null 2>&1 || true
+    fi
+fi
+
+echo "=== End Context ==="
+```
+
+The minimal useful set: today's date (stops date-guessing errors), current git branch (stops wrong-branch commits), dirty file count (surfaces uncommitted state). Add/remove based on what's genuinely useful for your workflow.
 
 ### Feedback Folder Enforcer
 

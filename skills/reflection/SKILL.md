@@ -28,7 +28,7 @@ If no prior anchor: read the last 10-15 sessions from `memory/session-history.md
 Extract sessions added since last reflection. For each session, look for:
 
 - **Repeated corrections** - same behavior corrected 2+ times = should be a rule
-- **Successful patterns** - technique that worked well, worth naming and keeping
+- **Successful patterns** - mine "What worked this session" sections. For each one: name the pattern AND propose how to amplify it (promote to CLAUDE.md, add to a skill, cross-reference from related files). Land amplification edits in the same /reflection commit.
 - **Implicit preferences** - things you said yes to without ever writing them down
 - **Skills or tools built** - not yet documented anywhere
 
@@ -40,6 +40,14 @@ Extract sessions added since last reflection. For each session, look for:
 | Cross-cutting hard rule | `.claude/rules/enforced-rules.md` |
 | CLAUDE.md principle | workspace `CLAUDE.md` |
 | Context/memory fact | `memory/MEMORY.md` + linked file |
+
+### 3b. Workspace health checks
+
+Before making updates:
+- CLAUDE.md line count (warn if over ~150 - it becomes a liability)
+- Are completed tasks still marked `[ ]` in your task list? Move them.
+- Is session-history.md over 3000 lines? Archive older sessions.
+- Any feedback files already baked into CLAUDE.md? (redundant, can trim)
 
 ### 4. Make the updates
 
@@ -67,8 +75,14 @@ Brief summary: sessions reviewed, patterns found, files updated. If nothing foun
 
 ---
 
+## Rules
+
+- Do NOT add to CLAUDE.md without removing something (zero-sum).
+- Do NOT add to enforced-rules.md without removing something (zero-sum).
+- Use the delta-first pattern. Do not re-scan session history already reviewed.
+
 ## What makes a good reflection
 
-The value is in the routing decision. A correction that happened once might be noise. Twice is a pattern. Three times is a rule that belongs in enforced-rules.md. 
+The value is in the routing decision. A correction that happened once might be noise. Twice is a pattern. Three times is a rule that belongs in enforced-rules.md.
 
 Don't make CLAUDE.md additions too specific ("when user says X, do Y"). Make them principles ("always do Z when approaching type-of-situation"). Specific rules go stale; principles don't.

@@ -1,5 +1,9 @@
 ---
 description: Quick codebase summary - language, purpose, key files, tests, entry points, open TODOs
+effort: low
+argument-hint: "[optional: path to repo]"
+allowed-tools: Read Grep Glob Bash(git *) Bash(ls *) Bash(find *) Bash(wc *) Bash(python3 *)
+when_to_use: "Use when starting work in an unfamiliar repo, onboarding to a new codebase, or needing a quick orientation. Produces a one-page structured summary with overview, structure, entry points, tests, key files, open TODOs, recent activity, and quick health assessment."
 ---
 
 # /survey-repo
@@ -29,7 +33,7 @@ Output a markdown summary with these sections:
 - How to run tests (command)
 
 ### 5. Key Files
-- README, CLAUDE.md, CHANGELOG, .gitignore - note any that are missing
+- README, CLAUDE.md, HISTORY.md (CHANGELOG.md deliberately absent - anti-pattern), .gitignore - note any that are missing
 - Config files: what settings are configurable
 
 ### 6. Open TODOs

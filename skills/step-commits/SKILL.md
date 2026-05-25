@@ -1,5 +1,7 @@
 ---
 description: Plan changes as atomic commits upfront, then implement and commit one at a time
+effort: medium
+when_to_use: "Use when starting a multi-change implementation session. Forces atomic commits by planning the full split BEFORE writing any code - each change gets its own commit. For already-dirty trees with multiple topics, use /commit-chunks instead. For a single-topic dirty tree, use /commit-all. To undo planned commits that went wrong, use /undo-commits."
 ---
 
 # Step Commits - One Change, One Commit
@@ -8,9 +10,11 @@ Use this when implementing multiple changes in one session. Forces atomic commit
 by planning the split BEFORE writing any code. Prevents the anti-pattern of one
 large commit with 5+ unrelated bullet points.
 
-**Key difference from /commit-chunks:**
-- `/commit-chunks` splits an existing diff across commits (post-hoc cleanup)
-- `/step-commits` plans the split UPFRONT so each change is implemented and committed independently - reviewer can match the commit message to exactly that diff
+| Skill | When to use |
+|-------|-------------|
+| `/commit-all` | tree already dirty, one topic, one commit |
+| `/commit-chunks` | tree already dirty, multiple topics, split post-hoc |
+| `/step-commits` | nothing implemented yet, plan atomic commits UPFRONT |
 
 ## Steps
 

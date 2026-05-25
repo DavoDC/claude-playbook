@@ -1,5 +1,35 @@
 # Part 6: Sessions and Memory
 
+## Session Launcher
+
+Claude Code has no built-in launch UI - you type flags every time (`claude --model sonnet --continue`). A session launcher script replaces that with an arrow-key or number-key picker for session type and model.
+
+`tools/launch-claude.sh` is a ready-to-use template. Copy it to your workspace, make it executable, and run it instead of `claude` directly:
+
+```bash
+cp tools/launch-claude.sh ~/workspace/launch.sh
+chmod +x ~/workspace/launch.sh
+./launch.sh
+```
+
+The picker shows:
+
+```
+  Session?
+  (arrows + Enter  |  1-4 quick  |  q quit)
+
+> bypass-permissions  (skip permission prompts - use with trusted projects)
+  new                 (fresh start)
+  continue            (auto-resumes most recent, no prompt)
+  resume              (shows conversation picker)
+```
+
+Then a second screen picks the model (sonnet / haiku / opus). The selected command is logged to `logs/claude-launch.log` for audit.
+
+**Adapting it:** Change `WORKSPACE_DIR` at the top to an absolute path if you don't always launch from the same directory. Add or remove session options by editing the `_pick "Session?"` block and the matching `case $session` block - they must stay in sync (index 0 is the first option).
+
+---
+
 ## /end-session - The Session Drain
 
 `/end-session` is the most-used skill in a serious setup. It is the crux of the continuous improvement loop - everything good that happened in a session gets preserved here.

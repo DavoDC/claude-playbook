@@ -97,7 +97,7 @@ effort: high
 
 This means you don't manually switch effort before/after complex skills - it happens automatically. Route routine work through `medium`, and let the skills that need depth declare it.
 
-Full reference: `NOT_MY_REPOS/claude-code-docs/docs/model-config.md` - "Adjust effort level" section.
+(full reference: [Adjust effort level - Claude Code docs](https://docs.anthropic.com/en/claude-code/model-config#adjust-effort-level))
 
 ---
 

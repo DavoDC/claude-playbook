@@ -10,7 +10,7 @@ Skills are sorted below by how often they're actually used - not by how interest
 
 These are listed first regardless of usage count - every invocation is high-value and they should be the first thing you reach for on hard problems.
 
-### /aristotle (25 uses - but every one matters)
+### [/aristotle](https://github.com/DavoDC/claude-playbook/blob/main/skills/aristotle/SKILL.md) (25 uses - but every one matters)
 
 First principles deconstruction. Strips all assumptions from a problem, finds the irreducible truths, rebuilds from zero.
 
@@ -25,11 +25,11 @@ First principles deconstruction. Strips all assumptions from a problem, finds th
 
 **Why it's valuable:** it consistently surfaces the real problem behind the stated problem. You think you're designing a config system; Aristotle reveals you're actually trying to reduce manual context-switching. The solution space changes completely.
 
-The full SKILL.md is in `skills/aristotle/SKILL.md`.
+[Full SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/aristotle/SKILL.md)
 
 ---
 
-### /premortem (every use is high-value)
+### [/premortem](https://github.com/DavoDC/claude-playbook/blob/main/skills/premortem/SKILL.md) (every use is high-value)
 
 Pre-mortem risk analysis. Imagine the plan has already failed. Work backward to find every reason why.
 
@@ -54,11 +54,11 @@ For each Tiger, assign urgency: Launch-Blocking / Fast-Follow (within 1-2 weeks)
 
 Pairs well with `/aristotle`: run Aristotle to stress-test the design, then premortem to stress-test the execution plan.
 
-The full SKILL.md is in `skills/premortem/SKILL.md`.
+[Full SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/premortem/SKILL.md)
 
 ---
 
-### /think (use for major design decisions)
+### [/think](https://github.com/DavoDC/claude-playbook/blob/main/skills/think/SKILL.md) (use for major design decisions)
 
 Full first-principles build workflow. Chains three things in order:
 
@@ -77,7 +77,7 @@ The order matters. Delete before simplify. Simplify before accelerate. Automate 
 
 ---
 
-### /socrates (rule evaluator)
+### [/socrates](https://github.com/DavoDC/claude-playbook/blob/main/skills/socrates/SKILL.md) (rule evaluator)
 
 Examines EXISTING rules backward - "should this still exist?" Complements `/aristotle` (which deconstructs forward when designing). Use when auditing enforced-rules.md, before adding yet another rule, or when a rule feels stale and you can't articulate why.
 
@@ -94,7 +94,7 @@ Output: table of verdicts per principle (not prose), then a one-paragraph summar
 
 Wire to a quarterly recurring task with your enforced-rules.md + CLAUDE.md as arguments. Pairs well with `/reflection` (which finds new rules to add) - `/socrates` is the trimmer.
 
-Starter skill in `skills/socrates/SKILL.md`.
+[Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/socrates/SKILL.md)
 
 ---
 
@@ -113,30 +113,30 @@ Smart session composition with IDEAS.md orchestration, TDD gate, budget awarenes
 
 No starter SKILL.md included - this skill integrates with IDEAS.md, budget awareness tools, and the git workflow. Build it after the workspace CLAUDE.md, IDEAS.md, and budget tools are set up. The design is fully documented in Part 4.
 
-### /commit-chunks (32 uses)
+### [/commit-chunks](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-chunks/SKILL.md) (32 uses)
 Commit changed files in logical chunks - one commit per feature/fix/topic. Analyses what's staged/unstaged and proposes a commit split with draft messages. Prevents the "committed everything in one giant blob" problem that makes git history unreadable.
 
-### /deep-dive (18 uses)
+### [/deep-dive](https://github.com/DavoDC/claude-playbook/blob/main/skills/deep-dive/SKILL.md) (18 uses)
 Deep investigation of a topic, file, directory, or repo. Think hard, investigate thoroughly, miss nothing. Uses a commit-anchored delta approach (see [Part 10](10-advanced.md)): only reads files that changed since the last deep-dive of the same scope.
 
-### /process-feedback (11 uses)
+### [/process-feedback](https://github.com/DavoDC/claude-playbook/blob/main/skills/process-feedback/SKILL.md) (11 uses)
 Takes a `feedback_*.txt` file written by the user (raw notes, corrections, wishes) and produces two outputs: new IDEAS.md entries for product work, and Claude rule files for feedback. The bridge between user notes and the improvement system.
 
-### /refine-ideas (9 uses)
+### [/refine-ideas](https://github.com/DavoDC/claude-playbook/blob/main/skills/refine-ideas/SKILL.md) (9 uses)
 Interactively clarify IDEAS.md priorities. Asks one question per item, derives semantic tiers from your answers. Use when IDEAS.md has gotten messy or when you've added a bunch of items and need to re-sort.
 
-### /commit-all (7 uses)
+### [/commit-all](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-all/SKILL.md) (7 uses)
 Commit all changed files in one go. Less surgical than `/commit-chunks` - use when you want everything staged and committed without thinking about logical grouping.
 
-### /reflection (2 uses)
+### [/reflection](https://github.com/DavoDC/claude-playbook/blob/main/skills/reflection/SKILL.md) (2 uses)
 Read recent session history and update CLAUDE.md, memory files, and workspace based on patterns found. Uses commit-anchored delta - only reads sessions added since the last reflection, stays fast. Run every few sessions or after a major block of work.
 
-Starter skill in `skills/reflection/SKILL.md`.
+[Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/reflection/SKILL.md)
 
-### /step-commits (2 uses)
+### [/step-commits](https://github.com/DavoDC/claude-playbook/blob/main/skills/step-commits/SKILL.md) (2 uses)
 Plan changes as atomic commits upfront before implementing. Define the commit sequence first, then execute one commit at a time. Good for complex multi-step changes where getting the commit order right matters.
 
-### /human-voice (2 uses)
+### [/human-voice](https://github.com/DavoDC/claude-playbook/blob/main/skills/human-voice/SKILL.md) (2 uses)
 Audit and rewrite text to remove AI writing patterns. For anything written to a person.
 
 **Tier 1 - always replace:** delve, leverage (as verb), utilize, robust, comprehensive, cutting-edge, seamless, meticulous, actionable, paradigm, testament to, underscores, holistic, synergy, "in order to", "serves as", "best practices"
@@ -147,7 +147,7 @@ Audit and rewrite text to remove AI writing patterns. For anything written to a 
 
 Two modes: `rewrite` (default) or `detect` (flags only, no rewriting).
 
-### /checkpoint (use in overnight loops)
+### [/checkpoint](https://github.com/DavoDC/claude-playbook/blob/main/skills/checkpoint/SKILL.md) (use in overnight loops)
 Create named restore points during long sessions or loops. `create <name>` commits current state and logs the checkpoint with SHA and context percentage. `list` shows today's checkpoints. `verify <name>` shows diff since that checkpoint.
 
 ---
@@ -163,7 +163,7 @@ More detailed than `/today`. Categorises all pending items into: can do now, nee
 ### /self-audit
 Workspace compliance check. Read-only - reports findings, never auto-fixes. Checks MEMORY.md health, pending actions for stale items, .gitignore gaps, skill integrity, hooks configuration.
 
-### /validate-rules
+### [/validate-rules](https://github.com/DavoDC/claude-playbook/blob/main/skills/validate-rules/SKILL.md)
 Check that enforced-rules.md and feedback files are internally consistent and not contradicting each other. Also runs validation to ensure hook-enforced rules are actually implemented in the hooks.
 
 ### /pre-rebuild
@@ -175,32 +175,32 @@ Review the current diff for correctness bugs at configurable effort levels. No s
 ### /security-review *(build your own)*
 Security-focused code review. Looks for OWASP top 10, credential leaks, injection vulnerabilities. No starter provided - can be as simple as: "read the diff, check for the OWASP top 10, report findings grouped by severity."
 
-### /release
+### [/release](https://github.com/DavoDC/claude-playbook/blob/main/skills/release/SKILL.md)
 Structured release process: version bump, changelog, tag, push.
 
-### /make-public
+### [/make-public](https://github.com/DavoDC/claude-playbook/blob/main/skills/make-public/SKILL.md)
 Pre-flight checklist before making a repo public. Checks for private paths, personal names, credentials, workspace-internal references.
 
 ### /save-memory *(build your own)*
 Manually save a piece of information to the memory system. No starter provided - straightforward: "write the fact to `memory/<category>/<name>.md`, add a pointer to `memory/MEMORY.md`, commit."
 
-### /check-compact
+### [/check-compact](https://github.com/DavoDC/claude-playbook/blob/main/skills/check-compact/SKILL.md)
 Context size check: counts exchanges in the current session; replies with one line - "Context heavy - please run /compact now." if heavy, or "Context light - no compact needed (~N exchanges)." if light. Run when unsure if compaction is needed before a large task.
 
-Starter skill in `skills/check-compact/SKILL.md`.
+[Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/check-compact/SKILL.md)
 
-### /survey-repo
+### [/survey-repo](https://github.com/DavoDC/claude-playbook/blob/main/skills/survey-repo/SKILL.md)
 Quick codebase summary: language, purpose, key files, tests, entry points, open TODOs. Use when starting work on an unfamiliar repo.
 
-### /undo-commits
+### [/undo-commits](https://github.com/DavoDC/claude-playbook/blob/main/skills/undo-commits/SKILL.md)
 Undo the last N commits via `git reset --soft`, show what's staged, help recommit cleanly. Safe - never rebases, never force-pushes.
 
 ### /health
 Workspace health check. Detects skill gaps, hook count anomalies, file bloat, stale peer-sync reviews, unindexed memory files.
 
-### /repo-status
+### [/repo-status](https://github.com/DavoDC/claude-playbook/blob/main/skills/repo-status/SKILL.md)
 Multi-repo status overview. For each repo in a configured directory: current branch, uncommitted changes count, and unpushed commits count. Output as a compact table. Flags repos with dirty files, unpushed commits, or unexpected branches. Never fetches (no network requirement). Read-only.
 
 Run before container rebuilds, session ends, or switching between repos. Build your own: `git -C <repo> status --short`, `git -C <repo> rev-list --count @{upstream}..HEAD`, output as a table.
 
-Starter skill in `skills/repo-status/SKILL.md`.
+[Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/repo-status/SKILL.md)

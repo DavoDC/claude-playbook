@@ -40,7 +40,16 @@ The playbook's job is opinionated workflow guidance - when to use a feature, how
 
 One sentence of workflow context + a pointer beats three paragraphs that go stale.
 
-**Verify before documenting.** Never document a Claude Code feature from training knowledge alone. Check official docs first - features change, and a stale description in the playbook misleads every reader who follows it. If you find the local `claude-code-docs` clone in your workspace, check that first.
+**Verify before documenting.** Never document a Claude Code feature from training knowledge alone. Check official docs first - features change, and a stale description in the playbook misleads every reader who follows it.
+
+## No internal paths - use hyperlinks
+
+**Never reference local workspace paths in this repo.** Readers do not have your file system. This means:
+- No local filesystem paths that only exist on your machine (cloned repos, workspace folders, etc.)
+- No "see the local docs clone" - link to the public URL instead
+- For Claude Code docs: link to `https://docs.anthropic.com/en/claude-code/[topic]`
+- For skills in this repo: use a relative link (e.g. `[aristotle](aristotle/SKILL.md)` from within `skills/`) or a full GitHub URL (`https://github.com/DavoDC/claude-playbook/blob/main/skills/aristotle/SKILL.md`)
+- Prefer hyperlinks everywhere over plain path text - readers can click through to the actual file
 
 ## Structure
 

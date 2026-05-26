@@ -68,6 +68,39 @@ If you're on a plan with rate limits, the session statusline (from `tools/`) sho
 
 ---
 
+## Effort Level
+
+Effort controls adaptive reasoning - how much the model thinks before responding. It is a second budget lever independent of model choice.
+
+**The key insight:** Claude Code's own UI describes `high` as "burns fastest - medium handles most tasks." Sessions contain a mix of complex reasoning and routine work (file reads, git ops, edits). Paying high-effort cost across every routine step wastes budget.
+
+**Default: `medium`.** Set this via your launcher script:
+
+```bat
+cmd /k claude --effort medium
+```
+
+Using the `--effort` flag on launch sets the level for that session without writing to settings - so it resets cleanly each time. This matters because `/effort low` within a session writes to `settings.json` and persists to the next session; the launcher flag overrides it.
+
+**For complex reasoning on demand:**
+- Say `ultrathink` in your prompt - applies deep reasoning for that turn only, session level unchanged
+- Use skills that have `effort: high` or `effort: xhigh` set in their frontmatter (e.g. /think, /aristotle, /deep-dive, /reflection) - the skill overrides the session level automatically and reverts when done
+
+**Setting effort in skill frontmatter:**
+
+```yaml
+---
+description: My heavy reasoning skill
+effort: high
+---
+```
+
+This means you don't manually switch effort before/after complex skills - it happens automatically. Route routine work through `medium`, and let the skills that need depth declare it.
+
+Full reference: `NOT_MY_REPOS/claude-code-docs/docs/model-config.md` - "Adjust effort level" section.
+
+---
+
 ## Session Strategy - Shorter is Better
 
 Every prompt sends the entire conversation history. As a session grows, each exchange costs more tokens than the one before - early messages are re-sent every time.

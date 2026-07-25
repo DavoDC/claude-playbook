@@ -153,9 +153,18 @@ Your core engineering standards belong here so they apply across all repos:
 
 ```
 - TDD always - every feature starts with tests. Write tests first, then implement.
+- Test strength over test count - a test that cannot fail still passes.
 - Scripts must be user-friendly - show output in terminal, log to a file, never close on completion.
 - Always add timing to scripts - log start/end time and per-step timing.
 ```
+
+**On that second line.** "TDD always" is the most common rule in a workspace CLAUDE.md and the least self-enforcing, because coverage percentages and test counts both rise when weak tests are added. A suite can grow steadily while its ability to detect a defect stays flat. The question is never how many tests exist, but whether each one would fail if the feature were broken.
+
+Five smells, all of which pass a green run: a **structural string-scan** that asserts the source text contains a function name or config key (it verifies someone typed something, so renaming a variable breaks it but shipping a bug does not); an **assertion-free** test that calls the code and asserts nothing, passing as long as no exception escapes; a **dodger** that tests a helper, wrapper or re-implementation rather than the real entry point, so the tested path and the shipped path are different code; an **over-mocked** test that ends up exercising its own mocks, whose worst form is a mock whose signature has drifted from the real object so that every real call would raise and the test never notices; and **assertion roulette**, many unlabelled assertions in one test, so a failure says the test broke but not which behaviour regressed.
+
+The strong version, in order: drive the **real entry point** that production uses; mock **only true boundaries** (network, database, clock, auth, filesystem) and run everything inside the boundary for real; assert **observable outcomes** - returned value, written file, emitted record, resulting state - rather than call sequences, because asserting that a function was called with certain arguments tests the implementation you already wrote while asserting the outcome tests the behaviour you wanted; and **mutation-verify anything that matters** by reintroducing the bug, watching the test fail, then restoring the source. A test you have never seen fail is a test you have not verified, and it takes seconds to check.
+
+The pattern to watch for is a high test count concentrated on easy pure functions while the main orchestration path and the primary output writer sit at zero behavioural coverage. Look at what the suite covers, not how much of it there is.
 
 ### 8. README-First
 

@@ -39,6 +39,21 @@ Examples:
 **Error recovery:**
 > When fixing a committed mistake: diagnose completely first. Don't retry the same failed approach. Test each fix. Only commit when verified clean.
 
+**Retry discipline:**
+> Two unchanged failure rounds is a hard stop - report what is actually needed rather than trying a third variant. Never stack an untested fix on an untested fix.
+
+The second identical failure is the signal that the problem lives in an assumption underneath the approach, not in the approach, so a third variant tests the same wrong assumption at full price. And once a candidate fix is testable, run the real test before reasoning about a second theory: layered unverified changes produce a pile nobody can unwind, because when it eventually works you cannot tell which change did it.
+
+### Grep Before Claiming Has A Harder Half
+
+"Grep before claiming" above covers the presence case. The absence case is more damaging and has no equivalent reflex: a bounded search finds nothing, and the result gets reported as "there is no such thing".
+
+A false positive gets checked and discarded on the next line. A false negative closes the investigation - the reader believes the thing does not exist, stops looking, and builds on the absence. And the failure is structural rather than careless, because every individual bound is reasonable: `grep "end session"` misses `end-session`, `endsession`, `endSession` and `End Session`, and misses all of them again inside a `.txt` file when the search was limited to `*.md`.
+
+Enumerate the variant axes **before** the pass, not after: case, separators (space, hyphen, underscore, none), word forms (singular, plural, tense, gerund), compound and partial forms where the term only ever appears inside a longer identifier, and surface (which file types and directories, and whether archives were included). Then take one of exactly two exits: run the search unbounded and report the absence as a finding, or **state the bound in the same sentence as the answer**. "No hits under `docs/` in markdown files" is true. "There is no such rule" is a claim you did not test.
+
+Before closing any investigation that ended in an absence, re-run the search one notch broader than whatever you used. The cost is one tool call and the thing it catches is a whole wrong conclusion.
+
 **Git safety:**
 > Claude commits only; user pushes. Never use --no-verify.
 
@@ -101,8 +116,13 @@ feedback_*.md (discovered)
         -> CLAUDE.md (promoted if top-level principle)
             -> skill file (if workflow-specific)
                 -> hook (if system-level enforcement needed)
+                -> the failing tool's own error message (the real terminus)
 ```
 
 Each promotion makes the rule more reliable. A hook cannot be ignored. A CLAUDE.md rule is read every session. A feedback file is only useful if Claude happens to load it.
 
 The game is getting important rules to the top of the hierarchy. Everything else follows from that.
+
+**The ladder does not stop at the hook.** If the tool that fails can print the correct usage in its own error output, that beats every layer below it, because it arrives at the exact moment of the mistake, cannot be skipped, and costs nothing when no mistake is made. A hook that blocks and explains is a weaker version of the same idea bolted on from outside.
+
+So when a rule keeps being violated after it has been written down, promoted, and hook-enforced, the question is not how to word the rule better. It is **which tool is failing here, and can that tool tell the caller what to do instead?** If the answer is yes, the rule stops needing enforcement at all. The clearest case seen in practice: a rule marked as a repeat violation kept firing on consecutive days through every documentation layer, and stopped immediately once the guidance was moved into the failing command's own error text.

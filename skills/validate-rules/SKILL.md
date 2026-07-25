@@ -16,10 +16,11 @@ Pre-commit validation gate. Run BEFORE `git push` to catch rule violations early
 
 ## Checks Performed
 
-### 1. Repo Index Discipline
-- Is this repo listed in your github-repos-index (or equivalent tracking file)?
-- FAIL: Repo missing from index
-- FIX: Add to index and commit
+### 1. Learnings Without A Rule File
+- Do this session's commit messages mention a learning, correction, finding or lesson while no rule file (`feedback_*.md`, enforced-rules, CLAUDE.md) changed?
+- FAIL: `git log` since session start mentions one, `git diff --name-only` shows no rule file touched
+- FIX: Write the feedback file now, while the incident is still in context
+- WHY: This is the improvement loop's actual leak. A learning that stays in the transcript is lost at the end of the session, and nothing else in the workflow notices it went missing.
 
 ### 2. Scope Documentation (if /dev-session session)
 - Did this session include a scope commit?

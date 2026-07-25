@@ -156,13 +156,18 @@ The whole thing (statusline.py + check-budget.sh + session-status.sh) is under 2
 In `.claude/settings.json`:
 ```json
 {
-  "statusline": {
+  "statusLine": {
+    "type": "command",
     "command": "python3 /path/to/tools/statusline.py"
   }
 }
 ```
 
+The key is camelCase and `"type": "command"` is mandatory. A wrong key is accepted silently, so the symptom is not an error but every budget check below reporting no data forever.
+
 Claude Code invokes this command via stdin for every status update, passing a JSON object containing `model`, `context_window`, `rate_limits`, `version`, `cwd`, etc.
+
+Updates are event-driven, which means they can go quiet exactly when the number matters most: an unattended loop where the main session sits idle waiting on background subagents produces no status events, so the cache below ages while the loop keeps spending. Set the optional `refreshInterval` field (seconds) to re-run the command on a timer as well (full reference: docs.anthropic.com/en/claude-code/statusline).
 
 ### Step 2 - statusline.py does two things
 

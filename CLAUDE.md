@@ -75,9 +75,8 @@ One sentence of workflow context + a pointer beats three paragraphs that go stal
 ## Structure
 
 ```
-docs/         10-part guide
+docs/         the guide, split by topic, numbered
 templates/    CLAUDE.md and enforced-rules starters
-tools/        statusline.py, check-budget.sh, session-status.sh
+tools/        statusline, budget and session-status scripts, plus a launcher
 skills/       skill SKILL.md files
-IDEAS.md      pointer to private workspace IDEAS file
 ```

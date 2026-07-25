@@ -14,6 +14,8 @@ Rules that make it work:
 
 This split (active vs archived) keeps IDEAS.md clean and usable. A list that keeps growing without anything leaving it stops being useful quickly.
 
+One placement note if you fork this playbook: keep your own ideas somewhere private (your workspace repo, a private gist, a local file outside the repo), not in the public fork. A backlog is the most context-leaking file you own - it names unreleased work, internal systems, and people. Public repos take bug reports and feature suggestions through Issues instead.
+
 ### Why the Removal Discipline Matters
 
 Marking done with `[x]` leaves noise. The active list is polluted with completed items. When Claude reads IDEAS.md to pick the next thing to work on, it has to filter through things that are already done. Remove entries cleanly; the git history is the record.

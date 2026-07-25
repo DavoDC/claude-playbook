@@ -3,10 +3,15 @@
 
 Configure in .claude/settings.json:
   {
-    "statusline": {
+    "statusLine": {
+      "type": "command",
       "command": "python3 /path/to/tools/statusline.py"
     }
   }
+
+The key is camelCase and "type" is required. Claude Code ignores a
+malformed block silently, so the symptom is an empty cache file, not
+an error.
 
 Claude Code calls this with status JSON on stdin every status update.
 This script: (1) prints a formatted status line, (2) writes budget JSON to

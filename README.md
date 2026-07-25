@@ -63,11 +63,14 @@ Copy `tools/` to somewhere in your workspace. In `.claude/settings.json`, add:
 
 ```json
 {
-  "statusline": {
+  "statusLine": {
+    "type": "command",
     "command": "python3 /path/to/tools/statusline.py"
   }
 }
 ```
+
+Both details matter: the key is camelCase, and `"type": "command"` is required. Get either wrong and Claude Code ignores the block without complaining, the cache file below is never written, and every budget check in this playbook silently reports no data instead of failing (full reference: docs.anthropic.com/en/claude-code/statusline).
 
 Claude Code passes its current status JSON to this script on every update. The script (1) displays it in your terminal statusline, (2) writes it to a temp file so other scripts can read budget state without API calls.
 
@@ -83,7 +86,7 @@ The next time Claude does something you correct: write `memory/feedback/feedback
 |------|------------|
 | `docs/` | Full guide split by topic - start with `01-claude-md.md` |
 | `templates/` | Ready-to-use CLAUDE.md and enforced-rules starters |
-| `tools/` | statusline.py, check-budget.sh, session-status.sh |
+| `tools/` | statusline, budget and session-status scripts, plus a launcher |
 | `skills/` | skill files - thinking, git, review, and workflow tools |
 
 ---

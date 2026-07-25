@@ -27,5 +27,5 @@ Do NOT ask for confirmation - just do it. Do NOT push.
 ## Rules
 
 - Commit message should be one line, under 72 chars
-- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com> on every commit
+- Co-Authored-By trailer naming the active model on every commit, e.g. `Co-Authored-By: Claude <model> <noreply@anthropic.com>`
 - If nothing to commit, say so and stop

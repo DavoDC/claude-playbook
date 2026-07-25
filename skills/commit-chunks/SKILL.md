@@ -27,7 +27,7 @@ Review all staged and unstaged changes in the current repo, then group them into
 - Generated/output files (reports, logs, cache) are separate from the script that generated them
 - Merge solo-file chunks into a topically similar adjacent chunk where possible - a lone unrelated file is usually an artificial split
 - Always include session logs (bash-audit, skill-usage, etc.) as a final `log: session update` chunk - never skip them
-- Co-Authored-By line: use the active Claude model, e.g. `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` on every commit.
+- Co-Authored-By line: use the active Claude model, e.g. `Co-Authored-By: Claude <model> <noreply@anthropic.com>` on every commit.
 - After committing log files, STOP - do not re-check git status (hook-generated log files create an infinite loop if you keep checking)
 
 ## File moves - split into two commits

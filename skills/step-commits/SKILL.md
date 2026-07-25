@@ -39,7 +39,7 @@ large commit with 5+ unrelated bullet points.
 - Imperative, present tense ("fix X", "add Y", "move Z")
 - Describes the USER-VISIBLE effect, not the code change
 - No em dashes, no bullet points in the subject line
-- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Co-Authored-By trailer naming the active model: `Co-Authored-By: Claude <model> <noreply@anthropic.com>`
 
 ## What counts as "one change"
 

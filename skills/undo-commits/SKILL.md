@@ -52,7 +52,7 @@ Undo the last N commits via `git reset --soft HEAD~N`. All changes stay staged, 
    git -C <repo> commit -m "$(cat <<'EOF'
    <message from user>
 
-   Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+   Co-Authored-By: Claude <model> <noreply@anthropic.com>
    EOF
    )"
    ```

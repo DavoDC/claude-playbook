@@ -33,8 +33,8 @@ Percentage of the weekly API quota. If this is high you may hit rate limits even
 A 2-line summary readable by humans and parseable by scripts:
 
 ```
-MyWorkspace | Sonnet 4.6 (200k) | 5h: 43% (r 1h14m) | 7d: 23% (r 6d8h) | ctx: 43%
-Claude v2.1.143 | 10:35AM | Sun 24/05/2026
+MyWorkspace | <model name> (<context window>) | 5h: 43% (r 1h14m) | 7d: 23% (r 6d8h) | ctx: 43%
+Claude v<version> | 10:35AM | Sun 24/05/2026
 ```
 
 The `/dev-session` skill calls this at session start and before continuation decisions to make budget-aware choices automatically.
@@ -51,6 +51,10 @@ The `/dev-session` skill calls this at session start and before continuation dec
 | Otherwise | Normal session. Batching allowed. |
 
 This prevents the worst outcome: starting a large piece of work at 75% context, running out mid-implementation, and ending with half-finished code.
+
+**One timing trap to know:** the ctx% counter updates between response turns, not between individual tool calls within the same turn. If a session reads several files and then checks budget status in that same turn, the check sees a stale, artificially-low number - none of those reads have been counted yet. Run the budget check after a natural turn boundary (a confirmation gate, the start of the next response) to get an accurate figure. Calling the check twice in the same turn does not help; both calls see the same stale counter.
+
+**When budget runs low, bound the next task, not just the model.** An open-ended "make it better" has no stop condition - as budget approaches exhaustion the prompt needs to get *more* bounded, not less. Give one concrete, verifiable task with explicit in-scope and out-of-scope boundaries, and say explicitly "stop the moment this is verified, do not pick up anything else" - otherwise the model will keep going and burn the reserve you were trying to protect. Prefer an objectively-checkable fix over a subjectively-better one for the last task in a session; if the only remaining work is subjective and ungated (a "does this feel right" call), the correct move is often to spend nothing and hand it to a human review instead of gambling the last of the budget on it.
 
 ---
 
@@ -101,6 +105,18 @@ This means you don't manually switch effort before/after complex skills - it hap
 
 ---
 
+## When a Setting Isn't Honoured: Check Env Vars First
+
+Environment variables are the highest-precedence configuration layer and the least visible one. For subagent model selection, resolution order is: environment variable, then the `model=` parameter passed to the call, then the subagent's own frontmatter, then the parent conversation's active model. An environment variable set once - often months earlier, for a reason nobody remembers - silently overrides every explicit `model=` argument from then on. Nothing errors. The work just comes back worse, using a cheaper model than intended, and it is easy to mistake that for a capability limit ("my plan tier doesn't support this") rather than a stale config value.
+
+The same silent-override behavior applies to effort level: a Windows/shell environment variable can lock effort at a fixed level and make `/effort` appear broken, with no indication in the UI that anything is overriding it.
+
+**The rule:** when any model, effort, or capability setting appears not to be honoured, check the environment block of your settings file and your shell's environment variables *first* - before any theory about plans, tiers, quotas, or entitlements. Config beats cosmology. It costs one command to check and can save weeks of planning around a constraint that does not actually exist. Once you find and clear the stray value, confirm the fix by observation (the tokens land where expected) rather than by the absence of an error, since the failure mode here is silence in both directions.
+
+This generalizes beyond env vars: any capability limit that gets written into a doc as a bare fact ("X is broken, use the workaround") should carry its evidence and who established it, not just the conclusion. A limit recorded as settled forecloses the five-minute re-test that would have found the one-line fix; a limit recorded as a hypothesis, with what was actually observed, invites someone to check it again next time it matters. Be especially suspicious of a constraint that conveniently explains a disappointment - "the plan won't allow it" is exactly the kind of story that closes an investigation instead of opening one.
+
+---
+
 ## Session Strategy - Shorter is Better
 
 Every prompt sends the entire conversation history. As a session grows, each exchange costs more tokens than the one before - early messages are re-sent every time.
@@ -114,6 +130,20 @@ The most token-efficient approach:
 3. **Front-load your prompt.** Tell Claude everything you want in one message - it will figure out the best order and approach. One detailed 8-line prompt beats eight back-and-forth exchanges covering the same ground. Longer prompts, fewer rounds.
 
 4. **Short + focused wins.** Rarely hitting max context is a sign of good session hygiene - it means you're closing before compaction, not fighting through it.
+
+### Two Levers: Fixed Cost vs Message Growth
+
+`/context` splits usage into a fixed session-start cost (paid once, every session, before you type anything) and message growth (paid per turn, which determines how long the session lasts before compaction). They need different tuning.
+
+**Fixed cost** is dominated by whatever project-level instructions load automatically every session - a CLAUDE.md, an enforced-rules file, anything auto-attached. Keep that content well under whatever hard limit you've set for it, and start trimming before you're close to the ceiling, not at it. Route workflow-specific detail out of the always-loaded file and into a demand-loaded doc (a process doc, a skill file) that only gets pulled in when the relevant task comes up. The floor here is harm-prevention content - never cut a safety rule to save tokens, that trades safety for runway, which is the wrong trade. The actual lever is redundancy and verbosity, not rule count: shorter bullets and pointers instead of inline detail, never fewer invariants.
+
+**Message growth** is the larger share of a typical session and the part under direct per-turn control:
+- Don't re-read a file already read this session - reference the earlier output instead.
+- Use offset/limit on large file reads when only a section is needed.
+- Delegate wide, exploratory searches to a subagent so the raw search output stays in the subagent's context and only the synthesized result returns to the main thread.
+- Prefer structured search tools over raw dumps of file contents.
+- Batch independent tool calls in parallel - this doesn't cut total tokens, but it cuts round-trips, which matters when compaction risk is time-based as well as token-based.
+- Compact at a natural breakpoint (right after finishing a subtask) rather than waiting for the forced threshold - a compaction forced mid-task loses more useful detail per token freed than one you choose.
 
 ---
 

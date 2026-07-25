@@ -68,6 +68,8 @@ The `enforced-rules.md` pattern helps with this. Split the load:
 
 Three files, three jobs. None of them should do another's job.
 
+One more thing worth building in from the start: when any of these files points to "where to find an example of X," prefer a grep search term over a hardcoded file path. A path like "look in project/data/logs/" is correct today and wrong once that repo gets renamed, restructured, or archived; a search term like `TimedRotating|getLogger` finds whatever the current best example is - including files that didn't exist when you wrote the doc - and just comes up empty if nothing matches yet, rather than pointing somewhere stale or wrong. The exception is a template file you maintain on purpose - those are stable by design and a path is fine there. Before adding a "look here" table to any process doc, ask: will this path still exist in a year? If you're not sure, use a grep term instead.
+
 ---
 
 ## Workspace CLAUDE.md - Sections Worth Having
@@ -126,6 +128,8 @@ Define exactly how you want Claude to write:
 - Write reports as markdown. No slide-deck formatting.
 - Document as you go - write findings immediately, don't accumulate in context.
 - No unexplained acronyms - define on first use.
+- Write markdown at full width, one paragraph per line - don't hard-wrap prose at 70-80 characters. Renderers reflow paragraphs anyway, so a hard wrap is invisible to a reader and just adds noisy diffs where one edit touches several wrap-points instead of one line. Lists, tables, code blocks, and ASCII diagrams keep their natural shape - this is about prose only.
+- Never write exact counts in any doc - test counts, skill counts, config entry counts, anything that changes as work continues. They go stale silently: the doc doesn't know a test got added, the reader assumes the number shown is current, and it's already wrong. Use a qualifier instead ("several", "over a dozen", "comprehensive as of DATE") or drop the number entirely. This applies to your own CLAUDE.md and feedback files just as much as a public README - see Part 8 for what happens when a skills list hardcodes usage counts.
 ```
 
 The em/en dash rule sounds trivial but matters if you have a write-guard hook - em dashes in files will block edits.
@@ -185,6 +189,21 @@ Define your own terminology. Claude will use it consistently:
 - Task - concrete next action (session-day), lives in roadmap/pending-actions.md
 ```
 
+### 11. Avoid Special-Case Exceptions
+
+Tell Claude to resist the urge to hardcode "if this repo / if this context" branches into shared rules and skills:
+
+```
+Before adding an if-repo or if-context exception to a shared rule or skill, stop and question
+the design. Exceptions signal the general structure doesn't fit the problem - they add cognitive
+load and drift out of sync with everything else. Ask what general mechanism (a pointer file, a
+consistent folder structure, a line of config) would make the exception unnecessary. Only hardcode
+the exception if no general solution exists and the cost of the exception is clearly lower than
+restructuring.
+```
+
+A concrete example: a session-composition skill once grew a special case for one project because that project's idea backlog lived in a different location than every other project's. The right fix wasn't a branch inside the skill - it was a one-line pointer file in that project pointing at the real location, so the skill kept reading normally with no branch at all. The pattern worth stealing: put the special knowledge in the data a skill reads, not in the skill's logic.
+
 ---
 
 ## Project-Level CLAUDE.md
@@ -192,6 +211,10 @@ Define your own terminology. Claude will use it consistently:
 Each repo gets its own CLAUDE.md. The workspace one covers HOW you work; the project one covers WHAT this repo is. A great project CLAUDE.md answers the key questions before Claude reads a single line of code.
 
 See `templates/CLAUDE_project.md` for a ready-to-fill template.
+
+### When It Grows Too Big: Split Off a DevContext.md
+
+CLAUDE.md is auto-loaded every session, whether or not the work at hand actually needs it. A project CLAUDE.md's scope is orientation and harm prevention only: what the repo does, build/test/run commands, key paths, and the safety rules that prevent data loss or broken invariants. How specific functions work internally, code patterns, and architecture notes are implementation detail - useful only when you're actively coding in that area, not worth paying for on every session including doc updates and config changes that never touch the code. Split those into a demand-loaded file, for example `docs/References/DevContext.md`, and read it only when a session is actually working on implementation. The trigger to split: CLAUDE.md exceeds roughly 150 lines, or more than half its content is implementation notes rather than orientation and safety rules. One project's CLAUDE.md grew past 300 lines because every dev session appended implementation learnings straight into it - the file paid its full token cost on every session, including ones that never touched that code. The fix was two files with two different load times, not one file trimmed by hand every few weeks.
 
 ### Section 1: One-Line Summary
 
@@ -313,3 +336,5 @@ See docs/IDEAS.md for all pending work, ordered by priority.
 When a feature is implemented: remove from IDEAS.md, add to HISTORY.md.
 Never mark done with checkmarks - remove the entry completely.
 ```
+
+One more habit worth codifying alongside it: when you dump a burst of raw ideas on Claude - dense, half-formed, "I had so many I couldn't get them all out" - tell it to save the raw text verbatim first, in its own section, before writing any refined version. A refined-only summary is Claude's interpretation baked in as the record; if the interpretation missed the point, the original is gone and there's nothing left to correct against. Structure it as a "Raw (verbatim)" section with the exact text - obvious typos fixed, substance untouched - followed by a "Processed" section below it with the expanded, connected, prioritised version. This only applies to genuine idea dumps, not routine back-and-forth; normal conversation doesn't need a verbatim transcript.

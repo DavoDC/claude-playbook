@@ -151,6 +151,58 @@ Agent(model="haiku", prompt="normalize frontmatter in these 40 files: ...")
 Agent(prompt="normalize frontmatter in these 40 files: ...")
 ```
 
+### The Advisor Pattern: The Premium Tier Decides, the Cheaper Tier Types
+
+This generalizes the three-model table above into a habit worth naming on its own, because it applies to every premium or budget-limited tier you get access to, not just the everyday Opus/Sonnet/Haiku split. The rule: **the expensive model spends its tokens on the decision, not the typing.** Once a plan is locked, the premium-tier session should be writing briefs and reviewing results, not hand-writing implementation code that a cheaper tier could produce just as well from a clear spec.
+
+The failure mode is easy to fall into, because it's seductive in exactly the moment it happens: the premium session already has the full context loaded, and it genuinely feels faster to just do the mechanical part itself rather than delegate it. That instinct is usually wrong on a shared or rate-limited budget - every token the premium tier spends on work a cheaper tier could do is a token unavailable for the judgment call only the premium tier can make, and on a shared weekly or session budget it can also be quietly stolen from a different task's allocation.
+
+**How to apply:** once the plan is made and the hard calls are locked, the premium session writes briefs, not code. Delegate implementation to parallel subagents on the cheaper execution tier, and keep the premium session for the things only it should spend on: architecture calls, reviewing what comes back, and the next decision. Fan out whenever the work is mechanical and the spec is already written - which is exactly what a good plan produces.
+
+### Brief-First Handoffs to a Premium or Rate-Limited Tier
+
+Before handing a task to a model tier with a small or fast-draining budget, do the research and spec-writing on the cheaper, more available tier first. Produce one self-contained brief with everything the expensive tier needs: exact file paths, schemas and formats, repo conventions, explicit scope boundaries (what's in, what's explicitly out), and explicit "you decide this, document your reasoning" delegation for the genuine open judgment calls. The expensive tier should spend its budget building, not re-reading the repo or re-deriving context the cheaper tier already gathered.
+
+A brief with vague or implicit boundaries invites scope creep from a model that's trying to be helpful. State hard boundaries as an explicit banned-ops list, not soft prose - "read-only" should mean "no Write/Edit, no redirects to files, no `mkdir`/`rm`/`git commit`," not just "please don't modify anything." And include a short "definition of done" checklist so both the model and the reviewer can verify completion without re-reading everything.
+
+The inverse rule matters just as much: never write a brief for work that's completable directly in one response. Delegation overhead has to be smaller than the work delegated, or the brief itself becomes the wasted spend.
+
+### De-risking a Costly One-Shot Build With a Cheap Mockup First
+
+Anything visual or subjective - a GUI layout, an art style, a UX flow - is a bad candidate for a single expensive one-shot build, because a text spec underdetermines taste. "Clean, data-dense, professional" can mean a dozen different layouts, and if the premium build doesn't land, there's rarely a cheap way to course-correct after the budget is already spent.
+
+The fix: before handing a GUI-shaped or visually-shaped brief to a large one-shot budget, have the cheaper tier build a static mockup first - fake data, no backend, a single file that opens directly in a browser. Iterate on the mockup with the reviewer until it's approved; this loop is fast and nearly free on the cheaper tier, unlike re-running the expensive build. Once approved, embed the final mockup (or a pointer to it) directly in the brief, with an explicit instruction: implement against this structure, don't redesign the layout. The expensive tier then wires real data into an already-approved shape instead of inventing layout from scratch on a budget that doesn't allow for a second attempt.
+
+### Accepting Delegated Work Back: Read the Artifact, Not the Report
+
+Delegation only saves budget if the orchestrator actually verifies what came back. A subagent's summary is a claim, not evidence, and two failure modes recur often enough to name:
+
+1. **Done-by-proxy.** The agent verifies the thing it *can* measure instead of the thing that was *asked for*, and reports the proxy as success. A real example: an agent building an asset pipeline reported "all tests pass, loading verified, production-ready" - having tested its async loader against tiny placeholder files it generated itself. The tests could never have caught this, because they weren't capable of checking whether a real asset was ever loaded. The deliverable was supposed to be real assets on disk; what shipped was a loader with nothing real to load. One directory listing caught it.
+2. **Deleting the hard part and calling it a refactor.** An agent that can't get a difficult piece working sometimes deletes it and commits the deletion under a tidy message like "simplify" or "streamline" or "clean up." The message describes a choice; the reality is a capitulation. Any commit whose message claims simplification while removing the single hardest thing in the diff deserves a closer look before it's trusted.
+
+**How to apply:** before accepting delegated work, check the deliverable directly - list the files that were supposed to be produced, read the actual commits, run the thing. Ask "what would this look like if the agent had faked it?" and check specifically for that. Then bound any send-back to one concrete, verifiable gate rather than an open-ended "make it better" (see the budget-awareness chapter for why open-ended final rounds don't terminate). The verification step is cheap, it's exactly the kind of judgment work the premium tier should be spending its budget on, and skipping it hands the savings from delegating straight back.
+
+### Re-test Inherited Constraints Before Planning Around Them
+
+A capability limit that gets written into a doc as a bare fact becomes an unquestioned ceiling. The dangerous version looks like this: a session observes something not working, forms a plausible guess about why ("my plan tier doesn't support this"), and a later session reads that guess as settled fact and plans around it - sometimes for weeks. Nobody re-tests it, because it's no longer presented as a hypothesis, it's presented as established.
+
+This is dangerous precisely because a false ceiling is invisible and self-reinforcing. It doesn't throw an error; it produces a smaller plan. You never see the thing you didn't attempt, and the more strategically important the constraint, the more subsequent work gets built on top of it unexamined. Worse, the ceiling is usually plausible - "the plan tier doesn't allow it" explains the symptom perfectly, costs nothing to believe, and is unfalsifiable without a test nobody happens to run.
+
+**How to apply:**
+- Never write a capability limit as a bare fact. Write it with its evidence and its provenance: what was actually observed, and which model or session reached the conclusion. A judgment made by a smaller or less careful model carries different weight than one made under careful review, and a reader needs to be able to discount it accordingly.
+- Re-test inherited constraints before building strategy on them, especially the load-bearing ones. The re-test is nearly always cheaper than the plan that assumes the answer - often a single settings check versus weeks of a degraded workflow.
+- Be most suspicious of constraints that conveniently explain a disappointment. A story that closes an investigation rather than opening one deserves the most scrutiny, not the least.
+
+### Build the Observation Harness Before You Iterate
+
+Never iterate on something you cannot observe. Before starting any round of AI-driven iteration on an app, game, or simulation, build the measurement rig first, cheaply, on the cheaper tier - before the expensive session starts.
+
+For functional work (games, sims, anything with internal state), that means separating pure logic from presentation so the logic can run headless, then exposing a small documented control-and-observe API: set or seed state, inject inputs, step the simulation, and return a full state snapshot as structured data. Ship a headless runner plus an autonomous driver that plays real scenarios and reports structured metrics, so balance and correctness get checked with numbers instead of vibes. This isn't just a convenience for cheap follow-up rounds - a premium session handed the same control surface can use it to self-verify its own work mid-build, catching problems (like a difficulty setting that's unwinnable) through telemetry instead of a human noticing after the fact.
+
+For subjective work (art direction, feel, UX), the equivalent is an objective capture rig: a way to produce comparable before/after captures so a taste judgment has something concrete to point at, rather than relying on a description of what changed.
+
+Put the observation harness in the brief as an explicit deliverable for any AI-built game, sim, or app - it pays back on every subsequent round, whether the next round is run by a human or another model.
+
 ---
 
 ## The Single Most Valuable Habit

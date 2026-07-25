@@ -1,6 +1,6 @@
 # Part 8: Skills Reference
 
-All skills live in `.claude/skills/<name>/SKILL.md`. Each is a markdown file defining what Claude should do when you type `/<name>`. Usage counts below are from real-world tracking via a session logger hook.
+All skills live in `.claude/skills/<name>/SKILL.md`. Each is a markdown file defining what Claude should do when you type `/<name>`. Usage below is tracked via a session logger hook and shown qualitatively (heavily used / regularly used / occasional / rarely used) rather than as exact counts - a number written today is stale by next week, and the category is what actually matters for deciding what to keep installed. See the maintenance section at the end of this part for how that tracking feeds a retirement loop.
 
 Skills are sorted below by how often they're actually used - not by how interesting they sound.
 
@@ -10,7 +10,7 @@ Skills are sorted below by how often they're actually used - not by how interest
 
 These are listed first regardless of usage count - every invocation is high-value and they should be the first thing you reach for on hard problems.
 
-### [/aristotle](https://github.com/DavoDC/claude-playbook/blob/main/skills/aristotle/SKILL.md) (25 uses - but every one matters)
+### [/aristotle](https://github.com/DavoDC/claude-playbook/blob/main/skills/aristotle/SKILL.md) (occasional, but every use is high-value)
 
 First principles deconstruction. Strips all assumptions from a problem, finds the irreducible truths, rebuilds from zero.
 
@@ -100,43 +100,43 @@ Wire to a quarterly recurring task with your enforced-rules.md + CLAUDE.md as ar
 
 ## Daily Workflow Skills
 
-### /end-session (148 uses)
+### /end-session (heavily used)
 Close out a session: write session record, reconcile tasks, drain memory, commit everything. The crux of the improvement loop. Run at the end of every session. See [Part 6](06-sessions-and-memory.md) for full detail.
 
 No starter SKILL.md included - this skill calls workspace-specific scripts (session consolidation, finalize stages). Build it incrementally: start with a simple "write session summary + commit" skill, then add the consolidation scripts as your workspace matures. The design is fully documented in Part 6.
 
-### /loop (85 uses)
+### /loop (heavily used)
 Claude Code built-in. Runs a prompt on a repeating interval. Usage: `/loop 30m /dev-session myproject`. The overnight work loop - set before bed, wake up to finished features. See [Part 7](07-overnight-loop.md) for the full workflow. No SKILL.md needed.
 
-### /dev-session (50 uses)
+### /dev-session (heavily used)
 Smart session composition with IDEAS.md orchestration, TDD gate, budget awareness, scope definition, and rule capture. The primary skill for actual project work. See [Part 4](04-dev-session.md) for full detail.
 
 No starter SKILL.md included - this skill integrates with IDEAS.md, budget awareness tools, and the git workflow. Build it after the workspace CLAUDE.md, IDEAS.md, and budget tools are set up. The design is fully documented in Part 4.
 
-### [/commit-chunks](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-chunks/SKILL.md) (32 uses)
+### [/commit-chunks](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-chunks/SKILL.md) (regularly used)
 Commit changed files in logical chunks - one commit per feature/fix/topic. Analyses what's staged/unstaged and proposes a commit split with draft messages. Prevents the "committed everything in one giant blob" problem that makes git history unreadable.
 
-### [/deep-dive](https://github.com/DavoDC/claude-playbook/blob/main/skills/deep-dive/SKILL.md) (18 uses)
+### [/deep-dive](https://github.com/DavoDC/claude-playbook/blob/main/skills/deep-dive/SKILL.md) (occasional)
 Deep investigation of a topic, file, directory, or repo. Think hard, investigate thoroughly, miss nothing. Uses a commit-anchored delta approach (see [Part 10](10-advanced.md)): only reads files that changed since the last deep-dive of the same scope.
 
-### [/process-feedback](https://github.com/DavoDC/claude-playbook/blob/main/skills/process-feedback/SKILL.md) (11 uses)
+### [/process-feedback](https://github.com/DavoDC/claude-playbook/blob/main/skills/process-feedback/SKILL.md) (occasional)
 Takes a `feedback_*.txt` file written by the user (raw notes, corrections, wishes) and produces two outputs: new IDEAS.md entries for product work, and Claude rule files for feedback. The bridge between user notes and the improvement system.
 
-### [/refine-ideas](https://github.com/DavoDC/claude-playbook/blob/main/skills/refine-ideas/SKILL.md) (9 uses)
+### [/refine-ideas](https://github.com/DavoDC/claude-playbook/blob/main/skills/refine-ideas/SKILL.md) (occasional)
 Interactively clarify IDEAS.md priorities. Asks one question per item, derives semantic tiers from your answers. Use when IDEAS.md has gotten messy or when you've added a bunch of items and need to re-sort.
 
-### [/commit-all](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-all/SKILL.md) (7 uses)
+### [/commit-all](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-all/SKILL.md) (rarely used)
 Commit all changed files in one go. Less surgical than `/commit-chunks` - use when you want everything staged and committed without thinking about logical grouping.
 
-### [/reflection](https://github.com/DavoDC/claude-playbook/blob/main/skills/reflection/SKILL.md) (2 uses)
+### [/reflection](https://github.com/DavoDC/claude-playbook/blob/main/skills/reflection/SKILL.md) (rarely used)
 Read recent session history and update CLAUDE.md, memory files, and workspace based on patterns found. Uses commit-anchored delta - only reads sessions added since the last reflection, stays fast. Run every few sessions or after a major block of work.
 
 [Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/reflection/SKILL.md)
 
-### [/step-commits](https://github.com/DavoDC/claude-playbook/blob/main/skills/step-commits/SKILL.md) (2 uses)
+### [/step-commits](https://github.com/DavoDC/claude-playbook/blob/main/skills/step-commits/SKILL.md) (rarely used)
 Plan changes as atomic commits upfront before implementing. Define the commit sequence first, then execute one commit at a time. Good for complex multi-step changes where getting the commit order right matters.
 
-### [/human-voice](https://github.com/DavoDC/claude-playbook/blob/main/skills/human-voice/SKILL.md) (2 uses)
+### [/human-voice](https://github.com/DavoDC/claude-playbook/blob/main/skills/human-voice/SKILL.md) (rarely used)
 Audit and rewrite text to remove AI writing patterns. For anything written to a person.
 
 **Tier 1 - always replace:** delve, leverage (as verb), utilize, robust, comprehensive, cutting-edge, seamless, meticulous, actionable, paradigm, testament to, underscores, holistic, synergy, "in order to", "serves as", "best practices"
@@ -204,3 +204,19 @@ Multi-repo status overview. For each repo in a configured directory: current bra
 Run before container rebuilds, session ends, or switching between repos. Build your own: `git -C <repo> status --short`, `git -C <repo> rev-list --count @{upstream}..HEAD`, output as a table.
 
 [Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/repo-status/SKILL.md)
+
+---
+
+## Skill Library Maintenance
+
+Every skill installed under `.claude/skills/` loads its name and one-line description into every session's context, whether or not that session ever calls it. A skill nobody invokes this month is a permanent tax on all the sessions that never call it either - the usage tiers above (heavily used, occasional, rarely used) exist specifically to surface which ones are paying for themselves and which aren't. The fix isn't fewer skills up front, since you can't know in advance which will earn their keep. It's a retirement loop.
+
+**Log invocations, then retire on evidence, not vibes.** The session logger hook records which skill fired on each `/command`, which over time gives actual usage data instead of a guess about what "feels" used. On a regular cadence - each `/reflection`, or a periodic `/health` pass - look at what hasn't fired in a long stretch and move it out of `.claude/skills/` into an archive folder, for example `archive/skills/`. Archive, never delete: keep the file git-tracked and runnable exactly as it was, just outside the directory that gets loaded into context every session. Bringing one back is a file move, not a rebuild.
+
+**Keep a retired-skills index.** Retiring a skill without a record of it means forgetting it exists the next time the process comes up. One entry per retired skill - what it did, when it was retired, and the path to bring it back - in an index file next to the archive folder. The index is what makes retirement safe: you're not deleting capability, you're moving its cost from "every session" to "the one session you actually need it."
+
+**Prefer reading a retired skill in place over promoting it back.** For a process that comes up genuinely occasionally - once a quarter, once every few months - the cheapest move is to open the archived SKILL.md and follow it manually, not to reinstall it. Promoting it back "just for this one use" is exactly how the context tax creeps back in: nobody re-retires it afterward, and a few months later it's dead weight in every session again.
+
+**The promotion criterion - and the part invocation counts alone will miss.** A skill earns its place installed if EITHER of two things is true: it's invoked directly and regularly, OR another installed skill routes into it as part of its own workflow. The second criterion is the non-obvious one. A real failure mode: a ranking/prioritisation skill was retired because its own direct invocation count was low, while several of the thinking skills that stayed installed all called into it as a step in their own process. The result was a dead command sitting in the middle of what had been a working chain - the routing calls into it silently failed, and nobody noticed until something downstream broke. Before retiring anything, grep the other installed skills for its name, not just its own invocation log.
+
+**The corollary.** A process you run only every month or two is often better off as a plain doc than as a skill at all. The doc is the runnable artifact - you or Claude reads it and follows the steps - and it costs nothing on every session that doesn't need it, versus a skill's permanent description-line tax paid regardless of use. Reach for a skill when a process needs Claude to make judgment calls across several steps on a regular basis; reach for a doc when it's reference material consulted rarely.

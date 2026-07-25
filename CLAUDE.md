@@ -8,15 +8,15 @@ This repo is **public**. Every file here is visible to anyone on GitHub.
 
 **This file (public CLAUDE.md):** public-safe operational rules only - what never to include, when to update, commit message hygiene, no-internal-paths rule. A stranger reading this should find it useful without learning anything private.
 
-**Workspace maintenance guide (private):** everything that cannot be public - SYNC safety specifics, skill classification, internal project names, incident notes. Located at `PRIVATE_NOTES/memory/playbook/maintenance.md` in the workspace repo. Read it before making any changes here.
+**Workspace maintenance guide (private):** everything that cannot be public - safety specifics for syncing between environments, skill classification, internal project names, incident notes. Kept privately in your own workspace repo, never here. Read it before making any changes here.
 
-**Workspace IDEAS file (private):** unshipped plans and TODOs. Located at `PRIVATE_NOTES/memory/playbook/IDEAS.md`. Never in this repo (only a pointer file lives here).
+**Workspace IDEAS file (private):** unshipped plans and TODOs. Kept privately in your own workspace repo, never here (only a pointer file lives in this repo).
 
 ---
 
 ## Before making any changes
 
-Read `PRIVATE_NOTES/memory/playbook/maintenance.md` in your workspace. It covers SYNC safety, skill sync approach, which skills to skip, and Ko-fi conventions.
+Read your private maintenance guide in your workspace. It covers safety for syncing between environments, skill sync approach, which skills to skip, and Ko-fi conventions.
 
 ---
 
@@ -26,7 +26,7 @@ Read `PRIVATE_NOTES/memory/playbook/maintenance.md` in your workspace. It covers
 - No absolute user paths (`C:\Users\name\`, `/home/user/`)
 - No internal project or tool names from private work
 - No personal names
-- No workspace-specific folder names (PRIVATE_NOTES/, PRIVATE_LOGS/, etc.)
+- No folder names specific to your private workspace repo
 - No private workflow names - use generic terms instead
 - No attribution to private workflow sources in commit messages - describe content only
 
@@ -42,7 +42,7 @@ Never update this repo automatically. Only when explicitly asked.
 
 ## Commit message hygiene
 
-Never include private source attribution in commit messages. Describe the content only. The commit-msg hook blocks: SYNC, PRIVATE_NOTES, PRIVATE_LOGS, From WORK, From HOME, WORK PC, HOME PC, PRIVATE_NOTES.
+Never include private source attribution in commit messages. Describe the content only. The commit-msg hook blocks a set of private source-attribution terms; the term list lives in the hook itself, out of this repo.
 
 ---
 

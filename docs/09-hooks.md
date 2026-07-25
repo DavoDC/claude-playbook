@@ -47,9 +47,15 @@ except Exception as e:
 
 **Rule:** exit non-zero only when you have a specific, intentional reason to block. Every other exit path is exit 0.
 
+### Blast Radius Triage: Blocking vs Passive Hooks
+
+Before writing a hook, ask one question: can this hook exit non-zero and block a tool call? The answer decides how paranoid to be about its failure modes, because the blast radius of a bug is completely different between the two kinds.
+
+Passive hooks (logging, warnings, context injection) always exit 0. Blocking hooks (guards, validators) exit non-zero on a violation. A bug in a passive hook makes it go silently inert - it stops doing its job, but every tool call still succeeds. Annoying, but easy to notice and fix. A bug in a blocking hook can lock the whole session - every tool call blocked, including the tools you'd need to fix the hook itself. That second failure mode is the one worth designing against from the start.
+
 ### The Silent Fail-Open Trap (SyntaxError)
 
-There is a failure mode worse than a hook crashing loudly: a hook that appears to run but does nothing.
+There is a failure mode worse than a hook crashing loudly: a hook that appears to run but does nothing. This is the passive-hook failure mode.
 
 A Python SyntaxError inside a `-c "..."` block causes Python to exit 1. The `|| exit 0` wrapper converts that to exit 0 (allow). The hook is registered, it fires, it appears healthy - but it has never run a single check. This is the silent fail-open trap.
 
@@ -99,6 +105,34 @@ print(f'BLOCKED: {reason}')
 print(f'BLOCKED: {reason}', file=sys.stderr)
 sys.exit(2)
 ```
+
+### Catastrophic Self-Lock: the Quoting Trap in Blocking Hooks
+
+Embedding Python inside `bash -c "..."` works fine until a blocked message needs a double-quote character. A `"` inside the Python string literal closes the outer shell's double-quoted argument early, producing a SyntaxError. For a passive hook that's the silent fail-open trap above - annoying but harmless. For a blocking hook whose fallback is `|| exit 2` (fail closed, which is the correct default for a security guard), that same SyntaxError now blocks every tool call - Read, Edit, Write, Bash, all of them. There is no self-repair path, because the tools needed to fix the hook are exactly the tools the hook is blocking.
+
+This is not a hypothetical: a stale-content check was added to a write guard, its blocked-message text happened to contain a quote character, and the guard began exiting 2 on every single tool use. Nothing worked until the file was edited directly on disk from outside the session - and the first attempted fix made it worse, swapping the double quotes for single quotes and landing on a different SyntaxError inside a Python string.
+
+**The fix: extract the Python to a `.py` file.** A `.py` file has zero shell-quoting constraints - any message content, any quote character, any punctuation, is safe. The `.sh` file becomes a thin caller that syntax-checks the script before running it, and - this is the important asymmetry - fails **open**, not closed, specifically when the syntax check itself fails. That's the one place a blocking hook should not block: the alternative is a session that can never repair itself.
+
+```bash
+#!/bin/bash
+# guard.sh - thin caller, no Python embedded here at all
+PY=$(command -v python3 || command -v python) || exit 0
+SCRIPT="$(dirname "$0")/guard.py"
+
+# If guard.py itself is broken: fail OPEN with a loud warning so tools keep
+# working and the file can be edited to fix it. Every other exit path below
+# this check is the hook's real, deliberate blocking logic.
+if ! $PY -m py_compile "$SCRIPT" 2>/tmp/guard_pyc_err.txt; then
+    echo "WARNING: guard.py syntax error - checks bypassed until fixed:" >&2
+    cat /tmp/guard_pyc_err.txt >&2
+    exit 0
+fi
+
+$PY "$SCRIPT" || exit 2   # only genuine, deliberate blocks reach here
+```
+
+Inside `guard.py`, any string content is safe - no shell quoting to reason about at all. Apply this pattern to any hook that can exit non-zero; it's the general answer to the blast-radius question above. Passive hooks can stay as `-c "..."` if that's more convenient - their worst case is inert, never locked.
 
 ### The `if:` Field - Efficient Tool Matching
 
@@ -413,6 +447,27 @@ The minimal useful set: today's date (stops date-guessing errors), current git b
 
 Blocks `feedback_*.md` files from being written outside the correct folder. Feedback files accumulate fast and if they spread across the repo they become unfindable.
 
+### Hook Registration Parity Check (SessionStart)
+
+A hook file existing on disk proves nothing about whether it runs. It's entirely possible for a guard hook to be written, tested, actively reviewed in most commits that touch it - and never wired into `settings.json`. It sits there looking correct, doing nothing, for a long time, until someone eventually notices that the exact pattern it was supposed to catch has been happening the whole time and the hook never fired once.
+
+The fix is a parity check, not vigilance: at session start, scan every hook file that declares a Claude Code event type in its header comment, and warn if its filename never shows up anywhere in `settings.json`. It's cheap - a directory listing and a grep - and it catches drift the moment a new session begins, rather than the moment someone happens to go looking.
+
+```bash
+# in a SessionStart hook, after loading live context
+SETTINGS_FILE="$WORKSPACE_ROOT/.claude/settings.json"
+for hookfile in "$WORKSPACE_ROOT"/hooks/*.sh; do
+    bn=$(basename "$hookfile")
+    if head -3 "$hookfile" | grep -qiE 'PreToolUse|PostToolUse|SessionStart|SessionEnd|UserPromptSubmit|PreCompact'; then
+        if ! grep -q "$bn" "$SETTINGS_FILE"; then
+            echo "WARN: $bn declares a hook event but is NOT registered in settings.json" >&2
+        fi
+    fi
+done
+```
+
+This depends on one small convention: every hook file self-declares its event type in a header comment (`# PreToolUse hook`, near the top of the file). Without that, the check has nothing to scan for - a small discipline that pays for the whole thing. Worth running the same check inside your hook test suite too, not only interactively at session start, so registration drift shows up in a non-interactive run as well.
+
 ---
 
 ## The Append-Only Log Pattern
@@ -434,6 +489,8 @@ Each log file gets a single line appended per event. No truncation, no rotation 
 **Auto-committing leftover dirty logs:** A `SessionStart` hook that runs `git add logs/ && git commit -m "log: session update"` at startup catches log files left dirty if the previous session crashed before running `/end-session`. Without this, logs accumulate as uncommitted changes indefinitely.
 
 **Analysis tools:** once you have log data, simple Python scripts can generate monthly summaries, burn-rate graphs, skill usage rankings for the Question/Delete pass. These are optional - but the data is worthless if you never look at it.
+
+**A blind spot worth naming:** blocking hooks (exit non-zero + stderr message) are the one hook type this pattern tends to miss entirely. A guard that blocks a write and prints its reason to stderr is visible in that single session's transcript, but if nothing writes the event to a log file, it leaves no trail once the session ends - there's nothing to grep. That matters because of a related rule worth having: a hook that fires repeatedly on the same pattern is a signal, not a mechanism - it means the underlying default behavior is wrong and should be fixed at the source (the instruction, the skill, the process doc that's steering Claude wrong), rather than silently tolerated because the hook keeps catching it every time. Without a log, "repeatedly" is unmeasurable - you're relying on memory of past incidents instead of a search. If a guard hook blocks something, consider having it append one line to a violations log before it exits, right there in the same code path as the block - that closes the loop between "the hook caught something" and "was this the third time this month."
 
 ---
 

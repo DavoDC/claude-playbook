@@ -1,5 +1,7 @@
 # Part 5: Budget Awareness
 
+> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+
 ## The Problem
 
 Claude has no fuel gauge. It will confidently start a 3-hour refactor with 25 minutes of budget remaining, get cut off mid-implementation, and leave your codebase in a state that's worse than when it started - broken tests, half-written functions, uncommitted changes that need untangling. Context compaction is just as bad: at 80% context, Claude summarises its own working memory mid-task, losing the detailed understanding it built up. The files it touches after compaction are edited with a different mental model than the ones before.

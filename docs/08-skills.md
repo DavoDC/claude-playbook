@@ -1,8 +1,12 @@
 # Part 8: Skills Reference
 
+> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+
 All skills live in `.claude/skills/<name>/SKILL.md`. Each is a markdown file defining what Claude should do when you type `/<name>`. Usage below is tracked via a session logger hook and shown qualitatively (heavily used / regularly used / occasional / rarely used) rather than as exact counts - a number written today is stale by next week, and the category is what actually matters for deciding what to keep installed. See the maintenance section at the end of this part for how that tracking feeds a retirement loop.
 
 Skills are sorted below by how often they're actually used - not by how interesting they sound.
+
+The shipped set is a menu, not a recommended set. Install what fits your workflow and ignore the rest. The usage labels on each entry reflect one person's invocation counts - they're context for judging a skill, not advice about whether you should use it. Some skills in a set like this are deliberately kept despite being rarely reached for, because a skill that's dead weight in one workflow can be the most useful file in the repo for a different one.
 
 ---
 

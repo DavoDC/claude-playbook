@@ -1,5 +1,7 @@
 # Part 10: Advanced Patterns and Worked Examples
 
+> Field notes, last reviewed 2026-07-25. Not mechanically asserted - see the README on what this repo guarantees.
+
 ## The Commit-Anchored Delta Pattern
 
 Used by both `/reflection` and `/deep-dive`, this pattern applies to any repeating audit workflow.

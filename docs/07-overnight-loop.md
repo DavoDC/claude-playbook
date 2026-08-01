@@ -1,5 +1,7 @@
 # Part 7: The Overnight Loop Workflow
 
+> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+
 This is one of the most powerful things you can do with Claude Code that most people don't know about.
 
 The `/loop` skill runs a command on a repeating interval - indefinitely, waking up automatically via a scheduling tool. Combined with `/dev-session`, you can set a work loop before you go to sleep and wake up to finished features, committed and documented.

@@ -80,6 +80,14 @@ The next time Claude does something you correct: write `memory/feedback/feedback
 
 ---
 
+## What's Guaranteed vs What's Field Notes
+
+`tools/`, `templates/`, and every settings.json snippet documented in these docs are the asserted core - `tools/selftest.sh` checks all three on every push, so a typo in any copied-out snippet fails CI. Run it yourself in seconds: `bash tools/selftest.sh`.
+
+Everything under `docs/` is field notes: dated observations from real use, useful but not mechanically verified. Claude Code's harness ships continuously, so any claim about how it behaves is a snapshot, not a permanent fact - each doc file carries the date it was last reviewed.
+
+---
+
 ## What's Here
 
 | Path | What it is |
@@ -103,7 +111,8 @@ The next time Claude does something you correct: write `memory/feedback/feedback
 | [06 - Sessions and Memory](docs/06-sessions-and-memory.md) | /end-session, session fragments, the file-based memory system |
 | [07 - The Overnight Loop](docs/07-overnight-loop.md) | /loop + /dev-session, /checkpoint restore points |
 | [08 - Skills Reference](docs/08-skills.md) | All skills sorted by actual usage count |
-| [09 - Hooks](docs/09-hooks.md) | Write guard, budget monitor, session logger, settings split |
+| [09 - Hooks](docs/09-hooks.md) | Events, exit codes, blast radius triage, the fail-open trap, the `if:` field |
+| [09b - Hook Recipes](docs/09-hooks-recipes.md) | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
 | [10 - Advanced Patterns](docs/10-advanced.md) | Commit-anchored delta, worked examples |
 | [11 - The Workspace Repo](docs/11-workspace-repo.md) | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
 | [Checklist](docs/checklist.md) | Building the full system - what to build in what order |

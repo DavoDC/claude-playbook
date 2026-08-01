@@ -1,5 +1,7 @@
 # Part 3: IDEAS.md, HISTORY.md, and the Roadmap System
 
+> Field notes, last reviewed 2026-07-25. Not mechanically asserted - see the README on what this repo guarantees.
+
 ## IDEAS.md - The Priority Queue
 
 Every project repo gets a `docs/IDEAS.md`. It is the forward-looking priority list for that repo - the single source of truth for "what to work on next."

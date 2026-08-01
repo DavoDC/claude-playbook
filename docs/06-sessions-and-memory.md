@@ -1,5 +1,7 @@
 # Part 6: Sessions and Memory
 
+> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+
 ## Session Launcher
 
 Claude Code has no built-in launch UI - you type flags every time (`claude --model sonnet --continue`). A session launcher script replaces that with an arrow-key or number-key picker for session type and model.

@@ -1,5 +1,7 @@
 # Part 2: Enforced Rules and The Improvement Loop
 
+> Field notes, last reviewed 2026-07-25. Not mechanically asserted - see the README on what this repo guarantees.
+
 ## Enforced Rules - The Distilled Layer
 
 Beyond CLAUDE.md, there is a second focused file: `enforced-rules.md` in `.claude/rules/`. This is auto-loaded and applies everywhere.

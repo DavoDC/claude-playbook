@@ -1,5 +1,7 @@
 # Checklist: Building the System
 
+> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+
 Use this to track which pieces of the system you've set up. Start with the top-level CLAUDE.md and the feedback habit - those two alone will improve every session.
 
 ---

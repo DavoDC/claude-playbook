@@ -1,5 +1,7 @@
 # Part 11: The Workspace Repo
 
+> Field notes, last reviewed 2026-05-24. Not mechanically asserted - see the README on what this repo guarantees.
+
 The most important structural decision in this whole system is one that looks trivial: **always run Claude from the same git repo.**
 
 Not a project repo. A dedicated workspace repo - a meta-repo whose only job is to hold your Claude config, memory, and skills.

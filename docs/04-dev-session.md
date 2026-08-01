@@ -1,5 +1,7 @@
 # Part 4: The /dev-session Skill - Smart Session Composition
 
+> Field notes, last reviewed 2026-05-24. Not mechanically asserted - see the README on what this repo guarantees.
+
 `/dev-session <repo>` is the most valuable skill for actual project work. It is not just "start coding" - it is a full structured workflow that picks the right work, manages scope, enforces TDD, tracks budget, and closes out properly.
 
 ## What Problem It Solves

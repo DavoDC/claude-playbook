@@ -1,5 +1,7 @@
 # Part 1: The CLAUDE.md Configuration Layer
 
+> Field notes, last reviewed 2026-07-25. Not mechanically asserted - see the README on what this repo guarantees.
+
 Claude Code reads `CLAUDE.md` from your repo root at the start of every session. This is your persistent instruction layer - things you never want to re-explain.
 
 There are two kinds:

@@ -1,6 +1,6 @@
 # Part 11: The Workspace Repo
 
-> Field notes, last reviewed 2026-05-24. Not mechanically asserted - see the README on what this repo guarantees.
+> **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
 The most important structural decision in this whole system is one that looks trivial: **always run Claude from the same git repo.**
 

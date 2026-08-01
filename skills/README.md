@@ -86,7 +86,6 @@ Claude Code makes it available as `/<name>` in any session run from that workspa
 | [undo-commits](undo-commits/SKILL.md) | Undo last N commits via git reset --soft, recommit cleanly. Safe - never rebases |
 | [checkpoint](checkpoint/SKILL.md) | Named session checkpoints - create/list/verify restore points during long runs |
 | [human-voice](human-voice/SKILL.md) | Audit and rewrite text to remove AI patterns - for emails, READMEs, anything to a person |
-| [make-public](make-public/SKILL.md) | Safety checklist before making a repo public - secrets, gitignore, README |
 | [release](release/SKILL.md) | Create a tagged GitHub release - version detection, changelog, release notes |
 | [skill-suggest](skill-suggest/SKILL.md) | Context-aware skill recommendations based on your task description |
 | [validate-rules](validate-rules/SKILL.md) | Pre-commit validation - TDD ratio, em-dash check, rule file changes |

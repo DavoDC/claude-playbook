@@ -18,6 +18,8 @@
 #      once the machine-specific command path is normalized away.
 #   6. every fenced python/bash block in the hooks docs that is a whole,
 #      standalone script (not a fragment) is syntactically valid.
+#   7. every file in docs/ carries exactly one tier marker line (Core or
+#      Field note) among its opening lines.
 #
 # Output discipline: silent pass, verbose fail. Each passing assertion
 # prints one PASS line and nothing else. A failing assertion prints
@@ -349,6 +351,42 @@ fi
 
 if [ "$ASSERT6_OK" = "1" ]; then
     echo "PASS: assertion 6 - $BLOCKS_FOUND whole-script block(s) in the hooks docs pass a syntax check (syntax only, not a behaviour check)"
+else
+    FAILED=1
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 7: every file in docs/ carries exactly one tier marker line
+# (Core or Field note) among its opening lines. The marker line is what
+# tells a reader whether a doc's claims are machine-asserted by this same
+# script or are dated, unverified field notes - a doc with zero markers
+# gives no signal either way, and a doc with two is ambiguous about which
+# one is authoritative. Only the opening lines are scanned (not the whole
+# file) so a marker-shaped line appearing later, inside a quoted example or
+# a worked-through recipe, cannot be mistaken for the file's own tier.
+# ---------------------------------------------------------------------------
+ASSERT7_OK=1
+MARKER_RE='^> \*\*(Core|Field note)\.\*\*'
+DOCS_CHECKED=0
+
+for DOC_PATH in "$REPO_ROOT"/docs/*.md; do
+    [ -f "$DOC_PATH" ] || continue
+    DOCS_CHECKED=$((DOCS_CHECKED + 1))
+    MARKER_COUNT=$(head -n 10 "$DOC_PATH" | grep -cE "$MARKER_RE")
+    if [ "$MARKER_COUNT" -ne 1 ]; then
+        ASSERT7_OK=0
+        echo "FAIL: assertion 7 - $DOC_PATH has $MARKER_COUNT tier marker line(s) in its opening lines, expected exactly 1"
+    fi
+done
+
+if [ "$DOCS_CHECKED" -eq 0 ]; then
+    ASSERT7_OK=0
+    echo "FAIL: assertion 7 - found 0 files under docs/*.md to check."
+    echo "This means the glob did not run, not that it passed."
+fi
+
+if [ "$ASSERT7_OK" = "1" ]; then
+    echo "PASS: assertion 7 - all $DOCS_CHECKED file(s) under docs/ carry exactly one tier marker line"
 else
     FAILED=1
 fi

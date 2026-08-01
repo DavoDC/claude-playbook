@@ -43,21 +43,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check docs.anthropic.com links resolve
+      - name: Check code.claude.com/docs links resolve
         shell: bash
         run: |
           set -u
 
-          # Pull every full https://docs.anthropic.com/... URL out of every
-          # markdown, python, and shell file in the repo. Only full https://
-          # URLs are matched here - a couple of bare non-https pointers
-          # exist elsewhere in the repo and are handled separately, not by
-          # this job. The excluded-character class deliberately does NOT
-          # exclude "[" or "]" - some URLs end in a literal placeholder like
-          # "[topic]", and that bracket is the signal the skip check below
-          # needs to see; only whitespace and markdown/code delimiters
+          # Pull every full https://code.claude.com/docs/... URL out of
+          # every markdown, python, and shell file in the repo. Only full
+          # https:// URLs are matched here - a couple of bare non-https
+          # pointers exist elsewhere in the repo and are handled separately,
+          # not by this job. The excluded-character class deliberately does
+          # NOT exclude "[" or "]" - some URLs end in a literal placeholder
+          # like "[topic]", and that bracket is the signal the skip check
+          # below needs to see; only whitespace and markdown/code delimiters
           # (quotes, backtick, parens, angle brackets) are stripped.
-          URL_PATTERN="https://docs\.anthropic\.com/[^[:space:]\"'\`()<>]+"
+          URL_PATTERN="https://code\.claude\.com/docs/[^[:space:]\"'\`()<>]+"
           RAW_URLS=$(grep -rhoE "$URL_PATTERN" \
               --include='*.md' --include='*.py' --include='*.sh' . || true)
 
@@ -74,7 +74,7 @@ jobs:
               # syntax remnants).
               CLEAN_URL=$(printf '%s' "$URL" | sed -E 's/[.,;:!?)]+$//')
 
-              # Skip placeholder URLs like https://docs.anthropic.com/en/[topic]
+              # Skip placeholder URLs like https://code.claude.com/docs/en/[topic]
               # - these are illustrative, not real pointers, and will never
               # resolve.
               case "$CLEAN_URL" in
@@ -103,14 +103,14 @@ jobs:
           done <<< "$RAW_URLS"
 
           if [ "$CHECKED" -eq 0 ]; then
-              echo "FAIL: found 0 https://docs.anthropic.com/... URLs to check."
+              echo "FAIL: found 0 https://code.claude.com/docs/... URLs to check."
               echo "This means the extractor did not run, not that it passed."
               exit 1
           fi
 
           if [ "$FAILED" -eq 1 ]; then
-              echo "VERDICT: FAIL - one or more docs.anthropic.com links did not resolve"
+              echo "VERDICT: FAIL - one or more code.claude.com/docs links did not resolve"
               exit 1
           fi
 
-          echo "VERDICT: PASS - all docs.anthropic.com links resolved"
+          echo "VERDICT: PASS - all code.claude.com/docs links resolved"

@@ -1,6 +1,6 @@
 # Part 6: Sessions and Memory
 
-> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+> **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
 ## Session Launcher
 
@@ -149,7 +149,7 @@ Claude Code has many features - hooks, MCP servers, custom slash commands, statu
 A practical fix: point Claude at the official documentation:
 
 ```
-https://docs.anthropic.com/en/claude-code/
+https://code.claude.com/docs/en/
 ```
 
 Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.

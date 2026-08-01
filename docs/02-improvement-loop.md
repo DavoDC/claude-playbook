@@ -1,6 +1,6 @@
 # Part 2: Enforced Rules and The Improvement Loop
 
-> Field notes, last reviewed 2026-07-25. Not mechanically asserted - see the README on what this repo guarantees.
+> **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
 ## Enforced Rules - The Distilled Layer
 

@@ -1,6 +1,6 @@
 # Part 8: Skills Reference
 
-> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+> **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
 All skills live in `.claude/skills/<name>/SKILL.md`. Each is a markdown file defining what Claude should do when you type `/<name>`. Usage below is tracked via a session logger hook and shown qualitatively (heavily used / regularly used / occasional / rarely used) rather than as exact counts - a number written today is stale by next week, and the category is what actually matters for deciding what to keep installed. See the maintenance section at the end of this part for how that tracking feeds a retirement loop.
 
@@ -196,9 +196,6 @@ Security-focused code review. Looks for OWASP top 10, credential leaks, injectio
 
 ### [/release](https://github.com/DavoDC/claude-playbook/blob/main/skills/release/SKILL.md)
 Structured release process: version bump, changelog, tag, push.
-
-### [/make-public](https://github.com/DavoDC/claude-playbook/blob/main/skills/make-public/SKILL.md)
-Pre-flight checklist before making a repo public. Checks for private paths, personal names, credentials, workspace-internal references.
 
 ### /save-memory *(build your own)*
 Manually save a piece of information to the memory system. No starter provided - straightforward: "write the fact to `memory/<category>/<name>.md`, add a pointer to `memory/MEMORY.md`, commit."

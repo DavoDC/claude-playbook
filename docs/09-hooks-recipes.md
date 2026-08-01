@@ -1,6 +1,6 @@
 # Hooks Worth Having
 
-> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+> **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
 Recipes moved out of `docs/09-hooks.md` to keep that file focused on the mechanics (events, exit codes, the fail-open trap, the quoting trap, the `if:` field). Start there first if you haven't read it yet - this file assumes that context.
 

@@ -1,6 +1,6 @@
 # Part 5: Budget Awareness
 
-> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+> **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
 ## The Problem
 
@@ -107,7 +107,7 @@ effort: high
 
 This means you don't manually switch effort before/after complex skills - it happens automatically. Route routine work through `medium`, and let the skills that need depth declare it.
 
-(full reference: https://docs.anthropic.com/en/claude-code/model-config#adjust-effort-level)
+(full reference: https://code.claude.com/docs/en/model-config#adjust-effort-level)
 
 ---
 
@@ -173,7 +173,7 @@ The key is camelCase and `"type": "command"` is mandatory. A wrong key is accept
 
 Claude Code invokes this command via stdin for every status update, passing a JSON object containing `model`, `context_window`, `rate_limits`, `version`, `cwd`, etc.
 
-Updates are event-driven, which means they can go quiet exactly when the number matters most: an unattended loop where the main session sits idle waiting on background subagents produces no status events, so the cache below ages while the loop keeps spending. Set the optional `refreshInterval` field (seconds) to re-run the command on a timer as well (full reference: docs.anthropic.com/en/claude-code/statusline).
+Updates are event-driven, which means they can go quiet exactly when the number matters most: an unattended loop where the main session sits idle waiting on background subagents produces no status events, so the cache below ages while the loop keeps spending. Set the optional `refreshInterval` field (seconds) to re-run the command on a timer as well (full reference: https://code.claude.com/docs/en/statusline).
 
 ### Step 2 - statusline.py does two things
 

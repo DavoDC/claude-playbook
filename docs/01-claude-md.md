@@ -1,6 +1,6 @@
 # Part 1: The CLAUDE.md Configuration Layer
 
-> Field notes, last reviewed 2026-07-25. Not mechanically asserted - see the README on what this repo guarantees.
+> **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
 Claude Code reads `CLAUDE.md` from your repo root at the start of every session. This is your persistent instruction layer - things you never want to re-explain.
 

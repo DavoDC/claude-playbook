@@ -1,6 +1,6 @@
 # Part 9: Hooks
 
-> Field notes, last reviewed 2026-08-01. Not mechanically asserted - see the README on what this repo guarantees.
+> **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
 Hooks are shell scripts that run automatically on Claude Code events. They enforce rules at the system level rather than relying on Claude remembering them from CLAUDE.md.
 
@@ -30,7 +30,7 @@ Two exits matter, and they are not the "0 vs anything else" binary they look lik
 - **Exit code 2**: block the tool call (Claude sees stderr message)
 - **Any other non-zero exit code** (including the conventional Unix failure code 1): non-blocking error - the transcript shows a `<hook name> hook error` notice with the first line of stderr, but the tool call proceeds anyway
 
-(full reference: https://docs.anthropic.com/en/claude-code/hooks#exit-code-output)
+(full reference: https://code.claude.com/docs/en/hooks#exit-code-output)
 
 Exit code 1 does not block. If a hook is meant to enforce a policy, it must exit 2 - anything else, including a crash that happens to exit 1, is silently non-blocking. A hook that crashes with an unhandled exception before reaching its intended `exit 2` therefore fails open, not closed, and the workflow proceeds as if the check never ran. The fail-open pattern below makes that failure mode explicit and deliberate instead of accidental:
 
@@ -254,7 +254,7 @@ All hooks go in `.claude/settings.json`. All permissions and MCP server config g
 
 ## Critical for Windows
 
-This section is about git hooks (`.git/hooks/`, run by git itself on `commit`, `push`, and so on), not Claude Code's own hooks - the two are separate mechanisms that happen to share a name. Claude Code hooks in `.claude/settings.json` can stay as bash: the shell-form command runs through Git Bash on Windows by default, or PowerShell if Git Bash isn't installed (full reference: https://docs.anthropic.com/en/claude-code/hooks#exec-form-and-shell-form).
+This section is about git hooks (`.git/hooks/`, run by git itself on `commit`, `push`, and so on), not Claude Code's own hooks - the two are separate mechanisms that happen to share a name. Claude Code hooks in `.claude/settings.json` can stay as bash: the shell-form command runs through Git Bash on Windows by default, or PowerShell if Git Bash isn't installed (full reference: https://code.claude.com/docs/en/hooks#exec-form-and-shell-form).
 
 Git hooks are a different story. Git Bash hooks work under WSL, but a Windows git client that shells out through `cmd.exe` rather than Git Bash - GitHub Desktop is the common case - will fail silently or block commits entirely if a git hook is written in bash syntax (observed on Windows 11 with GitHub Desktop; this is git-client behaviour, not a Claude Code feature, so no official Claude Code page covers it - recheck if the client's shelling-out behaviour changes). This is a painful lesson that only needs to be learned once.
 

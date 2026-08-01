@@ -53,7 +53,7 @@ The playbook's job is opinionated workflow guidance - when to use a feature, how
 **Rule:** When a playbook doc describes a Claude Code feature in detail, add a pointer:
 
 ```
-(full reference: https://docs.anthropic.com/en/claude-code/[topic])
+(full reference: https://code.claude.com/docs/en/[topic])
 ```
 
 One sentence of workflow context + a pointer beats three paragraphs that go stale.
@@ -68,7 +68,7 @@ One sentence of workflow context + a pointer beats three paragraphs that go stal
 
 **Never reference local workspace paths in this repo.** Readers do not have your file system.
 - No local filesystem paths that only exist on your machine
-- For Claude Code docs: link to `https://docs.anthropic.com/en/claude-code/[topic]`
+- For Claude Code docs: link to `https://code.claude.com/docs/en/[topic]`
 - For skills in this repo: use relative links or full GitHub URLs
 - Prefer hyperlinks over plain path text everywhere
 

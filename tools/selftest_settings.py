@@ -18,7 +18,7 @@ class of problem, both driven by the same "```json fenced block" extractor:
    correctly but structured differently between two docs (nested wrong,
    wrong sibling key, etc), which is a real key so mode 1 lets it through.
 
-Reference for the canonical list: https://docs.anthropic.com/en/claude-code/settings
+Reference for the canonical list: https://code.claude.com/docs/en/settings
 """
 import copy
 import json
@@ -27,7 +27,7 @@ import re
 import sys
 
 # Canonical top-level settings.json keys, per the "Available settings" table
-# at https://docs.anthropic.com/en/claude-code/settings. Keep this list as
+# at https://code.claude.com/docs/en/settings. Keep this list as
 # the ONLY copy of valid keys in this repo - every doc snippet is checked
 # against it, nothing else.
 CANONICAL_SETTINGS_KEYS = {
@@ -224,7 +224,7 @@ def main_key_drift(root):
         )
         print(
             "Canonical key list is defined once in tools/selftest_settings.py "
-            "(see https://docs.anthropic.com/en/claude-code/settings).",
+            "(see https://code.claude.com/docs/en/settings).",
             file=sys.stderr,
         )
         sys.exit(1)

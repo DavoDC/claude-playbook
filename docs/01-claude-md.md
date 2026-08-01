@@ -99,6 +99,8 @@ When fixing a bug or correcting a mistake, always do BOTH:
 (2) add a guard so it can't recur - a test, a CLAUDE.md rule, or a validation check
 ```
 
+One way a guard fails quietly: when its selection criterion and its pass criterion are the same property. A checker that only examines inputs which already look valid can never find the ones that don't - the worst violations get skipped as "not my business" before they're ever checked, and the guard reports success while doing nothing. Keep the two separate: decide what to check based on something independent of correctness (file path, a marker, surrounding structure), never based on the property being validated. And treat an empty result as a failure to investigate, not a clean pass - a check that found nothing and a check that never ran look identical from the outside.
+
 ### 3. Research Approach
 
 Tell Claude the order to look for information:
@@ -110,6 +112,10 @@ Tell Claude the order to look for information:
 ```
 
 This stops Claude from hallucinating API docs or stating things that are only true in old versions.
+
+One failure mode is worse than getting something wrong: reporting that something doesn't exist when the search just didn't look hard enough. A grep for one spelling, one case, one file extension that finds nothing proves the search was bounded - not that the thing is absent. Before closing an investigation on a negative result, vary case, separators (hyphen, underscore, space, no separator), singular and plural, and check whether the file types and directories you actually searched were the right ones. Then do one of two things: widen the search and report a true negative, or say exactly what you searched. "No hits under this path in markdown files" is honest. "There is no such thing" is usually a claim you never tested.
+
+Before building any diff, match, or reconciliation, say out loud what the unit of comparison actually is - and check that it's the thing the question is really about. It's easy to build a technically correct comparison that answers nothing: a file-level diff can report most files unchanged while the record inside them moved, split, or merged across files entirely, and the comparison would be accurate and useless at the same time. Ask: if every instance of the container changed shape but the real unit was preserved, would this comparison still say so? If yes is possible, you're comparing the wrong thing - restate the unit before writing the comparison, not after the first result disappoints.
 
 ### 4. Before Acting on Files
 
@@ -165,6 +171,8 @@ Your core engineering standards belong here so they apply across all repos:
 Five smells, all of which pass a green run: a **structural string-scan** that asserts the source text contains a function name or config key (it verifies someone typed something, so renaming a variable breaks it but shipping a bug does not); an **assertion-free** test that calls the code and asserts nothing, passing as long as no exception escapes; a **dodger** that tests a helper, wrapper or re-implementation rather than the real entry point, so the tested path and the shipped path are different code; an **over-mocked** test that ends up exercising its own mocks, whose worst form is a mock whose signature has drifted from the real object so that every real call would raise and the test never notices; and **assertion roulette**, many unlabelled assertions in one test, so a failure says the test broke but not which behaviour regressed.
 
 The strong version, in order: drive the **real entry point** that production uses; mock **only true boundaries** (network, database, clock, auth, filesystem) and run everything inside the boundary for real; assert **observable outcomes** - returned value, written file, emitted record, resulting state - rather than call sequences, because asserting that a function was called with certain arguments tests the implementation you already wrote while asserting the outcome tests the behaviour you wanted; and **mutation-verify anything that matters** by reintroducing the bug, watching the test fail, then restoring the source. A test you have never seen fail is a test you have not verified, and it takes seconds to check.
+
+One more signal worth watching for while testing: a suspiciously perfect result. A 100% match, a zero-diff, or "everything accounted for" on real data is exactly what a self-comparison bug, an overly loose match key, or a filter quietly dropping the hard cases would also produce. Before reporting a clean result as good news, spend one question ruling out the boring explanation for why it's clean. And when a verification pass does turn up a real defect, don't fix it in the same pass that found it - hand the fix to a fresh check. A fix validated by the same reasoning that just missed the bug once is not independently verified, just re-asserted.
 
 The pattern to watch for is a high test count concentrated on easy pure functions while the main orchestration path and the primary output writer sit at zero behavioural coverage. Look at what the suite covers, not how much of it there is.
 

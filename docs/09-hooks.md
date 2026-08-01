@@ -22,12 +22,13 @@ More events exist (`TeammateIdle`, `InstructionsLoaded`, `WorktreeCreate`, `Perm
 
 ### Exit Codes
 
-Two exits matter:
+Two exits matter, and they are not the "0 vs anything else" binary they look like at first glance:
 
 - **Exit 0**: allow the tool call to proceed
-- **Exit non-zero**: block the tool call (Claude sees stderr message)
+- **Exit code 2**: block the tool call (Claude sees stderr message)
+- **Any other non-zero exit code** (including the conventional Unix failure code 1): non-blocking error - the transcript shows a `<hook name> hook error` notice with the first line of stderr, but the tool call proceeds anyway
 
-This binary is more important than it looks. A hook that crashes with an unhandled exception exits non-zero and silently blocks your workflow. The fail-open pattern prevents this:
+Exit code 1 does not block. If a hook is meant to enforce a policy, it must exit 2 - anything else, including a crash that happens to exit 1, is silently non-blocking. A hook that crashes with an unhandled exception before reaching its intended `exit 2` therefore fails open, not closed, and the workflow proceeds as if the check never ran. The fail-open pattern below makes that failure mode explicit and deliberate instead of accidental:
 
 ```bash
 #!/bin/bash
@@ -37,7 +38,7 @@ import sys, json
 try:
     d = json.load(sys.stdin)
     # ... main logic ...
-    # sys.exit(1) to block with message on stderr
+    # sys.exit(2) to block with message on stderr
     # sys.exit(0) to allow
 except Exception as e:
     print(f'[HOOK] internal error: {e}', file=sys.stderr)
@@ -45,7 +46,7 @@ except Exception as e:
 " || exit 0  # outer bash also catches Python startup failures
 ```
 
-**Rule:** exit non-zero only when you have a specific, intentional reason to block. Every other exit path is exit 0.
+**Rule:** exit 2 only when you have a specific, intentional reason to block. Every other exit path is exit 0.
 
 ### Blast Radius Triage: Blocking vs Passive Hooks
 
@@ -189,13 +190,13 @@ CONTENT=$(cat)
 # Check for secrets
 if echo "$CONTENT" | grep -qE 'password\s*=\s*["\x27][^"\x27]+["\x27]|api_key\s*=|PRIVATE KEY'; then
     echo "BLOCKED: potential secret in content" >&2
-    exit 1
+    exit 2
 fi
 
 # Check for em/en dashes (U+2014, U+2013)
 if echo "$CONTENT" | grep -qP '[\x{2013}\x{2014}]'; then
     echo "BLOCKED: em/en dash found - use regular hyphens only" >&2
-    exit 1
+    exit 2
 fi
 
 exit 0
@@ -254,7 +255,7 @@ if bn in limits and os.path.isfile(fp):
     lines = sum(1 for _ in open(fp))
     if lines > limits[bn]:
         # Warn to stderr (shown in terminal) but don't block
-        # Change sys.exit(1) to block Claude instead of just warning
+        # Change sys.exit(2) to block Claude instead of just warning
         print(f'WARNING: {bn} is {lines} lines (limit {limits[bn]}). '
               f'Move explanations to feedback files - CLAUDE.md holds rules, not rationale.',
               file=sys.stderr)
@@ -273,7 +274,7 @@ Wire it up in `.claude/settings.json`:
 ]
 ```
 
-The key design choice: warn (stderr, exit 0) rather than block (exit 1). Blocking file edits when a limit is exceeded prevents the very trimming that would fix the violation. Warn instead - Claude sees it and trims proactively.
+The key design choice: warn (stderr, exit 0) rather than block (exit 2). Blocking file edits when a limit is exceeded prevents the very trimming that would fix the violation. Warn instead - Claude sees it and trims proactively.
 
 ### Lesson Detector (UserPromptSubmit)
 
@@ -496,7 +497,7 @@ Each log file gets a single line appended per event. No truncation, no rotation 
 
 ## Settings Split - Critical
 
-All hooks go in `.claude/settings.json`. All permissions and MCP server config go in `.claude/settings.local.json`. Never mix them - splitting hooks across both files causes double-fire where the same hook runs twice per event.
+All hooks go in `.claude/settings.json`. All permissions and MCP server config go in `.claude/settings.local.json`. Hook entries merge across settings files rather than replacing each other, so having different hooks in both files is normal - the real risk is registering the identical hook entry in more than one settings file, which makes it run twice per event. Keep hooks in one canonical file so that duplication can't happen by accident.
 
 ```json
 // .claude/settings.json - hooks ONLY

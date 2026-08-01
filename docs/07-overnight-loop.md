@@ -51,4 +51,4 @@ No interval specified - the model decides how long to sleep based on what it jus
 
 The mechanics: at the end of each iteration, call `ScheduleWakeup(delaySeconds, prompt)` where `prompt` is the same `/loop` invocation. This causes the session to wake up after `delaySeconds` and repeat.
 
-The budget abort logic: before doing any work, check `session-status.sh`. If 5-hour rate >= 83%, call `ScheduleWakeup(seconds_until_reset + 300, same_prompt)` and return without doing any work. The loop effectively pauses until the rate limit resets.
+The budget abort logic: before doing any work, check `session-status.sh`. If 5-hour rate >= 83%, call `ScheduleWakeup(min(seconds_until_reset, 3600), same_prompt)` and return without doing any work. `ScheduleWakeup` clamps its delay to between 60 and 3600 seconds, so a reset more than an hour away can't be skipped in one call - each wake re-checks the budget and, if the reset still hasn't passed, schedules another capped wakeup with the same prompt. The loop effectively pauses, waking periodically, until the rate limit actually resets.

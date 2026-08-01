@@ -101,7 +101,7 @@ effort: high
 
 This means you don't manually switch effort before/after complex skills - it happens automatically. Route routine work through `medium`, and let the skills that need depth declare it.
 
-(full reference: [Adjust effort level - Claude Code docs](https://github.com/ericbuess/claude-code-docs/blob/main/docs/model-config.md#adjust-effort-level))
+(full reference: https://docs.anthropic.com/en/claude-code/model-config#adjust-effort-level)
 
 ---
 
@@ -149,7 +149,7 @@ The most token-efficient approach:
 
 ## Building the System
 
-The whole thing (statusline.py + check-budget.sh + session-status.sh) is under 200 lines total. Here is how it is wired:
+The whole thing (statusline.py + check-budget.sh + session-status.sh) is small enough to read end to end in one sitting. Here is how it is wired:
 
 ### Step 1 - Configure Claude Code's statusline
 
@@ -204,11 +204,13 @@ Reads from `$(python3 -c "import tempfile; print(tempfile.gettempdir())")/claude
 
 Converts `resets_at` timestamps to human countdowns (e.g. "1h32m") by subtracting `datetime.now().timestamp()`.
 
-Emits a warning line if `five_hour >= 83` including the seconds until reset - so the calling script can pass it to `ScheduleWakeup()`:
+Emits a warning line if `five_hour >= 83` including the seconds until reset:
 
 ```
-5h NEARLY EXHAUSTED: 86%, resets in 1h12m - use ScheduleWakeup(4320) to skip past reset
+5h NEARLY EXHAUSTED: 86%, resets in 1h12m
 ```
+
+`ScheduleWakeup` clamps its delay to between 60 and 3600 seconds, so a reset that's further out than an hour away can't be skipped in a single call. The pattern is a bounded wakeup, not a single long sleep: call `ScheduleWakeup(min(seconds_until_reset, 3600))`, and on each wake re-run the budget check - if the reset still hasn't passed, schedule another capped wakeup and repeat. The loop naturally stops rescheduling once the 5-hour window has actually reset.
 
 ### Step 4 - session-status.sh wraps it all
 
@@ -230,7 +232,7 @@ Bash("bash /path/to/tools/session-status.sh")
 ```
 
 Parse the output for the three percentages. Build decision logic:
-- `five_pct >= 83` -> abort + `ScheduleWakeup(seconds_until_reset + 300)`
+- `five_pct >= 83` -> abort + `ScheduleWakeup(min(seconds_until_reset, 3600))`, re-checking and rescheduling on each wake until the reset has actually passed (see Step 3 - the clamp means one call can't skip past a reset more than an hour away)
 - `ctx_pct >= 80` -> quick-win only
 - `ctx_pct >= 60` -> caution mode
 

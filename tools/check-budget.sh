@@ -111,7 +111,10 @@ if parts:
         import re as _re
         def _t(s, pat): m = _re.search(pat, s or ''); return int(m.group(1)) if m else 0
         _secs = _t(reset_in, r'(\d+)d')*86400 + _t(reset_in, r'(\d+)h')*3600 + _t(reset_in, r'(\d+)m')*60 + 300
-        print(f"5h NEARLY EXHAUSTED: {int(five_pct)}%, resets in {reset_in} - use ScheduleWakeup({_secs}) to skip past reset")
+        # ScheduleWakeup clamps delaySeconds to 60-3600s, so a reset further out than an
+        # hour needs a bounded wakeup that re-checks and reschedules, not one long sleep
+        _clamped = max(60, min(_secs, 3600))
+        print(f"5h NEARLY EXHAUSTED: {int(five_pct)}%, resets in {reset_in} - call ScheduleWakeup({_clamped}) now, then re-check and reschedule (capped at 3600s each time) until the reset has passed")
 
 else:
     print("Budget: unable to parse rate limit data")

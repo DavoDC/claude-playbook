@@ -52,7 +52,7 @@ except Exception as e:
 
 ### Blast Radius Triage: Blocking vs Passive Hooks
 
-Before writing a hook, ask one question: can this hook exit non-zero and block a tool call? The answer decides how paranoid to be about its failure modes, because the blast radius of a bug is completely different between the two kinds.
+Before writing a hook, ask one question: can this hook exit 2 and block a tool call? The answer decides how paranoid to be about its failure modes, because the blast radius of a bug is completely different between the two kinds.
 
 Passive hooks (logging, warnings, context injection) always exit 0. Blocking hooks (guards, validators) exit 2 on a violation, since that is the only code that blocks. A bug in a passive hook makes it go silently inert - it stops doing its job, but every tool call still succeeds. Annoying, but easy to notice and fix. A bug in a blocking hook can lock the whole session - every tool call blocked, including the tools you'd need to fix the hook itself. That second failure mode is the one worth designing against from the start.
 
@@ -200,6 +200,22 @@ Each log file gets a single line appended per event. No truncation, no rotation 
 **A blind spot worth naming:** blocking hooks (exit 2 + stderr message) are the one hook type this pattern tends to miss entirely. A guard that blocks a write and prints its reason to stderr is visible in that single session's transcript, but if nothing writes the event to a log file, it leaves no trail once the session ends - there's nothing to grep. That matters because of a related rule worth having: a hook that fires repeatedly on the same pattern is a signal, not a mechanism - it means the underlying default behavior is wrong and should be fixed at the source (the instruction, the skill, the process doc that's steering Claude wrong), rather than silently tolerated because the hook keeps catching it every time. Without a log, "repeatedly" is unmeasurable - you're relying on memory of past incidents instead of a search. If a guard hook blocks something, consider having it append one line to a violations log before it exits, right there in the same code path as the block - that closes the loop between "the hook caught something" and "was this the third time this month."
 
 ---
+
+## Hooks Never Load From a Sibling Directory
+
+A hook only fires when it's registered in the `.claude/settings.json` of the directory Claude Code was launched from. There is no parent-directory fallback, and adding another directory to the session's awareness does not extend hook execution to it either - only a narrow slice of settings (things like enabled plugins and known marketplaces) is read from an added directory, and hooks aren't in that list. An auto-loaded instructions file follows the same rule from the other direction: Claude walks up from the working directory and lazily loads instruction files it finds in subdirectories as it reads into them, but it never reaches into a sibling directory to load one.
+
+This bites hardest in a multi-repo setup where one directory is always the launch point and everything else sits next to it as a sibling. A hook, or an instructions file, written into a sibling repo to protect that repo never fires unless a session happens to be launched from inside it directly. It's not a loud failure - the file sits there looking correct, runs fine if invoked manually, and simply never executes as part of a normal session. Safety rules written this way read as protection while providing none, which is worse than having no guard at all, because the repo's own files say the guard exists.
+
+The fix is not to duplicate the hook into every sibling repo (see the next section for why that trades a dead guard for something worse) and not to hardcode each sibling's name into the launch directory's hook either, since that just turns a missing guard into a pile of special cases. Split the concern instead: the sibling repo declares what protection it needs in a small tracked marker file, and generic, marker-driven logic in the launch directory's hook discovers and enforces it for any repo that opts in. Protecting one more sibling then costs a marker file, not a code change.
+
+## One Registration Point, Not One Copy Per Repo
+
+Hooks can be registered in two places: a project's own `.claude/settings.json`, which applies to that project only, or the user-level settings file, which applies to every project on the machine. When a hook needs to run across many repos, the user-level file is the single point of control - register it once there, pointing at one canonical copy of the script, and every project picks it up automatically.
+
+The mistake worth naming is copying the hook's script files into each repo instead, reasoning that a self-contained copy is safer or more defensive. It isn't. If the user-level registration already covers every target, the copies do no protective work at all - they are inert duplicates riding along for zero benefit. What they do instead is multiply risk: any personal detail baked into the script (a home directory path, a machine name) now leaks into every repo carrying a copy, including public ones; the copies drift the moment one is edited and the others aren't; and a bug fix has to be applied once per repo instead of once total, with every application a fresh chance to miss one or reintroduce the bug.
+
+If a leak like this is ever found, resist the instinct to just sanitize the copies' contents. Stripping a hardcoded path out of several duplicated files fixes the string while leaving the actual problem - a private script living in several public places - fully intact for the next detail that gets added to it. The right question is why the file exists in each repo at all, not what's wrong with what's inside it. Private or cross-cutting infrastructure belongs in exactly one place: registered once, at the single point of control that already covers everything, pointing at one canonical copy that never ships inside a repo that could go public.
 
 ## Settings Split - Critical
 

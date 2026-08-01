@@ -61,45 +61,124 @@ fi
 exit 0
 ```
 
-### File Size Guard (PostToolUse on Edit/Write)
+### File Size Guard (PreToolUse on Edit/Write)
 
-Enforces line-count limits on configuration files after every edit. This is what makes the "keep CLAUDE.md under 150 lines" advice in Part 1 actually stick - without a hook, Claude will gradually bloat the file and forget it ever happened.
+Enforces line-count limits on configuration files before every edit. This is what makes the "keep CLAUDE.md under 150 lines" advice in Part 1 actually stick - without a hook, Claude will gradually bloat the file and forget it ever happened.
+
+Warn-only and block-only are both wrong on their own. A warn-only guard is easy to ignore repeatedly - the file quietly drifts past its target for weeks because nothing ever actually stops a write. A block-at-any-size guard is too rigid - it can reject the very edit that would legitimately grow the file, at the exact moment there's no room left to finish the thought before trimming. The fix is two thresholds per file: a soft cap that warns and a hard cap that blocks outright. Blocking only works if the hook runs on an event that fires before the write lands - a hard cap wired to an after-the-fact event silently degrades into a second warning while still reading like a block.
+
+That's why this runs as `PreToolUse`, not `PostToolUse`. `PostToolUse` fires after the tool has already executed, so by the time it runs the write has already happened - exit code 2 there only surfaces stderr to Claude, it can't undo the write. `PreToolUse` fires before the write lands, which means the file on disk still holds the OLD content - re-reading it from disk would measure the wrong size. The hook has to compute the PROSPECTIVE size from the tool input instead: for `Write` that's the incoming `content`; for `Edit` it's the current on-disk content with `old_string` replaced by `new_string` (respecting `replace_all`). When the prospective size can't be determined - the file doesn't exist yet, `old_string` doesn't match, the payload is missing a field - the hook warns and allows rather than blocking, because a guard that blocks on its own confusion can lock a session out of the very edit that would fix the file.
 
 ```python
 #!/usr/bin/env python3
-# size-guard.py - called from a PostToolUse hook on Edit/Write
+# size-guard.py - called from a PreToolUse hook on Edit/Write
 import sys, json, os
 
-d = json.loads(sys.stdin.buffer.read())
-if d.get('tool_name') not in ('Write', 'Edit'):
-    sys.exit(0)
-
-fp = d.get('tool_input', {}).get('file_path', '')
-bn = os.path.basename(fp)
-
-# Adjust limits to match your targets from CLAUDE.md
+# Two thresholds per file: (soft cap, hard cap). Adjust to your CLAUDE.md targets.
 limits = {
-    'CLAUDE.md': 150,
-    'MEMORY.md': 200,
-    'enforced-rules.md': 250,
+    'CLAUDE.md': (120, 150),
+    'MEMORY.md': (160, 200),
+    'enforced-rules.md': (200, 250),
 }
 
-if bn in limits and os.path.isfile(fp):
-    lines = sum(1 for _ in open(fp))
-    if lines > limits[bn]:
-        # Warn to stderr (shown in terminal) but don't block
-        # Change sys.exit(2) to block Claude instead of just warning
-        print(f'WARNING: {bn} is {lines} lines (limit {limits[bn]}). '
-              f'Move explanations to feedback files - CLAUDE.md holds rules, not rationale.',
+
+def count_lines(text):
+    if not text:
+        return 0
+    return text.count('\n') + (0 if text.endswith('\n') else 1)
+
+
+def prospective_lines(tool_name, tool_input, fp):
+    """Return the line count the file will have AFTER the pending write,
+    or None if it can't be determined (unknown size)."""
+    if tool_name == 'Write':
+        content = tool_input.get('content')
+        if content is None:
+            return None
+        return count_lines(content)
+
+    if tool_name == 'Edit':
+        old_string = tool_input.get('old_string')
+        new_string = tool_input.get('new_string')
+        replace_all = tool_input.get('replace_all', False)
+        if old_string is None or new_string is None:
+            return None
+        if not os.path.isfile(fp):
+            return None
+        try:
+            with open(fp, 'r', encoding='utf-8') as f:
+                current = f.read()
+        except (OSError, UnicodeDecodeError):
+            return None
+        if old_string not in current:
+            return None
+        if replace_all:
+            updated = current.replace(old_string, new_string)
+        else:
+            updated = current.replace(old_string, new_string, 1)
+        return count_lines(updated)
+
+    return None
+
+
+def main():
+    try:
+        d = json.loads(sys.stdin.buffer.read())
+    except Exception as e:
+        # Say so rather than exiting quietly: a guard that goes inert must not
+        # look identical to a guard that ran and found nothing wrong.
+        print(f'WARNING: size guard could not parse its input ({e}) - write allowed unchecked.',
+              file=sys.stderr)
+        sys.exit(0)
+
+    tool_name = d.get('tool_name')
+    if tool_name not in ('Write', 'Edit'):
+        sys.exit(0)
+
+    tool_input = d.get('tool_input', {}) or {}
+    fp = tool_input.get('file_path', '')
+    bn = os.path.basename(fp)
+
+    if bn not in limits:
+        sys.exit(0)
+
+    soft, hard = limits[bn]
+
+    try:
+        lines = prospective_lines(tool_name, tool_input, fp)
+    except Exception:
+        lines = None
+
+    if lines is None:
+        # Can't determine the prospective size - warn and allow rather than
+        # blocking. A guard that blocks on its own confusion can lock a
+        # session out of the very edit that would fix the file.
+        print(f'WARNING: could not determine prospective size of {bn} - allowing write unchecked.',
+              file=sys.stderr)
+        sys.exit(0)
+
+    if lines > hard:
+        print(f'BLOCKED: this write would make {bn} {lines} lines (hard cap {hard}). '
+              f'Move explanations to feedback files before writing more - CLAUDE.md holds rules, not rationale.',
+              file=sys.stderr)
+        sys.exit(2)
+
+    if lines > soft:
+        print(f'WARNING: this write would make {bn} {lines} lines (soft cap {soft}, hard cap {hard}). '
+              f'Trim proactively before the hard cap blocks the next write.',
               file=sys.stderr)
 
-sys.exit(0)
+    sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()
 ```
 
 Wire it up in `.claude/settings.json`:
 
 ```json
-"PostToolUse": [
+"PreToolUse": [
   {
     "matcher": "Write|Edit",
     "hooks": [{ "type": "command", "command": "python3 /path/to/size-guard.py" }]
@@ -107,7 +186,7 @@ Wire it up in `.claude/settings.json`:
 ]
 ```
 
-The key design choice: warn (stderr, exit 0) rather than block (exit 2). Blocking file edits when a limit is exceeded prevents the very trimming that would fix the violation. Warn instead - Claude sees it and trims proactively.
+The soft cap gives Claude a chance to trim proactively while there's still room to do it in the same edit. The hard cap is the backstop a warning alone can't provide - because it runs on `PreToolUse`, `exit 2` actually stops the write before it lands, instead of just leaving a note after the fact. A warning that fires every time and never actually stops anything eventually gets ignored like any other repeated notice that has no teeth.
 
 ### Lesson Detector (UserPromptSubmit)
 

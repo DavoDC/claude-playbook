@@ -10,7 +10,7 @@ The failure mode it prevents: starting a session without a clear item, doing som
 
 ## How It Integrates With IDEAS.md
 
-IDEAS.md is the orchestrator. `/dev-session` doesn't decide what to work on - it reads the priority ordering from IDEAS.md and picks the top actionable item. The session derives its purpose from the file, not from conversation context. This is why keeping IDEAS.md well-ordered matters: it directly determines what Claude works on.
+`/dev-session` does not decide what to work on. It reads the ordering IDEAS.md defines and takes the top actionable item, deriving its purpose from the file rather than from conversation context. The contract for what IDEAS.md is and how that ordering works is defined once, in [Part 3 - How IDEAS.md and /dev-session Work Together](03-ideas-and-roadmap.md#how-ideasmd-and-dev-session-work-together); it is not restated here, because a contract stated in two places is a contract that will eventually disagree with itself.
 
 ---
 

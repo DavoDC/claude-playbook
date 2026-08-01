@@ -60,6 +60,8 @@ One sentence of workflow context + a pointer beats three paragraphs that go stal
 
 **Verify before documenting.** Never document a Claude Code feature from training knowledge alone. Check official docs first.
 
+**Stamp what the docs don't cover.** If a claim describes official Claude Code feature behavior, point at the docs page for it - don't restate it from memory. If a claim describes something observed in practice that no official page covers, say so explicitly: name the Claude Code version and platform it was observed on, so a reader can discount an old observation instead of trusting it at face value. Behaviour is tested, not remembered, and an unstamped claim reads with the same confidence as a documented one even when it is neither.
+
 ---
 
 ## No internal paths - use hyperlinks

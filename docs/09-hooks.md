@@ -30,6 +30,8 @@ Two exits matter, and they are not the "0 vs anything else" binary they look lik
 - **Exit code 2**: block the tool call (Claude sees stderr message)
 - **Any other non-zero exit code** (including the conventional Unix failure code 1): non-blocking error - the transcript shows a `<hook name> hook error` notice with the first line of stderr, but the tool call proceeds anyway
 
+(full reference: https://docs.anthropic.com/en/claude-code/hooks#exit-code-output)
+
 Exit code 1 does not block. If a hook is meant to enforce a policy, it must exit 2 - anything else, including a crash that happens to exit 1, is silently non-blocking. A hook that crashes with an unhandled exception before reaching its intended `exit 2` therefore fails open, not closed, and the workflow proceeds as if the check never ran. The fail-open pattern below makes that failure mode explicit and deliberate instead of accidental:
 
 ```bash
@@ -111,7 +113,7 @@ sys.exit(2)
 
 ### Catastrophic Self-Lock: the Quoting Trap in Blocking Hooks
 
-Embedding Python inside `bash -c "..."` works fine until a blocked message needs a double-quote character. A `"` inside the Python string literal closes the outer shell's double-quoted argument early, producing a SyntaxError. For a passive hook that's the silent fail-open trap above - annoying but harmless. For a blocking hook whose fallback is `|| exit 2` (fail closed, which is the correct default for a security guard), that same SyntaxError now blocks every tool call - Read, Edit, Write, Bash, all of them. There is no self-repair path, because the tools needed to fix the hook are exactly the tools the hook is blocking.
+Embedding Python inside `bash -c "..."` works fine until a blocked message needs a double-quote character. A `"` inside the Python string literal closes the outer shell's double-quoted argument early, producing a SyntaxError. For a passive hook that's the silent fail-open trap above - annoying but harmless. For a blocking hook whose fallback is `|| exit 2` (fail closed, which is the correct default for a security guard), that same SyntaxError now blocks every tool call - Read, Edit, Write, Bash, all of them. There is no self-repair path, because the tools needed to fix the hook are exactly the tools the hook is blocking (observed on Claude Code v2.1.220, Windows 11 with Git Bash; no official page covers this session-lock failure mode, so recheck if behaviour changes).
 
 This is not a hypothetical: a stale-content check was added to a write guard, its blocked-message text happened to contain a quote character, and the guard began exiting 2 on every single tool use. Nothing worked until the file was edited directly on disk from outside the session - and the first attempted fix made it worse, swapping the double quotes for single quotes and landing on a different SyntaxError inside a Python string.
 
@@ -252,6 +254,8 @@ All hooks go in `.claude/settings.json`. All permissions and MCP server config g
 
 ## Critical for Windows
 
-Hooks must be `.bat` or `.ps1` files, not bash scripts. Git Bash hooks work in WSL but Windows git hooks (used by GitHub Desktop) will fail silently or block commits entirely if you use bash syntax. This is a painful lesson that only needs to be learned once.
+This section is about git hooks (`.git/hooks/`, run by git itself on `commit`, `push`, and so on), not Claude Code's own hooks - the two are separate mechanisms that happen to share a name. Claude Code hooks in `.claude/settings.json` can stay as bash: the shell-form command runs through Git Bash on Windows by default, or PowerShell if Git Bash isn't installed (full reference: https://docs.anthropic.com/en/claude-code/hooks#exec-form-and-shell-form).
 
-If you're on Windows: write all hooks as `.ps1` or `.bat` scripts. Keep bash hooks only in `.claude/settings.json` (not in `.git/hooks/`).
+Git hooks are a different story. Git Bash hooks work under WSL, but a Windows git client that shells out through `cmd.exe` rather than Git Bash - GitHub Desktop is the common case - will fail silently or block commits entirely if a git hook is written in bash syntax (observed on Windows 11 with GitHub Desktop; this is git-client behaviour, not a Claude Code feature, so no official Claude Code page covers it - recheck if the client's shelling-out behaviour changes). This is a painful lesson that only needs to be learned once.
+
+If you're on Windows: write git hooks (`.git/hooks/`) as `.ps1` or `.bat` scripts. Claude Code hooks (`.claude/settings.json`) can stay bash.

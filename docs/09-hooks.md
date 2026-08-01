@@ -52,7 +52,7 @@ except Exception as e:
 
 Before writing a hook, ask one question: can this hook exit non-zero and block a tool call? The answer decides how paranoid to be about its failure modes, because the blast radius of a bug is completely different between the two kinds.
 
-Passive hooks (logging, warnings, context injection) always exit 0. Blocking hooks (guards, validators) exit non-zero on a violation. A bug in a passive hook makes it go silently inert - it stops doing its job, but every tool call still succeeds. Annoying, but easy to notice and fix. A bug in a blocking hook can lock the whole session - every tool call blocked, including the tools you'd need to fix the hook itself. That second failure mode is the one worth designing against from the start.
+Passive hooks (logging, warnings, context injection) always exit 0. Blocking hooks (guards, validators) exit 2 on a violation, since that is the only code that blocks. A bug in a passive hook makes it go silently inert - it stops doing its job, but every tool call still succeeds. Annoying, but easy to notice and fix. A bug in a blocking hook can lock the whole session - every tool call blocked, including the tools you'd need to fix the hook itself. That second failure mode is the one worth designing against from the start.
 
 ### The Silent Fail-Open Trap (SyntaxError)
 
@@ -133,7 +133,7 @@ fi
 $PY "$SCRIPT" || exit 2   # only genuine, deliberate blocks reach here
 ```
 
-Inside `guard.py`, any string content is safe - no shell quoting to reason about at all. Apply this pattern to any hook that can exit non-zero; it's the general answer to the blast-radius question above. Passive hooks can stay as `-c "..."` if that's more convenient - their worst case is inert, never locked.
+Inside `guard.py`, any string content is safe - no shell quoting to reason about at all. Apply this pattern to any hook that can exit 2; it's the general answer to the blast-radius question above. Passive hooks can stay as `-c "..."` if that's more convenient - their worst case is inert, never locked.
 
 ### The `if:` Field - Efficient Tool Matching
 
@@ -491,7 +491,7 @@ Each log file gets a single line appended per event. No truncation, no rotation 
 
 **Analysis tools:** once you have log data, simple Python scripts can generate monthly summaries, burn-rate graphs, skill usage rankings for the Question/Delete pass. These are optional - but the data is worthless if you never look at it.
 
-**A blind spot worth naming:** blocking hooks (exit non-zero + stderr message) are the one hook type this pattern tends to miss entirely. A guard that blocks a write and prints its reason to stderr is visible in that single session's transcript, but if nothing writes the event to a log file, it leaves no trail once the session ends - there's nothing to grep. That matters because of a related rule worth having: a hook that fires repeatedly on the same pattern is a signal, not a mechanism - it means the underlying default behavior is wrong and should be fixed at the source (the instruction, the skill, the process doc that's steering Claude wrong), rather than silently tolerated because the hook keeps catching it every time. Without a log, "repeatedly" is unmeasurable - you're relying on memory of past incidents instead of a search. If a guard hook blocks something, consider having it append one line to a violations log before it exits, right there in the same code path as the block - that closes the loop between "the hook caught something" and "was this the third time this month."
+**A blind spot worth naming:** blocking hooks (exit 2 + stderr message) are the one hook type this pattern tends to miss entirely. A guard that blocks a write and prints its reason to stderr is visible in that single session's transcript, but if nothing writes the event to a log file, it leaves no trail once the session ends - there's nothing to grep. That matters because of a related rule worth having: a hook that fires repeatedly on the same pattern is a signal, not a mechanism - it means the underlying default behavior is wrong and should be fixed at the source (the instruction, the skill, the process doc that's steering Claude wrong), rather than silently tolerated because the hook keeps catching it every time. Without a log, "repeatedly" is unmeasurable - you're relying on memory of past incidents instead of a search. If a guard hook blocks something, consider having it append one line to a violations log before it exits, right there in the same code path as the block - that closes the loop between "the hook caught something" and "was this the third time this month."
 
 ---
 

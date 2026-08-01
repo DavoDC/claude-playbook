@@ -101,6 +101,10 @@ When fixing a bug or correcting a mistake, always do BOTH:
 
 One way a guard fails quietly: when its selection criterion and its pass criterion are the same property. A checker that only examines inputs which already look valid can never find the ones that don't - the worst violations get skipped as "not my business" before they're ever checked, and the guard reports success while doing nothing. Keep the two separate: decide what to check based on something independent of correctness (file path, a marker, surrounding structure), never based on the property being validated. And treat an empty result as a failure to investigate, not a clean pass - a check that found nothing and a check that never ran look identical from the outside.
 
+Fix and guard closes a single door. There's a third rung beyond it, and it's where the actual compounding happens: name the structural reason the setup allowed the bug in the first place, ask what else shares that same gap, and ask which existing review should have caught it and didn't - then fix that review too. Skipping this rung means the next bug with the same root cause gets fixed and guarded individually, again, forever.
+
+The same discipline runs in the other direction. When something you tried turns out to be genuinely good - a prompt phrasing, a workflow shortcut, a way of splitting a task - decide immediately whether it should recur, not later. A high-value one-off left as a one-off wastes most of its value: the value was in doing it again, and by the time you remember it happened, the details of what made it work are gone.
+
 ### 3. Research Approach
 
 Tell Claude the order to look for information:
@@ -318,7 +322,7 @@ Prefer dry-run mode first. Never delete source files without confirming the
 destination write succeeded. When in doubt, do nothing and ask.
 ```
 
-### Section 8: Explicit Prohibitions
+### Section 8: Explicit Prohibitions and the Division of Labour
 
 Named constraints are more reliable than implicit ones:
 
@@ -331,6 +335,10 @@ workflows, but stops before running any integration. No exceptions, even dry-run
 TagFixer MUST ONLY operate on the NewMusic folder. Never on the library root.
 Never refactor this to accept a folderPath parameter.
 ```
+
+Prohibitions are only half of it. A CLAUDE.md should name two lists explicitly: what the agent may do without asking, and what it must always hand back to you. An unstated boundary gets rediscovered by crossing it - the agent tries the risky operation, gets caught, gets corrected, and the correction only covers that one case. Naming both lists up front closes the whole class at once instead of one instance at a time.
+
+The harder half to hold onto: when a task hits a step the agent genuinely cannot run - a push, a production deploy, an account credential, a physical action - the right response is to deliver the complete solution with that one step clearly handed over, never to quietly shrink the deliverable to only what could be executed. A narrowed deliverable reads as a finished one right up until the un-run step turns out to matter. State the handoff in the output every time it's hit, rather than letting the gap surface later as a surprise.
 
 ### Section 9: Critical Platform Gotchas
 

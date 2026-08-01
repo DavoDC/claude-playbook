@@ -67,6 +67,12 @@ Before closing any investigation that ended in an absence, re-run the search one
 
 See `templates/enforced-rules.md` for a ready-to-use starter.
 
+### When the Always-Loaded File Gets Too Big
+
+The same fate that motivated pulling rules out of CLAUDE.md in the first place eventually catches up with enforced-rules.md itself: as it grows, it stops being read carefully. The fix is the same pattern one level down - demote a rule to a one-line pointer and load its detail on demand, so the always-loaded file becomes a tiered index rather than a document that has to hold everything at once.
+
+That demotion has a safety condition, and it's the half that's easy to skip: a rule may only be demoted to a pointer if its detail is genuinely reachable at the moment it becomes relevant - a feedback file something actually loads, a process doc a skill reads - not a file nobody opens until someone happens to go looking. Never demote a rule whose violation is silent and whose detail lives in a document nothing loads; a silent failure with no active trigger to surface the pointer just stops firing, and nothing tells you it stopped. Without that condition, demotion is hiding rules and calling it organisation.
+
 ---
 
 ## The Improvement Loop
@@ -109,6 +115,12 @@ A pipe-delimited table in a single file tracks every improvement to the workspac
 Columns: date, git SHA, category (hook/skill/rule/process/tool/config), description, portability (APPLY/SKIP/DEFER).
 
 This is faster than parsing git log and lets you quickly find "what hooks did I add in May?" or "what rules are portable to a new machine?". The portability flag matters: some things are environment-specific (launcher scripts, timezone config, container paths) and shouldn't be blindly copied.
+
+### Knowing Whether the Loop Is Working
+
+An improvement loop that's never measured is a belief, not a process. It's easy to feel like corrections are compounding while the actual rate of repeat violations stays flat - instrument it mechanically instead of trusting the feeling: track how many feedback files exist, how many are actually being referenced, and whether the same topic keeps reopening under a new filename.
+
+Two things matter once you do. A metric some rule depends on that reads blank for several runs in a row is a defect in the instrumentation, not a clean result to shrug at - "zero repeat violations this month" might mean the loop is working, or it might mean nothing is logging violations anymore, and the two look identical until you check which one it is. And loop-health checks have to be computed as set differences over recorded events - which feedback files exist minus which ones a session actually touched, which rules got promoted minus which ones ever fired again - never as narrative reconciliation. A narrative account of whether the loop worked can always be written to come out even, because it's assembled after the fact from whatever you remember; a set difference over a log either shows a gap or it doesn't.
 
 ### The Rule Promotion Diagram
 

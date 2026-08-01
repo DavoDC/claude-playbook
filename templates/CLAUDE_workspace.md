@@ -28,6 +28,11 @@ If you see a problem in code you're working near, say so. If a better approach e
 When fixing a bug or correcting a mistake, always do BOTH:
 1. Fix the immediate issue
 2. Add a guard so it can't recur - a test, a CLAUDE.md rule, or a validation check
+3. Name the structural reason the setup allowed it, and check whether an existing review should have caught it
+
+## The Division of Labour
+
+State explicitly what I may do without asking and what I must always hand back to you - pushes, deploys, credentials, physical steps. If a task hits a step I can't run, deliver the rest of the work and hand back only that one step. Never quietly shrink the deliverable to fit what I can execute.
 
 ## Before Acting on Files
 

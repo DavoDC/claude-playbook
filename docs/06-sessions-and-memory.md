@@ -50,7 +50,7 @@ The fragment is the most important artifact. Key sections:
 ## Session [N] - [Date]
 
 **Time:** HH:MM - HH:MM (duration)
-**Model:** claude-sonnet-4-6
+**Model:** <model in use this session>
 **Budget:** ctx% used
 
 **What happened:**
@@ -144,10 +144,10 @@ For scripts, utilities, and automation tools, default to Python. Compiled langua
 
 Claude Code has many features - hooks, MCP servers, custom slash commands, statusline config, remote control, thinking modes - but Claude has no awareness of them by default. Claude doesn't know what it can configure unless you tell it.
 
-A practical fix: clone the Claude Code documentation and give Claude access to it:
+A practical fix: point Claude at the official documentation:
 
-```bash
-git clone https://github.com/ericbuess/claude-code-docs
+```
+https://docs.anthropic.com/en/claude-code/
 ```
 
 Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.

@@ -20,9 +20,9 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 ## Environment Setup (do once, pays forever)
 
 - [ ] **Use Windows Terminal** (not cmd.exe or the default terminal) - you can paste images directly into the Claude Code chat window. Screenshot something, Ctrl+V, Claude sees it. This alone unlocks visual debugging.
-- [ ] **Clone the Claude Code docs** - Claude has no awareness of its own features by default. Clone the docs so Claude can read them and suggest things you didn't know existed:
-  ```bash
-  git clone https://github.com/ericbuess/claude-code-docs
+- [ ] **Point Claude at the official docs** - Claude has no awareness of its own features by default. Give it the reference so it can read them and suggest things you didn't know existed:
+  ```
+  https://docs.anthropic.com/en/claude-code/
   ```
   Then ask Claude to read the docs and suggest features that match your workflow. Works especially well for initial setup.
 - [ ] **Read the Claude Code docs yourself** - hooks, MCP servers, statusline config, remote control - most users discover these months late.

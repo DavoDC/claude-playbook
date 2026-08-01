@@ -211,17 +211,57 @@ Put the observation harness in the brief as an explicit deliverable for any AI-b
 
 Running several agent sessions at once is now normal rather than exceptional: a foreground session, an unattended loop, and background subagents can all be live against one checkout simultaneously. They share one working tree, one temp directory, and one set of logs, and nothing in the harness isolates them. Every failure below is silent, and most produce a plausible-looking result, which is why they survive review.
 
-**The design rule is worth more than the hazard list:** every new temp file, log, cache, index or state file gets a session identifier at the moment it is created, and every one is designed against the question "what happens when three of these run at once?" Ask it at creation time - retrofitting session scope onto a file that other scripts already parse costs an order of magnitude more, and until it is done every consumer of that file is quietly wrong.
+**The design rule is worth more than the hazard list:** give every new temp file, log, cache, index or state file a session identifier at the moment it is created, and design each one against the question "what happens when three of these run at once?" Ask it at creation time. Retrofitting session scope onto a file that other tools already parse costs an order of magnitude more than building it in up front, and until it is done every consumer of that file is quietly wrong.
 
 The hazards, in cost order:
 
-- **Commits capture a sibling session's work.** `git add -A`, `git commit -a`, or any pathspec broader than what this session touched will sweep up another session's uncommitted edits. The message then describes one change while the diff contains two, and nobody knows the second one shipped. Stage explicit paths. This is the worst of the set because it corrupts git history, which is the record everything else is reconstructed from.
+- **Commits capture a sibling session's work, and staging explicit paths does not prevent it.** `git add <paths>` controls what you add; `git commit` then ships the *entire index*, including whatever a sibling session staged seconds earlier. Two sessions can each name only their own files to `git add` and still have one of them ship the other's in-progress work, because the commit command itself was never told to restrict its scope. The fix is to pass the pathspec to the commit, not just to the add:
+
+  ```
+  git commit -m "..." -- path/one.md path/two.py
+  ```
+
+  This is the costliest hazard in the set because it corrupts git history, which is the one record everything else gets reconstructed from. Verify rather than trust: `git show --stat HEAD` after committing should list exactly the files you intended and nothing else.
 - **"The latest entry" in a shared log is not necessarily yours.** Any hook in any session appends to shared logs. Reading the tail to find out what *this* session did returns whatever was written most recently by *any* session. Filter by session id, never by recency.
 - **Day-scoped counters span every session.** Token counts, violation tallies and similar daily aggregates sum all concurrent sessions. Correct as a daily total, wrong for every per-session claim derived from it.
 - **The statusline cache is last-writer-wins.** One cache path, every session writing it, so the context percentage on screen may belong to a different session. Have the statusline write its session id into the cache and have consumers check it.
 - **Shared state files assume a single reader.** Read-modify-write with no locking loses whichever write landed first, with no error.
 
 One inversion worth noting: account-wide rate-limit windows are genuinely shared, so another session's budget number is the right one to act on. What is wrong there is attributing the spend to this session.
+
+### Worked Example: Locking a Shared Background Step
+
+Two sessions can each decide, independently and reasonably, that a background consolidation step (rebuilding an index, compacting a log, running a cleanup pass) needs to run right now. Nothing prevents both from starting it at once, and the two runs racing each other is worse than either running alone - partial writes, duplicated work, or a file left in a half-written state.
+
+The mechanism is an exclusive lock taken before the step starts: try to acquire it, and if a peer already holds it, wait briefly and then exit cleanly rather than racing it.
+
+```
+if acquire_lock("consolidate.lock", wait=5s):
+    run_consolidation_step()
+    release_lock("consolidate.lock")
+else:
+    exit(0)  # a peer is already doing this; nothing to do here
+```
+
+Keep the wait short - this is a "someone else already has it, stand down" check, not a queue. The specific lock utility varies by platform and is not available in every environment (a plain `mkdir`-based lock works anywhere with a filesystem; `flock` is Unix-only; Windows needs a named mutex or an exclusive file handle), so pick whatever your stack already has rather than adding a new dependency for it.
+
+---
+
+## Freeze the Consumer Before Repairing a Broken Dependency
+
+A dependency that has been down for a while does not mean nothing is happening. It means pending work - a deletion queue, a sync job, a scheduled task - has been silently suppressed the whole time, and the instant the connection is restored, that backlog fires against state that may be months stale. A system that has been failing safely for weeks is not idle; it is loaded.
+
+The instinct on finding a broken connection is to restore it first, because a broken connection reads as safe. It is the opposite: the outage is often the only thing standing between a stale, overdue queue and an action that cannot be undone once it runs.
+
+**How to apply, before touching the connection itself:**
+
+1. Find the consumer of the broken dependency and read its pending work directly from storage - the queue table, the collection, the job list - rather than through the API, because the API usually needs the same dependency that is down.
+2. Check for due dates or timestamps that passed during the outage. Overdue by any margin is the danger signal.
+3. Freeze the consumer: disable the schedule, deactivate the job, pause the worker. Verify the freeze actually took effect.
+4. Only then repair the dependency.
+5. Clear or re-date the stale queue before unfreezing, so entries evaluate against a fresh clock rather than inheriting a due date from before the outage began.
+
+This generalizes past any one integration: paused cron jobs, disabled webhooks, a stopped worker with a full queue, an expired credential blocking a sync, a disconnected replica about to catch up - anything with a due-date or backlog semantic behaves the same way. The one-line test before repairing any broken dependency: ask what the repair will *unblock*, and go look at that queue first.
 
 ---
 

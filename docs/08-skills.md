@@ -98,6 +98,16 @@ Wire to a quarterly recurring task with your enforced-rules.md + CLAUDE.md as ar
 
 ---
 
+### [/prioritise](https://github.com/DavoDC/claude-playbook/blob/main/skills/prioritise/SKILL.md) (ranking interface)
+
+Rank any list or backlog by leverage, using Aristotle's "who benefits, are they a bottleneck?" lens. Aristotle is the engine; this is the focused interface for pure ranking - no full 5-phase narration, just a ranked list with one-line justification per item.
+
+**When to use:** ranking a backlog, prioritising IDEAS.md, deciding what order to work through a list of tasks. When `/aristotle` is already running, redirect pure ranking requests here instead.
+
+[Full SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/prioritise/SKILL.md)
+
+---
+
 ## Daily Workflow Skills
 
 ### /end-session (heavily used)
@@ -118,6 +128,9 @@ Commit changed files in logical chunks - one commit per feature/fix/topic. Analy
 
 ### [/deep-dive](https://github.com/DavoDC/claude-playbook/blob/main/skills/deep-dive/SKILL.md) (occasional)
 Deep investigation of a topic, file, directory, or repo. Think hard, investigate thoroughly, miss nothing. Uses a commit-anchored delta approach (see [Part 10](10-advanced.md)): only reads files that changed since the last deep-dive of the same scope.
+
+### [/cross-synth](https://github.com/DavoDC/claude-playbook/blob/main/skills/cross-synth/SKILL.md)
+Cross-synthesise any N subjects (repos, files, docs, configs, tests, features) side-by-side: find what's shared, what's missing, what's inconsistent, and what one subject can teach the others. Horizontal analysis - where `/deep-dive` goes deep on one thing, `/cross-synth` goes wide across many.
 
 ### [/process-feedback](https://github.com/DavoDC/claude-playbook/blob/main/skills/process-feedback/SKILL.md) (occasional)
 Takes a `feedback_*.txt` file written by the user (raw notes, corrections, wishes) and produces two outputs: new IDEAS.md entries for product work, and Claude rule files for feedback. The bridge between user notes and the improvement system.
@@ -197,6 +210,9 @@ Undo the last N commits via `git reset --soft`, show what's staged, help recommi
 
 ### /health
 Workspace health check. Detects skill gaps, hook count anomalies, file bloat, stale peer-sync reviews, unindexed memory files.
+
+### [/skill-suggest](https://github.com/DavoDC/claude-playbook/blob/main/skills/skill-suggest/SKILL.md)
+Context-aware skill recommendations. Describe a task and it detects the intent (exploration, implementation, debugging, review, ...) and suggests the most relevant installed skills, with an optional `--detailed` mode for full guidance on each match. Uses keyword matching, so treat suggestions as a starting point, not a verdict.
 
 ### [/repo-status](https://github.com/DavoDC/claude-playbook/blob/main/skills/repo-status/SKILL.md)
 Multi-repo status overview. For each repo in a configured directory: current branch, uncommitted changes count, and unpushed commits count. Output as a compact table. Flags repos with dirty files, unpushed commits, or unexpected branches. Never fetches (no network requirement). Read-only.

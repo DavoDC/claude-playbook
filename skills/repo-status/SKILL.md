@@ -1,3 +1,9 @@
+---
+description: Multi-repo status overview - branch, dirty file count, unpushed commits per repo. Read-only, never fetches.
+effort: low
+when_to_use: "Use before a container rebuild, session end, or when switching between repos to check for dirty files or unpushed commits across your workspace. Report, never fix - this skill surfaces state only."
+---
+
 # /repo-status - Multi-Repo Status Overview
 
 Check the state of all repos in your workspace before a container rebuild, session end, or switching between repos.

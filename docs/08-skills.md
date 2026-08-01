@@ -96,7 +96,9 @@ Examines EXISTING rules backward - "should this still exist?" Complements `/aris
 
 Output: table of verdicts per principle (not prose), then a one-paragraph summary. Anti-pattern: zero zombies = you summarised, not questioned.
 
-Wire to a quarterly recurring task with your enforced-rules.md + CLAUDE.md as arguments. Pairs well with `/reflection` (which finds new rules to add) - `/socrates` is the trimmer.
+Wire to a recurring task with your enforced-rules.md + CLAUDE.md as arguments. Pairs well with `/reflection` (which finds new rules to add) - `/socrates` is the trimmer.
+
+A calendar cadence ("quarterly") is the obvious first choice but doesn't generalise well if your session cadence is irregular - a quarter can pass in a handful of sessions or in hundreds, depending on how active the period was. If your usage is bursty rather than steady, prefer a cadence measured in sessions (for example, every 15-20 sessions) over one measured in calendar time.
 
 [Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/socrates/SKILL.md)
 
@@ -236,6 +238,8 @@ Every skill installed under `.claude/skills/` loads its name and one-line descri
 **Keep a retired-skills index.** Retiring a skill without a record of it means forgetting it exists the next time the process comes up. One entry per retired skill - what it did, when it was retired, and the path to bring it back - in an index file next to the archive folder. The index is what makes retirement safe: you're not deleting capability, you're moving its cost from "every session" to "the one session you actually need it."
 
 **Prefer reading a retired skill in place over promoting it back.** For a process that comes up genuinely occasionally - once a quarter, once every few months - the cheapest move is to open the archived SKILL.md and follow it manually, not to reinstall it. Promoting it back "just for this one use" is exactly how the context tax creeps back in: nobody re-retires it afterward, and a few months later it's dead weight in every session again.
+
+**Track the retirement decision itself, not just the retirement.** Archiving a skill is easy to execute and easy to forget about afterward - the file moves, the index gets a line, and the judgment call ("was this the right thing to retire?") quietly disappears with it. Put that judgment call on a visible backlog instead of letting it evaporate: a line in your ideas or backlog doc naming the skill and the open question keeps it revisitable. This matters most when the retirement was a close call rather than an obvious one - a skill with low but nonzero usage, or one that overlaps with something else that stayed installed. A decision sitting on a backlog gets reconsidered when circumstances change; a decision that only exists as a completed action in an archive folder does not.
 
 **The promotion criterion - and the part invocation counts alone will miss.** A skill earns its place installed if EITHER of two things is true: it's invoked directly and regularly, OR another installed skill routes into it as part of its own workflow. The second criterion is the non-obvious one. A real failure mode: a ranking/prioritisation skill was retired because its own direct invocation count was low, while several of the thinking skills that stayed installed all called into it as a step in their own process. The result was a dead command sitting in the middle of what had been a working chain - the routing calls into it silently failed, and nobody noticed until something downstream broke. Before retiring anything, grep the other installed skills for its name, not just its own invocation log.
 

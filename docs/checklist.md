@@ -27,6 +27,7 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
   https://docs.anthropic.com/en/claude-code/
   ```
   Then ask Claude to read the docs and suggest features that match your workflow. Works especially well for initial setup.
+- [ ] **Clone the docs repo as a sibling of the workspace repo, not inside it** - if you want an always-current local copy (for offline reading, or so a session-start hook can pull and grep it), clone it next to the workspace repo, not nested underneath it: `workspace/` and `claude-code-docs/` as siblings under the same parent folder. "Clone the docs" alone is ambiguous - inside-or-beside are both reasonable readings of the same instruction, and picking the wrong one silently breaks any path that assumes the other. See `docs/11-workspace-repo.md` for the full convention.
 - [ ] **Read the Claude Code docs yourself** - hooks, MCP servers, statusline config, remote control - most users discover these months late.
 
 ---

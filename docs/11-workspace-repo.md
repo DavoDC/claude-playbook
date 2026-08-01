@@ -97,6 +97,14 @@ Over time, the workspace becomes a detailed model of how you work. Not because o
 
 ---
 
+## External Reference Repos (like the docs)
+
+You'll sometimes want a local, read-only clone of something outside your own work - the official docs, a library you're reading source for, anything you pull but never push to. Keep these clones as siblings of the workspace repo, not nested inside it: a parent folder holding `workspace/` and `docs-repo/` next to each other, not `workspace/docs-repo/`.
+
+This matters because "clone the docs locally" on its own is ambiguous - inside-the-workspace and beside-the-workspace are both reasonable readings of the same instruction, and any automation you build on top (a session-start hook that auto-pulls the clone, a skill that greps it) has to guess which one you meant. Guess wrong and the automation doesn't error, it just silently no-ops: the directory check fails, the pull never runs, and nothing tells you. State the convention explicitly - external reference repos live beside the workspace repo, one level up from it - and write any automation that depends on the path to fail loudly (print a warning, don't just skip) when it isn't found there, rather than degrading silently.
+
+---
+
 ## Cross-Machine Sync
 
 The workspace repo syncs across machines the same way any git repo does: commit and push. On a new machine, clone the workspace repo and run Claude from it. Your entire context - preferences, corrections, session history, skills - is immediately available.

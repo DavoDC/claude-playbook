@@ -80,13 +80,17 @@ Effort controls adaptive reasoning - how much the model thinks before responding
 
 **The key insight:** Claude Code's own UI describes `high` as "burns fastest - medium handles most tasks." Sessions contain a mix of complex reasoning and routine work (file reads, git ops, edits). Paying high-effort cost across every routine step wastes budget.
 
-**Default: `medium`.** Set this via your launcher script:
+**Default: `medium`.** Two mechanisms can set this, and they are not interchangeable - they have different persistence semantics, and picking the wrong one defeats the point.
+
+An environment variable (for example a shell or launcher-set `CLAUDE_CODE_EFFORT_LEVEL`) looks like the obvious way to pin a default, but it leaks into the whole session and outranks everything else, including `/effort` calls you make mid-session. Set the variable once and every later attempt to raise effort for a hard problem silently gets overridden back down - `/effort high` appears to work, then the model reasons at the env var's level anyway, with no error and no indication anything is overriding it. That defeats the usual intent of "reset the default at the start of the session, then let the session control itself."
+
+The fix is to patch the default directly instead of exporting an environment variable - either the `effortLevel` key in `settings.json` at launch, or the `--effort` CLI flag shown below, which behaves the same way: it sets the level for that session without writing a persistent override, so it resets cleanly each launch and does not block later `/effort` changes.
 
 ```bat
 cmd /k claude --effort medium
 ```
 
-Using the `--effort` flag on launch sets the level for that session without writing to settings - so it resets cleanly each time. This matters because `/effort low` within a session writes to `settings.json` and persists to the next session; the launcher flag overrides it.
+A settings-file or flag default resets cleanly at the start of each session but does not shadow later in-session changes, so `/effort high` continues to work as expected afterward. Skill-level `effort: high` frontmatter also overrides the session level - but not the environment variable, so a stray `CLAUDE_CODE_EFFORT_LEVEL` still wins even when a skill declares its own effort. Prefer the flag or a settings-file patch; avoid an environment variable for this unless you specifically want it to override every in-session change too.
 
 **For complex reasoning on demand:**
 - Say `ultrathink` in your prompt - applies deep reasoning for that turn only, session level unchanged

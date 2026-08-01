@@ -1,13 +1,23 @@
 #!/bin/bash
 # selftest.sh - self-test for the budget-tracking tools in this repo.
 #
-# Three assertions, no network, no installs beyond python3 and bash:
+# Assertions, no network, no installs beyond python3 and bash:
 #   1. statusline.py accepts synthetic status JSON on stdin, exits 0, and
 #      writes a cache file containing the expected keys.
-#   2. check-budget.sh reads that same cache and emits a percentage.
-#   3. every Claude Code settings.json snippet documented anywhere in this
+#   2. check-budget.sh reads that same cache and its output contains the
+#      exact, distinctive percentage literals fed into statusline.py above -
+#      a real round-trip across the statusline.py -> cache file ->
+#      check-budget.sh boundary, not just "a percentage appeared somewhere".
+#   3. with the cache file removed, check-budget.sh prints its no-data
+#      message and exits 0 (the graceful-failure path the README promises).
+#   4. every Claude Code settings.json snippet documented anywhere in this
 #      repo uses only real settings.json keys (tools/selftest_settings.py
 #      holds the one canonical key list; see that file for the reference).
+#   5. every documented statusLine settings.json snippet (README.md,
+#      docs/*.md) reduces to the same canonical form as every other one,
+#      once the machine-specific command path is normalized away.
+#   6. every fenced python/bash block in the hooks docs that is a whole,
+#      standalone script (not a fragment) is syntactically valid.
 #
 # Output discipline: silent pass, verbose fail. Each passing assertion
 # prints one PASS line and nothing else. A failing assertion prints
@@ -46,15 +56,22 @@ trap cleanup EXIT
 
 CACHE_FILE="$TEST_TMPDIR/claude-statusline-data.json"
 
+# Distinctive synthetic percentages, deliberately all different from each
+# other and from any real-world round number, so a substring match below
+# can't accidentally pass by coincidence.
+SYNTH_FIVE_HOUR=37
+SYNTH_SEVEN_DAY=61
+SYNTH_CTX=84
+
 # ---------------------------------------------------------------------------
 # Assertion 1: statusline.py accepts synthetic input, exits 0, writes cache
 # ---------------------------------------------------------------------------
 SYNTHETIC_JSON='{
   "model": {"display_name": "Claude Sonnet 5", "id": "claude-sonnet-5"},
-  "context_window": {"used_percentage": 42, "context_window_size": 200000},
+  "context_window": {"used_percentage": '"$SYNTH_CTX"', "context_window_size": 200000},
   "rate_limits": {
-    "five_hour": {"used_percentage": 33, "resets_at": 9999999999},
-    "seven_day": {"used_percentage": 12, "resets_at": 9999999999}
+    "five_hour": {"used_percentage": '"$SYNTH_FIVE_HOUR"', "resets_at": 9999999999},
+    "seven_day": {"used_percentage": '"$SYNTH_SEVEN_DAY"', "resets_at": 9999999999}
   },
   "version": "0.0.0-selftest",
   "cwd": "/tmp/selftest",
@@ -122,7 +139,15 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Assertion 2: check-budget.sh parses that cache and emits a percentage
+# Assertion 2: check-budget.sh reads that cache and round-trips the exact
+# synthetic percentages fed into statusline.py above.
+#
+# The old version of this assertion only grepped for "any NN% pattern" in
+# the output. That passes even when a key gets renamed on one side of the
+# statusline.py -> cache file -> check-budget.sh boundary, as long as SOME
+# percentage happens to survive elsewhere. Asserting the exact, distinctive
+# literal strings below - "5h: 37%" and not just "\d+%" - fails the moment
+# either script stops agreeing with the other on a key name or a field.
 # ---------------------------------------------------------------------------
 ASSERT2_OK=1
 if [ "$ASSERT1_OK" != "1" ]; then
@@ -137,34 +162,195 @@ else
         echo "--- check-budget.sh output ---"
         echo "$BUDGET_OUTPUT"
         echo "-------------------------------"
-    elif ! printf '%s' "$BUDGET_OUTPUT" | grep -Eq '[0-9]+%'; then
-        ASSERT2_OK=0
-        echo "FAIL: assertion 2 - no NN% pattern found in check-budget.sh output"
-        echo "--- check-budget.sh output ---"
-        echo "$BUDGET_OUTPUT"
-        echo "-------------------------------"
+    else
+        for EXPECTED in "5h: ${SYNTH_FIVE_HOUR}%" "7d: ${SYNTH_SEVEN_DAY}%" "ctx: ${SYNTH_CTX}%"; do
+            if ! printf '%s' "$BUDGET_OUTPUT" | grep -qF -- "$EXPECTED"; then
+                ASSERT2_OK=0
+                echo "FAIL: assertion 2 - expected literal \"$EXPECTED\" in check-budget.sh output, not found"
+            fi
+        done
+        if [ "$ASSERT2_OK" != "1" ]; then
+            echo "--- check-budget.sh output ---"
+            echo "$BUDGET_OUTPUT"
+            echo "-------------------------------"
+        fi
     fi
 fi
 
 if [ "$ASSERT2_OK" = "1" ]; then
-    echo "PASS: assertion 2 - check-budget.sh reads the cache and emits a percentage"
+    echo "PASS: assertion 2 - check-budget.sh round-trips the exact synthetic percentages from statusline.py"
 else
     FAILED=1
 fi
 
 # ---------------------------------------------------------------------------
-# Assertion 3: every settings.json snippet in the repo's docs uses only
+# Assertion 3: graceful no-data path. With the cache file removed,
+# check-budget.sh must print its no-data message and exit 0, not fail. This
+# is the only assertion testing the failure-mode promise the README makes:
+# a missing/misconfigured statusline reports "no data", it does not error.
+# ---------------------------------------------------------------------------
+ASSERT3_OK=1
+rm -f "$CACHE_FILE"
+NODATA_OUTPUT=$(bash "$SCRIPT_DIR/check-budget.sh" 2>&1)
+NODATA_EXIT=$?
+# Literal message text, copied from check-budget.sh's own no-data branch.
+EXPECTED_NODATA_MSG="Budget: no rate-limit data in statusline file"
+
+if [ "$NODATA_EXIT" -ne 0 ]; then
+    ASSERT3_OK=0
+    echo "FAIL: assertion 3 - check-budget.sh exited $NODATA_EXIT with no cache file present, expected 0"
+    echo "--- check-budget.sh output ---"
+    echo "$NODATA_OUTPUT"
+    echo "-------------------------------"
+elif [ "$NODATA_OUTPUT" != "$EXPECTED_NODATA_MSG" ]; then
+    ASSERT3_OK=0
+    echo "FAIL: assertion 3 - expected exactly \"$EXPECTED_NODATA_MSG\""
+    echo "--- check-budget.sh output ---"
+    echo "$NODATA_OUTPUT"
+    echo "-------------------------------"
+fi
+
+if [ "$ASSERT3_OK" = "1" ]; then
+    echo "PASS: assertion 3 - check-budget.sh handles a missing cache file gracefully (no-data message, exit 0)"
+else
+    FAILED=1
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 4: every settings.json snippet in the repo's docs uses only
 # real settings keys, checked against one canonical list.
 # ---------------------------------------------------------------------------
 SETTINGS_OUTPUT=$(python3 "$SCRIPT_DIR/selftest_settings.py" "$REPO_ROOT" 2>&1)
 SETTINGS_EXIT=$?
 
 if [ "$SETTINGS_EXIT" -eq 0 ]; then
-    echo "PASS: assertion 3 - $SETTINGS_OUTPUT"
+    echo "PASS: assertion 4 - $SETTINGS_OUTPUT"
 else
     FAILED=1
-    echo "FAIL: assertion 3 - settings-key drift detected"
+    echo "FAIL: assertion 4 - settings-key drift detected"
     echo "$SETTINGS_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 5: every documented statusLine settings.json snippet reduces to
+# the same canonical form as every other one. The key-drift check above only
+# proves each key name is real - it says nothing about whether two docs
+# structure the SAME setting differently (wrong nesting, an extra sibling
+# key, a swapped value). This is the assertion that would have caught a
+# past bug where a settings key was written wrongly in more than one place.
+# ---------------------------------------------------------------------------
+STATUSLINE_OUTPUT=$(python3 "$SCRIPT_DIR/selftest_settings.py" "$REPO_ROOT" --statusline-agreement 2>&1)
+STATUSLINE_SETTINGS_EXIT=$?
+
+if [ "$STATUSLINE_SETTINGS_EXIT" -eq 0 ]; then
+    echo "PASS: assertion 5 - $STATUSLINE_OUTPUT"
+else
+    FAILED=1
+    echo "FAIL: assertion 5 - statusLine snippets disagree with each other"
+    echo "$STATUSLINE_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 6: fenced python and bash blocks in the hooks docs that are
+# whole, standalone scripts are syntactically valid (python3 -m py_compile /
+# bash -n).
+#
+# NOTE: this is a SYNTAX check only, not a behaviour check. A block passing
+# here means it parses - it says nothing about whether the hook does the
+# right thing at runtime. Green here must never be read as "these hooks
+# work".
+#
+# Skip rule for telling a whole script apart from a fragment: a block only
+# counts if its FIRST line is a shebang ("#!..."). Every fragment in these
+# two docs - a WRONG/CORRECT comparison that contains an intentional
+# SyntaxError for illustration, a bare "python3 -c ..." one-liner, a snippet
+# meant to be pasted into the middle of an existing hook - lacks a shebang,
+# because none of them are standalone scripts. Every full recipe in these
+# docs opens with one. This is deliberately the ONLY signal used: a block is
+# not excluded just because it contains a "..." placeholder in a comment
+# (the fail-open wrapper example does exactly that and is still a complete,
+# valid, checkable script), so the rule stays a single unambiguous check
+# instead of a pile of heuristics that could disagree with each other.
+# ---------------------------------------------------------------------------
+HOOKS_DOC_1="$REPO_ROOT/docs/09-hooks.md"
+HOOKS_DOC_2="$REPO_ROOT/docs/09-hooks-recipes.md"
+HOOKBLOCK_DIR="$TEST_TMPDIR/hookblocks"
+mkdir -p "$HOOKBLOCK_DIR"
+
+ASSERT6_OK=1
+
+BLOCKS_FOUND=$(python3 - "$HOOKBLOCK_DIR" "$HOOKS_DOC_1" "$HOOKS_DOC_2" << 'PYEOF'
+import re, sys, os
+
+out_dir = sys.argv[1]
+doc_paths = sys.argv[2:]
+
+FENCE_RE = re.compile(r"```(python|bash)\n(.*?)```", re.DOTALL)
+
+n = 0
+manifest = []
+for doc_path in doc_paths:
+    with open(doc_path, encoding="utf-8") as f:
+        text = f.read()
+    for m in FENCE_RE.finditer(text):
+        lang, block = m.group(1), m.group(2)
+        lines = block.splitlines()
+        first_line = lines[0] if lines else ""
+        if not first_line.startswith("#!"):
+            # Fragment, not a whole script - see the skip-rule comment in
+            # selftest.sh for why shebang presence is the chosen signal.
+            continue
+        n += 1
+        ext = "py" if lang == "python" else "sh"
+        out_path = os.path.join(out_dir, f"block{n}.{ext}")
+        # newline="" everywhere in this block: on Windows, text-mode writes
+        # translate every "\n" to "\r\n". Left alone that plants a stray
+        # \r on the end of the "lang" field of every manifest.tsv row (and
+        # inside the extracted scripts themselves), which silently breaks
+        # the `[ "$LANG" = "python" ]` comparison below and makes every
+        # python block get bash-syntax-checked instead of py_compile'd.
+        with open(out_path, "w", encoding="utf-8", newline="") as out:
+            out.write(block)
+        manifest.append(f"{out_path}\t{doc_path}\t{lang}")
+
+with open(os.path.join(out_dir, "manifest.tsv"), "w", encoding="utf-8", newline="") as f:
+    f.write("\n".join(manifest))
+
+print(n)
+PYEOF
+)
+
+if ! [ "$BLOCKS_FOUND" -gt 0 ] 2>/dev/null; then
+    ASSERT6_OK=0
+    echo "FAIL: assertion 6 - found 0 shebang-prefixed python/bash blocks across the hooks docs."
+    echo "This means the extractor did not run, not that it passed - the fence"
+    echo "pattern or shebang signal in selftest.sh is not matching anything."
+fi
+
+if [ "$ASSERT6_OK" = "1" ]; then
+    while IFS=$'\t' read -r BLOCK_PATH DOC_PATH LANG; do
+        [ -z "$BLOCK_PATH" ] && continue
+        if [ "$LANG" = "python" ]; then
+            BLOCK_ERR=$(python3 -m py_compile "$BLOCK_PATH" 2>&1)
+            BLOCK_RC=$?
+        else
+            BLOCK_ERR=$(bash -n "$BLOCK_PATH" 2>&1)
+            BLOCK_RC=$?
+        fi
+        if [ "$BLOCK_RC" -ne 0 ]; then
+            ASSERT6_OK=0
+            echo "FAIL: assertion 6 - $BLOCK_PATH (from $DOC_PATH) failed a $LANG syntax check"
+            echo "--- error ---"
+            echo "$BLOCK_ERR"
+            echo "-------------"
+        fi
+    done < "$HOOKBLOCK_DIR/manifest.tsv"
+fi
+
+if [ "$ASSERT6_OK" = "1" ]; then
+    echo "PASS: assertion 6 - $BLOCKS_FOUND whole-script block(s) in the hooks docs pass a syntax check (syntax only, not a behaviour check)"
+else
+    FAILED=1
 fi
 
 # ---------------------------------------------------------------------------

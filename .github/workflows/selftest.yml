@@ -3,13 +3,114 @@ name: selftest
 on:
   push:
   pull_request:
+  workflow_dispatch:
+  # Weekly, not just on push/pull_request: what this suite defends against
+  # most is upstream harness drift (Claude Code changing a settings key,
+  # a statusline field, or a documented URL out from under this repo) -
+  # and that kind of drift happens with zero commits to this repo. A
+  # push-only trigger would never fire during exactly the quiet period
+  # when nobody is touching this repo and it is most likely to go stale.
+  schedule:
+    - cron: "0 3 * * 1"  # Monday 03:00 UTC
+
+permissions:
+  contents: read
 
 jobs:
   selftest:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - run: bash tools/selftest.sh
+      # shell: bash on Windows runners uses the Git Bash that ships with
+      # actions/runner-images, not PowerShell/cmd - selftest.sh is a bash
+      # script and needs it either way. The Windows leg is not redundant
+      # with the Ubuntu leg: this repo makes Windows-specific claims (see
+      # docs/09-hooks.md "Critical for Windows"), and only a real Windows
+      # runner proves the temp-dir isolation in selftest.sh actually holds
+      # up where Python resolves tempfile.gettempdir() via TEMP, not TMPDIR.
+      - name: Run selftest.sh
+        shell: bash
+        run: bash tools/selftest.sh
+
+  doc-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check docs.anthropic.com links resolve
+        shell: bash
+        run: |
+          set -u
+
+          # Pull every full https://docs.anthropic.com/... URL out of every
+          # markdown, python, and shell file in the repo. Only full https://
+          # URLs are matched here - a couple of bare non-https pointers
+          # exist elsewhere in the repo and are handled separately, not by
+          # this job. The excluded-character class deliberately does NOT
+          # exclude "[" or "]" - some URLs end in a literal placeholder like
+          # "[topic]", and that bracket is the signal the skip check below
+          # needs to see; only whitespace and markdown/code delimiters
+          # (quotes, backtick, parens, angle brackets) are stripped.
+          URL_PATTERN="https://docs\.anthropic\.com/[^[:space:]\"'\`()<>]+"
+          RAW_URLS=$(grep -rhoE "$URL_PATTERN" \
+              --include='*.md' --include='*.py' --include='*.sh' . || true)
+
+          FAILED=0
+          CHECKED=0
+          SEEN=""
+
+          while IFS= read -r URL; do
+              [ -z "$URL" ] && continue
+
+              # Strip trailing punctuation that grep's URL match tends to
+              # sweep up from surrounding prose (end of sentence, closing
+              # paren/bracket that wasn't part of the URL, markdown link
+              # syntax remnants).
+              CLEAN_URL=$(printf '%s' "$URL" | sed -E 's/[.,;:!?)]+$//')
+
+              # Skip placeholder URLs like https://docs.anthropic.com/en/[topic]
+              # - these are illustrative, not real pointers, and will never
+              # resolve.
+              case "$CLEAN_URL" in
+                  *"["*"]"*) continue ;;
+              esac
+
+              # De-dupe: the same URL is often documented in more than one
+              # place, no need to hit it twice.
+              case " $SEEN " in
+                  *" $CLEAN_URL "*) continue ;;
+              esac
+              SEEN="$SEEN $CLEAN_URL"
+
+              CHECKED=$((CHECKED + 1))
+              STATUS=$(curl -s -o /dev/null -w '%{http_code}' -L --max-time 15 "$CLEAN_URL" || echo "000")
+
+              case "$STATUS" in
+                  2??|3??)
+                      echo "OK   $STATUS  $CLEAN_URL"
+                      ;;
+                  *)
+                      echo "FAIL $STATUS  $CLEAN_URL"
+                      FAILED=1
+                      ;;
+              esac
+          done <<< "$RAW_URLS"
+
+          if [ "$CHECKED" -eq 0 ]; then
+              echo "FAIL: found 0 https://docs.anthropic.com/... URLs to check."
+              echo "This means the extractor did not run, not that it passed."
+              exit 1
+          fi
+
+          if [ "$FAILED" -eq 1 ]; then
+              echo "VERDICT: FAIL - one or more docs.anthropic.com links did not resolve"
+              exit 1
+          fi
+
+          echo "VERDICT: PASS - all docs.anthropic.com links resolved"

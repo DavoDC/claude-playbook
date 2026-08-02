@@ -6,13 +6,13 @@ Forward-looking backlog. Format and lifecycle: `templates/BACKLOG-SPEC.md`, not 
 
 ---
 
-## T0 - blocking
+## TIER 0 - blocking
 
 - [ ] **Outcome.** Why it is necessary: what fails if skipped.
   Evidence: `file:line`.
 
-## T1 - core
+## TIER 1 - core
 
-## T2 - quality
+## TIER 2 - quality
 
-## T3 - nice to have
+## TIER 3 - nice to have

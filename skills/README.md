@@ -76,6 +76,7 @@ Claude Code makes it available as `/<name>` in any session run from that workspa
 | [think](think/SKILL.md) | Full build workflow - /aristotle + 5-step engineering algorithm + instantiation check |
 | [socrates](socrates/SKILL.md) | Rule evaluator - 5 questions per principle, verdict table, deletes zombies, strengthens weak rules |
 | [prioritise](prioritise/SKILL.md) | Rank any list by leverage - Aristotle's "who benefits, are they a bottleneck?" lens |
+| [brainstorm](brainstorm/SKILL.md) | Generate options for a genuinely open-ended problem - Six Hats, SCAMPER, total negation, reverse brainstorming. Generates; does not rank |
 | [refine-ideas](refine-ideas/SKILL.md) | Clarify IDEAS.md priorities - one question per item ("why necessary?"), groups by answer |
 | [survey-repo](survey-repo/SKILL.md) | Quick codebase summary - language, purpose, key files, tests, entry points, open TODOs |
 | [deep-dive](deep-dive/SKILL.md) | Deep investigation of a topic, file, or repo - security analysis, code review, architecture |

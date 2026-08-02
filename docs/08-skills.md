@@ -114,6 +114,18 @@ Rank any list or backlog by leverage, using Aristotle's "who benefits, are they 
 
 ---
 
+### [/brainstorm](https://github.com/DavoDC/claude-playbook/blob/main/skills/brainstorm/SKILL.md) (generation interface)
+
+Generate options for a genuinely open-ended problem using a named method rather than free association: Six Thinking Hats to evaluate one candidate from six angles, SCAMPER to generate siblings of a candidate that already exists, total negation to break out of a framing, reverse brainstorming for safety and correctness work.
+
+**When to use:** "think broadly", "what else could we do", "give me options", "I'm stuck on how to approach this". Also when exactly one candidate exists and you want adjacent or better ones.
+
+**The thing it deliberately does not do is rank.** Generation and evaluation are different activities and blending them is why brainstorms produce three ideas: the first objection kills the second idea before the fourth one exists. This skill generates and hands off to `/prioritise`.
+
+[Full SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/brainstorm/SKILL.md)
+
+---
+
 ## Daily Workflow Skills
 
 ### /end-session (heavily used)

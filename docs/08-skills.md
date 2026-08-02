@@ -133,7 +133,12 @@ No starter SKILL.md included - this skill integrates with IDEAS.md, budget aware
 Commit changed files in logical chunks - one commit per feature/fix/topic. Analyses what's staged/unstaged and proposes a commit split with draft messages. Prevents the "committed everything in one giant blob" problem that makes git history unreadable.
 
 ### [/deep-dive](https://github.com/DavoDC/claude-playbook/blob/main/skills/deep-dive/SKILL.md) (occasional)
-Deep investigation of a topic, file, directory, or repo. Think hard, investigate thoroughly, miss nothing. Uses a commit-anchored delta approach (see [Part 10](10-advanced.md)): only reads files that changed since the last deep-dive of the same scope.
+
+Deep investigation of a topic, file, directory or repo. Two mechanisms make it different from asking Claude to look at something carefully.
+
+It uses a commit-anchored delta (see [Part 10](10-advanced.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
+
+And it generates its lenses before it scans, using the framework in [Part 12](12-audit-lenses.md), then states in its output which cells it walked and which it deliberately skipped. That second half is what stops the fifth pass over a repo confirming what the fourth one said: the delta tells you which files to re-read, and only the lens framework tells you what to ask of them.
 
 ### [/cross-synth](https://github.com/DavoDC/claude-playbook/blob/main/skills/cross-synth/SKILL.md)
 Cross-synthesise any N subjects (repos, files, docs, configs, tests, features) side-by-side: find what's shared, what's missing, what's inconsistent, and what one subject can teach the others. Horizontal analysis - where `/deep-dive` goes deep on one thing, `/cross-synth` goes wide across many.

@@ -72,7 +72,7 @@ Adding items to a backlog is easy and everybody does it. Re-ranking one is rare,
 
 Apply ONE extreme lens to the LIST, not the code. Write down what moved. "Nothing moved" is a real result. Do not run more than two per pass.
 
-This is the cheapest step in the whole process and the only one that improves items you are not touching. One measured instance: asking "what would you fix if you could never touch this repo again" of a 180-item backlog promoted a bottom-tier item to first place, because an override flag that silently destroyed hand-edited work had been correctly tiered as polish under "how valuable is this" and was the most important item in the repo under "what is unrecoverable". Nothing was learned about the code.
+This is the cheapest step in the whole process and the only one that improves items you are not touching. One measured instance: asking "what would you fix if you could never touch this repo again" of a 180-item backlog promoted a bottom-tier item to first place, because an item whose failure mode was silent, irreversible loss of a person's own work had been correctly tiered as polish under "how valuable is this" and was the most important item in the repo under "what is unrecoverable". Nothing was learned about the code.
 
 ## Two mechanical habits
 

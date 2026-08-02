@@ -48,9 +48,9 @@ Record what you walked. A grid of subjects against questions, with four marks:
 
 This is the sharpest single data point the framework has, and it is what `W` exists for.
 
-A data-correctness audit read a specific line of a synchronisation tool: the check that decides whether a remote item has changed and needs re-downloading. It found a genuine defect on that exact line, a configuration boolean read by bare truthiness so that the string "false" turned the feature on. It reported it correctly.
+A data-correctness audit read a specific line: a configuration flag controlling a conditional code path, meant to decide whether an item had changed and needed reprocessing. It found a genuine defect on that exact line, a configuration boolean read by bare truthiness so that the string "false" turned the feature on. It reported it correctly.
 
-Three days later a real user hit a different defect **on the same line**: the skip decides on version equality alone, so it never re-downloads a file the user has deleted locally.
+Three days later a real user hit a different defect **on the same line**: the skip decided on version equality alone, so it never reprocessed an item the user had deleted locally.
 
 The lens was not absent. The line was not unread. The question asked of it was "is this value parsed correctly", and the defect answered to "can this decision lose data". Same subject, same line, different question, and the audit had no way to see it.
 
@@ -71,7 +71,7 @@ Bias a new pass toward HONEST, MISSING and USABLE. Treat a round that is mostly 
 
 **Walk the PEOPLE.** Who else touches this and what do they see? A first-time user. A security reviewer. Someone debugging at two in the morning with only the log. A packager. Someone on the other operating system. Someone with narrower permissions than you. The team inheriting it. Yourself in a year. Each is a lens, and the people axis catches things the subject axis words too neutrally.
 
-**Cross-synthesise, cheapest of all.** Put two comparable things side by side and the differences generate the questions for free. Two repos, two modules, your tool and the real artefact it imitates, this pass and the last one. **Run it both ways or the better design loses to whichever side was audited most recently.** In one instance, comparing two sibling tools produced four defects in one and, more valuably, revealed that the other keyed all its state by an immutable record identifier rather than by filename, which is exactly why one of them had forked forty-three live records and the other structurally could not.
+**Cross-synthesise, cheapest of all.** Put two comparable things side by side and the differences generate the questions for free. Two repos, two modules, your tool and the real artefact it imitates, this pass and the last one. **Run it both ways or the better design loses to whichever side was audited most recently.** In one instance, comparing two sibling tools revealed that one keyed all its state by an immutable record identifier rather than by filename, and the other did not, which is exactly why the filename-keyed tool had forked a meaningful number of live records in ordinary use, and the identifier-keyed one structurally could not.
 
 ## Operate the tool, do not read it
 
@@ -181,7 +181,7 @@ Every lens above answers "is there a defect here". These answer "given everythin
 
 ### The evidence this class is worth having
 
-Two tool backlogs held 180 open items between them, already tiered by value across nine prior audit rounds. Asking one extreme question, *what would you fix if you could never touch this repo again*, promoted a bottom-tier item to first place: an override flag that silently overwrote hand-edited files, destroying a person's work with no trace and no confirmation.
+Two tool backlogs held 180 open items between them, already tiered by value across nine prior audit rounds. Asking one extreme question, *what would you fix if you could never touch this repo again*, promoted a bottom-tier item to first place: an item whose failure mode was silent, irreversible loss of a person's own work, with no trace and no confirmation.
 
 It had been read past by nine rounds and correctly tiered as polish under the question "how valuable is this". Under the question "what is unrecoverable" it is the single most important item in either repo.
 

@@ -190,6 +190,16 @@ Delegation only saves budget if the orchestrator actually verifies what came bac
 
 **How to apply:** before accepting delegated work, check the deliverable directly - list the files that were supposed to be produced, read the actual commits, run the thing. Ask "what would this look like if the agent had faked it?" and check specifically for that. Then bound any send-back to one concrete, verifiable gate rather than an open-ended "make it better" (see the budget-awareness chapter for why open-ended final rounds don't terminate). The verification step is cheap, it's exactly the kind of judgment work the premium tier should be spending its budget on, and skipping it hands the savings from delegating straight back.
 
+### A Recommendation Handover Needs Stable Identifiers
+
+Any workflow where one party hands recommendations to another - a review producing a punch list for a maintainer, a subagent's findings handed back to an orchestrator, one repo's audit producing suggestions for a sibling repo - eventually needs a second round, and the second round always starts the same way: inspecting the recipient's artefact to work out what actually landed from the first round, because nothing flows back on its own.
+
+That inspection is unreliable in one specific and easy-to-miss way: an item the recipient applied in modified form looks identical, from the outside, to an item applied completely unchanged, and an item the recipient deliberately rejected looks identical to one that was simply never seen. All three read as "not present verbatim in the result," and a diff cannot tell them apart.
+
+The cheap half of the fix costs nothing to adopt and should be treated as the baseline rule: give every recommended item a stable identifier that stays unique across handovers, not a number that resets each batch. Per-batch numbering ("item 3") cannot be referred to later, because the next round's item 3 is a different item, and nobody revisiting this two rounds later can tell the two apart by number alone.
+
+The fuller version, worth adopting once volume justifies the bookkeeping: the recipient keeps a one-line disposition per identifier - applied, applied-with-changes, declined, or deferred - plus a short phrase of reason. Applied-with-changes is the interesting case and the one worth the most attention, because it means the recipient found something genuinely wrong with the recommendation as given and fixed it on the way in, and without a disposition line the sender never learns what was wrong or that a fix was even needed. A recommendation that goes in clean and comes out changed is quietly telling the sender something about their own judgment, and that signal is exactly the one a plain diff throws away.
+
 ### Re-test Inherited Constraints Before Planning Around Them
 
 A capability limit that gets written into a doc as a bare fact becomes an unquestioned ceiling. The dangerous version looks like this: a session observes something not working, forms a plausible guess about why ("my plan tier doesn't support this"), and a later session reads that guess as settled fact and plans around it - sometimes for weeks. Nobody re-tests it, because it's no longer presented as a hypothesis, it's presented as established.

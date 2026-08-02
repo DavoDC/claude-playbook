@@ -20,6 +20,9 @@
 #      standalone script (not a fragment) is syntactically valid.
 #   7. every file in docs/ carries exactly one tier marker line (Core or
 #      Field note) among its opening lines.
+#   8. no long sentence appears in two places across this repo's .md files,
+#      outside a short, scoped allow list (tools/selftest_dedup.py holds
+#      the exceptions and the reason for each).
 #
 # Output discipline: silent pass, verbose fail. Each passing assertion
 # prints one PASS line and nothing else. A failing assertion prints
@@ -389,6 +392,27 @@ if [ "$ASSERT7_OK" = "1" ]; then
     echo "PASS: assertion 7 - all $DOCS_CHECKED file(s) under docs/ carry exactly one tier marker line"
 else
     FAILED=1
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 8: no long sentence appears in two places across this repo's .md
+# files, outside a short, scoped allow list. This is the check the other
+# assertions above don't cover - they check settings snippets, scripts, and
+# tier markers, but nothing here asserts prose, and prose is where the
+# single-source rule actually breaks: a correction lands in one copy while
+# another quietly disagrees. The allow list in tools/selftest_dedup.py is
+# scoped per exception to the exact files it was cleared between, so the
+# same sentence turning up in a third file still fails.
+# ---------------------------------------------------------------------------
+DEDUP_OUTPUT=$(python3 "$SCRIPT_DIR/selftest_dedup.py" "$REPO_ROOT" 2>&1)
+DEDUP_EXIT=$?
+
+if [ "$DEDUP_EXIT" -eq 0 ]; then
+    echo "PASS: assertion 8 - $DEDUP_OUTPUT"
+else
+    FAILED=1
+    echo "FAIL: assertion 8 - duplicated prose detected outside the scoped allow list"
+    echo "$DEDUP_OUTPUT"
 fi
 
 # ---------------------------------------------------------------------------

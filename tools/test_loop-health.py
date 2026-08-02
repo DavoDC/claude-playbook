@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Repeatable test suite for loop-health.py.
 
-Covers the six original scenarios plus a case specifically for the
-empty-vs-absent capture log fix, and an exit-code parity check between the
---json and non-JSON branches. Silent on pass, verbose on fail, per workspace
+Covers the original scenarios plus regressions for the empty-vs-absent
+capture log fix, an exit-code parity check between the --json and non-JSON
+branches, the misaligned-fields fifth input state, and a dedicated contract
+check that all three exit codes (0 clean, 1 finding, 2 instrument defect)
+land where the spec says. Silent on pass, verbose on fail, per workspace
 convention: the combined verdict is the LAST line of output, so `tail -1`
 gives the answer.
 
@@ -65,9 +67,9 @@ def case1():
         ])
         ok = True
         detail = [f"exit code: {rc}", out, "STDERR: " + err]
-        if rc != 1:
+        if rc != 2:
             ok = False
-            detail.append("EXPECTED exit code 1, got " + str(rc))
+            detail.append("EXPECTED exit code 2 (could not measure), got " + str(rc))
         if "UNKNOWN" not in out:
             ok = False
             detail.append("EXPECTED 'UNKNOWN' to appear in output")
@@ -102,9 +104,9 @@ def case2():
         ])
         ok = True
         detail = [f"exit code: {rc}", out, "STDERR: " + err]
-        if rc != 1:
+        if rc != 2:
             ok = False
-            detail.append("EXPECTED exit code 1, got " + str(rc))
+            detail.append("EXPECTED exit code 2 (could not measure), got " + str(rc))
         try:
             report = json.loads(out)
         except Exception as e:
@@ -153,9 +155,9 @@ def case3():
         ])
         ok = True
         detail = [f"exit code: {rc}", out, "STDERR: " + err]
-        if rc != 1:
+        if rc != 2:
             ok = False
-            detail.append("EXPECTED exit code 1, got " + str(rc))
+            detail.append("EXPECTED exit code 2 (could not measure), got " + str(rc))
         try:
             report = json.loads(out)
         except Exception as e:
@@ -299,10 +301,20 @@ def case4():
             ok = False
             detail.append("EXPECTED no instrumentation_defects on a fully "
                           f"populated run, got {report.get('instrumentation_defects')!r}")
-        if rc != 0:
+        # This fixture measures cleanly (no instrumentation defects) but the
+        # data it measures is genuinely unhealthy: an orphaned rule, a guard
+        # that has become the normal state, and a repeated topic are all
+        # real findings about the SYSTEM, not about the instrument. That is
+        # exit code 1, not 0 - a fully populated run is not the same thing
+        # as a clean one.
+        if not report.get("findings"):
             ok = False
-            detail.append(f"EXPECTED exit code 0 on a fully populated/clean "
-                          f"run, got {rc}")
+            detail.append("EXPECTED non-empty findings for orphan/noisy-guard/"
+                          f"repeat data, got {report.get('findings')!r}")
+        if rc != 1:
+            ok = False
+            detail.append("EXPECTED exit code 1 (measured, findings present) "
+                          f"on this fixture, got {rc}")
 
         record("4 FULL HAPPY PATH", ok, "\n".join(detail))
     finally:
@@ -445,10 +457,10 @@ def case7():
             detail.append("EXPECTED the empty-capture-log branch (repeat_topics "
                           f"== UNKNOWN), got repeat_topics_tagged="
                           f"{report.get('repeat_topics_tagged')!r}")
-        if rc != 1:
+        if rc != 2:
             ok = False
-            detail.append("EXPECTED non-zero exit code for an empty-but-present "
-                          f"capture log, got {rc}")
+            detail.append("EXPECTED exit code 2 (could not measure) for an "
+                          f"empty-but-present capture log, got {rc}")
         record("7 CAPTURE LOG PRESENT BUT EMPTY (BUG 1 regression)", ok, "\n".join(detail))
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -546,9 +558,9 @@ def case9():
             ok = False
             detail.append("EXPECTED a saturation defect reporting '100%' and "
                           f"the 0-of-2 intersection; not found. defects={defects!r}")
-        if rc != 1:
+        if rc != 2:
             ok = False
-            detail.append(f"EXPECTED non-zero exit for a saturation defect, got {rc}")
+            detail.append(f"EXPECTED exit code 2 for a saturation defect, got {rc}")
         record("9 SATURATION AT 100%", ok, "\n".join(detail))
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -599,9 +611,9 @@ def case10():
             ok = False
             detail.append("EXPECTED a saturation defect reporting '0%' and "
                           f"the 2-of-2 intersection; not found. defects={defects!r}")
-        if rc != 1:
+        if rc != 2:
             ok = False
-            detail.append(f"EXPECTED non-zero exit for a saturation defect, got {rc}")
+            detail.append(f"EXPECTED exit code 2 for a saturation defect, got {rc}")
         record("10 SATURATION AT 0%", ok, "\n".join(detail))
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -609,9 +621,12 @@ def case10():
 
 # ---------------------------------------------------------------------
 # Case 11 (new): a genuine PARTIAL unreferenced_pct (neither 0 nor 100)
-# must NOT be flagged as a saturation defect, and the happy-path fixture
-# must still exit clean. Without this, a saturation check that fires on
-# everything would look identical to a correct one.
+# must NOT be flagged as a saturation defect. Without this, a saturation
+# check that fires on everything would look identical to a correct one. The
+# happy-path fixture also carries real findings (an orphan, a noisy guard, a
+# repeated topic), so the exit code here is 1 (measured, findings present),
+# not 0 - what this case is actually pinning down is the ABSENCE of a
+# saturation defect, checked directly against instrumentation_defects.
 # ---------------------------------------------------------------------
 def case11():
     d = new_tempdir()
@@ -644,9 +659,14 @@ def case11():
             ok = False
             detail.append(f"EXPECTED no saturation defect on a genuine partial "
                           f"result, got defects={defects!r}")
-        if rc != 0:
+        if defects:
             ok = False
-            detail.append(f"EXPECTED exit 0 on a clean partial result, got {rc}")
+            detail.append(f"EXPECTED no instrumentation defects at all on this "
+                          f"fixture, got defects={defects!r}")
+        if rc != 1:
+            ok = False
+            detail.append("EXPECTED exit code 1 (measured, findings present - "
+                          f"this fixture has real orphans/noise/repeats), got {rc}")
         record("11 SATURATION - PARTIAL DOES NOT FLAG", ok, "\n".join(detail))
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -701,9 +721,9 @@ def case12():
             ok = False
             detail.append(f"EXPECTED repeat_topics == UNKNOWN on collapse, got "
                           f"{report.get('repeat_topics')!r}")
-        if rc != 1:
+        if rc != 2:
             ok = False
-            detail.append(f"EXPECTED non-zero exit on a collapse defect, got {rc}")
+            detail.append(f"EXPECTED exit code 2 on a collapse defect, got {rc}")
         record("12 PARSE YIELD COLLAPSE, not EMPTY", ok, "\n".join(detail))
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -759,6 +779,176 @@ def case13():
         shutil.rmtree(d, ignore_errors=True)
 
 
+# ---------------------------------------------------------------------
+# Case 14 (new, fifth-input-state regression): a capture log where every
+# row parses, every date recovers, and the file is neither empty nor
+# below the parse-yield floor - every existing guard passes - but the
+# fields hold something other than their names say, because the log's
+# actual shape is "[date time] [session] correction: message" rather than
+# "date rule topic". "rule" ends up holding a bare time token and "topic"
+# ends up holding an entire sentence. This must be caught as its own
+# state (misaligned), not silently clustered and not folded into
+# absent/empty/saturated/collapsed.
+# ---------------------------------------------------------------------
+def case14():
+    d = new_tempdir()
+    try:
+        rules_dir = os.path.join(d, "rules")
+        os.makedirs(rules_dir)
+        with open(os.path.join(rules_dir, "feedback_x.md"), "w", encoding="utf-8") as fh:
+            fh.write("content\n")
+
+        cap_log = os.path.join(d, "cap.log")
+        with open(cap_log, "w", encoding="utf-8") as fh:
+            for i in range(1, 11):
+                fh.write(f"[{d_ago(i)} 07:3{i % 10}:2{i % 10}] [sess-0] "
+                         f"correction: no dont do that, use Y instead, item {i}\n")
+
+        rc, out, err = run(d, [
+            "--rules", rules_dir,
+            "--reference-log", os.path.join(d, "no-such-ref.log"),
+            "--guard-log", os.path.join(d, "no-such-guard.log"),
+            "--capture-log", cap_log,
+            "--json",
+        ])
+        ok = True
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        try:
+            report = json.loads(out)
+        except Exception as e:
+            ok = False
+            report = {}
+            detail.append(f"JSON PARSE FAILED: {e}")
+
+        defects = report.get("instrumentation_defects", [])
+        if not any("MISALIGNED FIELDS" in dd for dd in defects):
+            ok = False
+            detail.append("EXPECTED a MISALIGNED FIELDS defect for the capture "
+                          f"log; not found. defects={defects!r}")
+        if report.get("repeat_topics") != "UNKNOWN":
+            ok = False
+            detail.append(f"EXPECTED repeat_topics == UNKNOWN on misalignment, "
+                          f"got {report.get('repeat_topics')!r}")
+        if report.get("repeat_topics_tagged") is not None:
+            ok = False
+            detail.append("EXPECTED no clustering result at all on misalignment "
+                          f"(not even a wrong one), got repeat_topics_tagged="
+                          f"{report.get('repeat_topics_tagged')!r}")
+        if rc != 2:
+            ok = False
+            detail.append(f"EXPECTED exit code 2 (could not measure) on a "
+                          f"misaligned capture log, got {rc}")
+        record("14 MISALIGNED FIELDS (fifth state)", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------
+# Case 15 (new, exit-code contract): the three outcomes need three exit
+# codes, checked directly rather than inferred from other cases - 0 for a
+# clean measured run, 1 for a measured run with a real system finding, 2
+# for a run that could not measure at all.
+# ---------------------------------------------------------------------
+def case15():
+    # 0: measured, no defects, no findings. An empty (but present) rules dir
+    # sidesteps the 0%/100% saturation defect entirely, since unreferenced_pct
+    # is only computed when there is at least one rule file - with zero rule
+    # files there is nothing to be orphaned and nothing to saturate on.
+    d0 = new_tempdir()
+    try:
+        rules_dir = os.path.join(d0, "rules")
+        os.makedirs(rules_dir)
+        ref_log = os.path.join(d0, "ref.log")
+        guard_log = os.path.join(d0, "guard.log")
+        cap_log = os.path.join(d0, "cap.log")
+        with open(ref_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(1)} sess-1 some_file.md\n")
+        with open(guard_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(1)} quiet-guard allow\n")
+        with open(cap_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(1)} some_file.md onlytopic\n")
+
+        rc, out, err = run(d0, [
+            "--rules", rules_dir, "--reference-log", ref_log,
+            "--guard-log", guard_log, "--capture-log", cap_log, "--json",
+        ])
+        ok = rc == 0
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        if not ok:
+            detail.append(f"EXPECTED exit code 0 (clean measured run), got {rc}")
+        record("15a exit code 0 (clean)", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d0, ignore_errors=True)
+
+    # 1: measured, a real finding (an orphaned rule) present. Two rule files
+    # with only one referenced gives a 50% unreferenced_pct - partial, so it
+    # is a genuine finding rather than the 0%/100% saturation defect case.
+    d1 = new_tempdir()
+    try:
+        rules_dir = os.path.join(d1, "rules")
+        os.makedirs(rules_dir)
+        for rn in ("feedback_orphan.md", "feedback_referenced.md"):
+            with open(os.path.join(rules_dir, rn), "w", encoding="utf-8") as fh:
+                fh.write("content\n")
+        ref_log = os.path.join(d1, "ref.log")
+        guard_log = os.path.join(d1, "guard.log")
+        cap_log = os.path.join(d1, "cap.log")
+        with open(ref_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(1)} sess-1 feedback_referenced.md\n")
+        with open(guard_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(1)} quiet-guard allow\n")
+        with open(cap_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(1)} feedback_referenced.md onlytopic\n")
+
+        rc, out, err = run(d1, [
+            "--rules", rules_dir, "--reference-log", ref_log,
+            "--guard-log", guard_log, "--capture-log", cap_log, "--json",
+        ])
+        ok = True
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        try:
+            report = json.loads(out)
+        except Exception as e:
+            ok = False
+            report = {}
+            detail.append(f"JSON PARSE FAILED: {e}")
+
+        if report.get("instrumentation_defects"):
+            ok = False
+            detail.append("EXPECTED no instrumentation defects on this fixture "
+                          f"(partial pct, not saturated), got "
+                          f"{report.get('instrumentation_defects')!r}")
+        if not report.get("findings"):
+            ok = False
+            detail.append(f"EXPECTED a non-empty findings list (the orphaned "
+                          f"rule), got {report.get('findings')!r}")
+        if rc != 1:
+            ok = False
+            detail.append(f"EXPECTED exit code 1 (measured, findings present), "
+                          f"got {rc}")
+        record("15b exit code 1 (finding, no defect)", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d1, ignore_errors=True)
+
+    # 2: could not measure at all.
+    d2 = new_tempdir()
+    try:
+        rc, out, err = run(d2, [
+            "--rules", os.path.join(d2, "no-such-rules"),
+            "--reference-log", os.path.join(d2, "no-such-ref.log"),
+            "--guard-log", os.path.join(d2, "no-such-guard.log"),
+            "--capture-log", os.path.join(d2, "no-such-capture.log"),
+            "--json",
+        ])
+        ok = rc == 2
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        if not ok:
+            detail.append(f"EXPECTED exit code 2 (could not measure), got {rc}")
+        record("15c exit code 2 (instrument defect)", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d2, ignore_errors=True)
+
+
 def main():
     if not os.path.exists(SCRIPT):
         print(f"FATAL: script not found at {SCRIPT}")
@@ -778,6 +968,8 @@ def main():
     case11()
     case12()
     case13()
+    case14()
+    case15()
 
     passed = sum(1 for _, ok, _ in results if ok)
     total = len(results)

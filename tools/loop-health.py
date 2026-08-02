@@ -19,6 +19,23 @@ Expected inputs, all plain append-only text logs, all optional:
 Usage:
   python3 tools/loop-health.py
   python3 tools/loop-health.py --rules memory/feedback --days 90 --json
+
+Exit codes (a wrapper script should branch on these, not just check nonzero):
+  0  measured, no defects and no findings - nothing to do
+  1  measured successfully, findings present - investigate the SYSTEM
+  2  could not measure - an instrumentation defect - investigate the
+     INSTRUMENT first; every other number this run produced is suspect
+     until it is fixed. Every input-state classification (absent, empty,
+     saturated, collapsed, misaligned) is an instrumentation defect and
+     maps here, never to 1.
+
+Note on 2: some CLI conventions (getopt, argparse itself) reserve exit code
+2 for a usage error. This tool reuses it for a different reason - a broken
+measurement source, not a bad invocation - because "could not measure" is a
+fundamentally different failure from "result 1: unhealthy" and a caller
+needs to be able to tell them apart from the exit code alone. If that
+collision matters for your wrapper, check the JSON "instrumentation_defects"
+field instead of relying only on the exit code.
 """
 
 import argparse
@@ -49,6 +66,27 @@ CANDIDATE_HEAD_CHARS = 20
 # lines is normal and must not trip this.
 PARSE_YIELD_FLOOR = 0.5
 
+# A plausible topic/rule token: short, no internal whitespace, no sentence
+# punctuation. Real filenames ("feedback_x.md"), tags ("alpha"), and guard
+# names ("noisy-guard") all satisfy this. A full log message or sentence
+# fragment that landed in the wrong field because the columns shifted does
+# not - that is exactly the shape a misaligned field produces, and exactly
+# what the positional split() below cannot tell from a well-formed value on
+# its own. Slash is allowed so path-like fields (a reference log's "path")
+# pass too; anything with a colon, comma, bracket, quote or space fails.
+TOKEN_RE = re.compile(r"^[\w./\-]{1,64}$")
+
+# Same reasoning as PARSE_YIELD_FLOOR: a few misshapen rows in an otherwise
+# normal log are not the signal. Most of the window failing the shape check
+# is the signal - the log's column layout does not match what this tool
+# expects, and clustering on it anyway produces a confident, wrong answer.
+MISALIGNED_FLOOR = 0.5
+
+
+def _field_shape_ok(value):
+    """True if value is a plausible short token, not a shifted sentence."""
+    return bool(value) and bool(TOKEN_RE.match(value))
+
 
 def parse_log(path, fields):
     """Read an append-only whitespace-delimited log. Returns [] if absent.
@@ -68,16 +106,35 @@ def parse_log(path, fields):
     return rows
 
 
-def _row_date(row):
+def _row_date(row, date_key="date"):
     """Recover the date from a parsed row, tolerant of surrounding
     punctuation ("[2026-08-01]", "2026-08-01,") and of a shifted field
     order (a newly inserted column pushes the date into a field keyed by
-    the wrong name). Scans every value in the row for a date-shaped token
-    rather than trusting the "date" key and slicing its first ten
-    characters - the old approach recovered nothing once either of those
-    happened, even though the date was sitting right there in the row.
+    the wrong name).
+
+    The primary lookup is the "date" key itself. Only if that fails do we
+    fall back to scanning every other value in the row for a date-shaped
+    token - and that fallback is gated on the REST of the row looking
+    plausible (each other field passes the same short-token shape check
+    used against misaligned rows elsewhere in this file). Without that
+    gate, a misaligned row that happens to have a date-shaped value
+    sitting in some other field gets "rescued" by this function even
+    though every other field is garbage - which is precisely what let a
+    misaligned capture log sail past every guard before this fix: the
+    date always parsed, so the row always looked like a keeper.
     """
-    for value in row.values():
+    primary = row.get(date_key, "")
+    m = DATE_RE.search(primary)
+    if m:
+        try:
+            return datetime.fromisoformat(m.group()).date()
+        except ValueError:
+            pass
+
+    others = [v for k, v in row.items() if k != date_key]
+    if not others or not all(_field_shape_ok(v) for v in others):
+        return None
+    for value in others:
         m = DATE_RE.search(value)
         if not m:
             continue
@@ -179,7 +236,15 @@ def main():
     args = ap.parse_args()
 
     report = {"window_days": args.days, "generated": date.today().isoformat()}
+    # Two different lists for two different questions. "defects" is about the
+    # INSTRUMENT: could this run measure at all. "findings" is about the
+    # SYSTEM: given a successful measurement, is there a problem in it. They
+    # drive different exit codes below because they need different human
+    # responses - a broken instrument is urgent in a way an unhealthy-but-
+    # measured system is not, since it silently invalidates every other
+    # number this run produced.
     defects = []
+    findings = []
 
     # ---- Inventory -------------------------------------------------------
     if os.path.isdir(args.rules):
@@ -230,6 +295,11 @@ def main():
                 "inside the corpus at all. Treat this as a broken "
                 "instrument, not a confident result, until the log is "
                 "shown to cover the corpus.")
+        elif orphans:
+            findings.append(
+                f"{len(orphans)} rule(s) never referenced ({pct}%): "
+                + ", ".join(orphans[:5])
+                + (", ..." if len(orphans) > 5 else ""))
 
     # ---- Difference 2: guards that never fire, and guards that always do --
     if fire_status == "absent":
@@ -253,6 +323,10 @@ def main():
         report["guards_now_normal_state"] = [
             g for g, n in per_guard.items()
             if n >= 20 and blocks.get(g, 0) / n > 0.5]
+        if report["guards_now_normal_state"]:
+            findings.append(
+                "guard(s) now firing as the normal state, not an exception: "
+                + ", ".join(report["guards_now_normal_state"]))
 
     # ---- Difference 3: the same lesson arriving twice --------------------
     if cap_status == "absent":
@@ -266,6 +340,28 @@ def main():
         report["repeat_topics"] = UNKNOWN
         defects.append("capture log is EMPTY over the window - instrumentation "
                        "is silent, which is not the same as zero repeats")
+    elif caps and (sum(1 for c in caps if _field_shape_ok(c.get("rule", ""))
+                       and _field_shape_ok(c.get("topic", ""))) / len(caps)
+                   < MISALIGNED_FLOOR):
+        # A fifth input state, distinct from absent/empty/saturated/collapsed:
+        # every one of those guards can pass - the log exists, is non-empty,
+        # parses at the expected line-length, and every row's date recovers
+        # cleanly - while the fields still hold something other than their
+        # names say, because the column layout does not match what this tool
+        # expects. Clustering on "topic" in that state produces a confident,
+        # wrong answer (whole log messages reported as topics, "rule" holding
+        # a bare timestamp) rather than an absence, so it needs its own name
+        # rather than folding into one of the other four.
+        shaped_ok = sum(1 for c in caps if _field_shape_ok(c.get("rule", ""))
+                        and _field_shape_ok(c.get("topic", "")))
+        report["repeat_topics"] = UNKNOWN
+        defects.append(
+            f"capture log: only {shaped_ok} of {len(caps)} in-window rows have "
+            "plausible rule/topic fields (short, no internal whitespace, no "
+            "sentence punctuation) - MISALIGNED FIELDS, most likely the "
+            "log's column layout does not match what this tool expects, not "
+            "a real topic distribution. Treating this metric as UNKNOWN, not "
+            "a clustering result.")
     else:
         by_topic = defaultdict(list)
         for c in caps:
@@ -289,6 +385,11 @@ def main():
 
         report["repeat_topics_tagged"] = explicit
         report["repeat_topics_suspected"] = fuzzy
+        if explicit:
+            findings.append(
+                f"{len(explicit)} topic(s) captured more than once: "
+                + ", ".join(list(explicit)[:5])
+                + (", ..." if len(explicit) > 5 else ""))
         # Trend is the actual signal. A count without a direction says nothing.
         halves = defaultdict(int)
         cutoff = date.today() - timedelta(days=args.days // 2)
@@ -313,11 +414,19 @@ def main():
             else "flat or worsening" if halves else UNKNOWN)
 
     report["instrumentation_defects"] = defects
+    report["findings"] = findings
+
+    # ---- Exit code ---------------------------------------------------------
+    # Three outcomes, three codes - see EXIT_CODE_HELP in --help. A defect
+    # (could not measure) always wins over a finding (measured, unhealthy):
+    # a broken instrument makes every other number in this report suspect,
+    # including the findings, so it must not be reported as "just" a finding.
+    exit_code = 2 if defects else (1 if findings else 0)
 
     # ---- Output ----------------------------------------------------------
     if args.json:
         print(json.dumps(report, indent=2, default=list))
-        return 1 if defects else 0
+        return exit_code
 
     print(f"Loop health, last {args.days} days")
     print(f"  rules on disk ................ {report['rule_count']}")
@@ -345,14 +454,23 @@ def main():
         for a, b in susp[:5]:
             print(f"      {a}  ~  {b}")
 
+    if findings:
+        print("\nFINDINGS - measured successfully, and there is a problem in "
+              "the SYSTEM:")
+        for f in findings:
+            print(f"  - {f}")
+        if defects:
+            print("  (treat these as unverified until the instrument defects "
+                  "below are fixed - a broken instrument makes every other "
+                  "number in this report suspect)")
+
     if defects:
         print("\nINSTRUMENTATION DEFECTS - these are not zeros, they are gaps:")
         for d in defects:
             print(f"  - {d}")
         print("\nA metric that cannot be computed is a defect to fix, not a "
               "clean result. Do not report this run as healthy.")
-        return 1
-    return 0
+    return exit_code
 
 
 if __name__ == "__main__":

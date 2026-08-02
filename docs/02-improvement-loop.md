@@ -122,6 +122,24 @@ An improvement loop that's never measured is a belief, not a process. It's easy 
 
 Two things matter once you do. A metric some rule depends on that reads blank for several runs in a row is a defect in the instrumentation, not a clean result to shrug at - "zero repeat violations this month" might mean the loop is working, or it might mean nothing is logging violations anymore, and the two look identical until you check which one it is. And loop-health checks have to be computed as set differences over recorded events - which feedback files exist minus which ones a session actually touched, which rules got promoted minus which ones ever fired again - never as narrative reconciliation. A narrative account of whether the loop worked can always be written to come out even, because it's assembled after the fact from whatever you remember; a set difference over a log either shows a gap or it doesn't.
 
+### Building the Measurement
+
+The two rules above are what make the numbers mean anything, and both are easy to state and easy to skip.
+
+**Blank is a defect, not a zero.** Build the check so a metric that cannot be computed reports as an explicit unknown and fails the run, rather than reporting a suspiciously good number that is indistinguishable from real good news.
+
+**Set differences, never reconciliation.** Three differences, each over an append-only log you could already be writing:
+
+- Rule files that exist, minus rule files any session actually loaded. The remainder is rules reaching nothing.
+- Guards promoted to enforcement, minus guards that have fired since. The remainder needs looking at, because a dead guard and a solved problem are indistinguishable from the count alone.
+- Correction topics captured, minus topics captured only once. The remainder is repeat violations, and its **direction over time** is the real health signal. A count without a direction says nothing.
+
+The third one needs a topic tag written at capture time, because matching on filenames misses nearly every repeat: the second occurrence of a lesson almost never arrives with the same wording as the first.
+
+**If you build only one thing, log every guard fire with its verdict.** That single log answers "which guards are dead" and, more usefully, "which guards fire so constantly that they have become the normal state rather than an exception" - a question with no other source. A guard firing on most attempts is evidence something upstream is wrong, not evidence the guard is earning its place.
+
+`tools/loop-health.py` computes these three differences from plain-text logs (`python3 tools/loop-health.py --help` documents the expected format). It is a standard-library script with a test suite alongside it (`tools/test_loop-health.py`) - tested against synthetic cases, not run against months of real production logs, so read its output as a starting point to investigate rather than a certified verdict. Its default paths (`memory/feedback`, `logs/rule-references.log`, and so on) are illustrative examples, not paths it expects to already exist - point every flag at wherever your own rules and logs actually live.
+
 ### The Rule Promotion Diagram
 
 ```

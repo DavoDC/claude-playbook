@@ -94,7 +94,7 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 |------|------------|
 | `docs/` | Full guide split by topic - start with `01-claude-md.md` |
 | `templates/` | Ready-to-use CLAUDE.md, enforced-rules and backlog (IDEAS/HISTORY) starters |
-| `tools/` | statusline, budget and session-status scripts, plus a launcher |
+| `tools/` | statusline, budget and session-status scripts, loop-health measurement, plus a launcher |
 | `skills/` | skill files - thinking, git, review, and workflow tools |
 
 ---

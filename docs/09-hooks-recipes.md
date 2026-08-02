@@ -188,6 +188,21 @@ Wire it up in `.claude/settings.json`:
 
 The soft cap gives Claude a chance to trim proactively while there's still room to do it in the same edit. The hard cap is the backstop a warning alone can't provide - because it runs on `PreToolUse`, `exit 2` actually stops the write before it lands, instead of just leaving a note after the fact. A warning that fires every time and never actually stops anything eventually gets ignored like any other repeated notice that has no teeth.
 
+#### The Missing Escape Hatch: a Reasoned Override
+
+The hard cap above has one real gap: no way through it. A hard block with no override turns every legitimate exception - a rule that genuinely needs one more sentence to stop being cryptic, a one-time restructuring commit that has to touch two files at once - into a fight with the tooling instead of a judgment call. The usual outcome of that fight is not a considered exception, it's the content degraded until it slips back under the cap: a rule trimmed to the point of ambiguity, a safety note shortened until it stops actually preventing the mistake it was written for. The guard "wins" and the content it exists to protect loses.
+
+The fix is an override token the author can put in the file itself, naming a REASON:
+
+```
+# SIZE-CAP-OVERRIDE: adding the credential-rotation rule mid-incident,
+# will trim on the next pass.
+# REASON: cutting it now removes the only guidance stopping the exact
+# mistake causing tonight's incident.
+```
+
+Have the size guard check for that token before it blocks: present and non-empty, allow the write through but still print a warning so the override doesn't vanish silently from the audit trail; absent, block exactly as before. The point of requiring a REASON is not the string match itself - it's that an override which must be justified in writing, on the record inside the file, is self-limiting in a way a silent bypass is not. Writing the sentence "I am overriding this because" is a small enough tax that nobody pays it for a lazy edit, and a large enough one that a genuine exception pays it without complaint.
+
 ### Lesson Detector (UserPromptSubmit)
 
 Scans each user message for correction, lesson, and confirmation patterns. When a match fires, injects a reminder into Claude's context: "This looks like a correction - should it be saved to memory?"

@@ -172,3 +172,17 @@ An improvement step was staged as a prerequisite for the next work session. It w
 The fix is not a firmer instruction, and this is the part people get wrong. It is to **restructure the work so the main pass itself produces the prerequisite's output as its closing step**, turning an entry fee into a deliverable. The step then happens because the work produces it, not because someone remembered.
 
 Half the failure in this case was worse and worth checking for in your own instructions: the prerequisite was self-contradictory. It asked for a summary artefact to be written before the pass, while the same process document required that artefact be built afterwards from verified results. The sessions that skipped it were half right, and no amount of emphasis would have fixed an instruction that could not be correctly obeyed.
+
+---
+
+### Composition Defects: Correct Parts, Wrong Whole
+
+A change assembled from independently-written pieces can consist entirely of correct pieces and still be wrong, because the defect lives in the composition, and every review looked at a part.
+
+The concrete case. A set of recommendations argued one point in its main framework section and argued it again, independently, in a list of smaller standalone edits. The recipient applied both, correctly, because each read as a distinct and reasonable instruction. The result was one chapter making the same argument twice, a few lines apart, from the same worked example, in different words.
+
+Why no existing check catches it, and this is the part worth spelling out: a sentence-level duplication check sees two different sentences and passes. A per-file review sees two files, each internally coherent and each correct. The recipient's review sees two instructions that both look reasonable. The duplication exists only in the merged result, and the merged result is the one artefact nobody read as a whole. Each party reviewed their own half.
+
+Two habits, one for each side of the handover. When handing over more than about three edits to one target, include a claim index: one line per distinct claim, naming which file argues it. It takes minutes and it is the only artefact in which the merged result is legible before the merge happens. After applying a multi-part change, read the result once, as a reader, not as a diff. The diff shows two correct additions; the document shows the same paragraph twice. It takes a minute and it is the only review that sees the composition.
+
+The generalisation reaches well past documentation: whenever parts are reviewed independently and merged automatically, the merged artefact is unreviewed by construction. The same shape turns up as a pull request built from several branches, a configuration merged from layered files, or a rule set assembled from several sources. Each part is reviewed; the composition is not.

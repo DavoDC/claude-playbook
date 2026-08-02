@@ -31,6 +31,20 @@ The lens (content/staleness/security/etc.) lets you track different types of aud
 
 The delta tells you WHICH files to re-read. It does not tell you what to ask of them, and asking the same question of new files is how a fifth audit round confirms what the fourth one said. [Part 12](12-audit-lenses.md) covers the other half: generating the questions before you scan, and recording coverage in a form that makes "have we looked at this" answerable.
 
+## Reading Is Not Running, and the Difference Is Not What You Expect
+
+The obvious cost of analysing something by reading it is that you miss things. That is real, and it is not the expensive part.
+
+**Reading-based analysis manufactures confident, quantified, false findings that survive review because the arithmetic checks out.** One measured instance: a discrepancy computed across more than two thousand log entries, internally consistent and reported with a percentage, turned out to be a category error. Two counters with plausible names measured different populations and had never been required to agree. A single short run of the tool produced one line of output that settled it, showing one entry that fetched zero items and processed one.
+
+The same short run returned five other findings that many prior reading-based passes had gone straight past.
+
+**So: if the thing runs, run it before you read it.** Pick the smallest real invocation whose output you can verify arithmetically by hand, then check every printed number against what you can count yourself.
+
+**Validate the instrument first, always.** Two earlier attempts at this kind of measurement produced clean-looking and entirely invalid results: one called the wrong entry point so the code path under test was never exercised, and one compared two data structures whose element shapes differed between versions. Confirm the measurement exercises the path it claims to, and that both sides of any before-and-after comparison are the same shape. Skip this step and the technique manufactures false confidence instead of findings.
+
+The honest boundary, stated plainly: **reading is worth its cost for asking whether a claim matches the code and whether something is absent. It is close to worthless for deciding whether a bound is correct or a count is true.** Both of those need the thing run.
+
 ---
 
 ## Worked Examples

@@ -140,3 +140,17 @@ The game is getting important rules to the top of the hierarchy. Everything else
 **The ladder does not stop at the hook.** If the tool that fails can print the correct usage in its own error output, that beats every layer below it, because it arrives at the exact moment of the mistake, cannot be skipped, and costs nothing when no mistake is made. A hook that blocks and explains is a weaker version of the same idea bolted on from outside.
 
 So when a rule keeps being violated after it has been written down, promoted, and hook-enforced, the question is not how to word the rule better. It is **which tool is failing here, and can that tool tell the caller what to do instead?** If the answer is yes, the rule stops needing enforcement at all. The clearest case seen in practice: a rule marked as a repeat violation kept firing on consecutive days through every documentation layer, and stopped immediately once the guidance was moved into the failing command's own error text.
+
+---
+
+### Why the Step You Ordered First Keeps Getting Skipped
+
+A worked failure, because the correct fix is counter-intuitive.
+
+An improvement step was staged as a prerequisite for the next work session. It was handed to two consecutive sessions. Both were told in their opening instruction, in the strongest available terms, that it was non-negotiable and had to happen first. Both went straight to the fix list. It sat undone for three days while roughly twenty other things were fixed around it.
+
+**A prerequisite that produces nothing the main work consumes will be skipped, however emphatically it is ordered first.** The main work does not need it, so nothing downstream fails when it is missing, so it stays missing.
+
+The fix is not a firmer instruction, and this is the part people get wrong. It is to **restructure the work so the main pass itself produces the prerequisite's output as its closing step**, turning an entry fee into a deliverable. The step then happens because the work produces it, not because someone remembered.
+
+Half the failure in this case was worse and worth checking for in your own instructions: the prerequisite was self-contradictory. It asked for a summary artefact to be written before the pass, while the same process document required that artefact be built afterwards from verified results. The sessions that skipped it were half right, and no amount of emphasis would have fixed an instruction that could not be correctly obeyed.

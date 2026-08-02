@@ -165,6 +165,14 @@ Ask it of any pass that reports a large finding count. In one twenty-six-finding
 
 Reading and operating are not the same activity. This framework makes reading much better. It does not make reading sufficient.
 
+### Say How Many of Your Findings a User Could Ever Reach
+
+A pass that reports twenty-six findings sounds better than one that reports four. It may be worse.
+
+Of one twenty-six-finding pass, the categories no user could ever hit were unjustified-constant items and comment-narrative items: real maintainability work with no user-visible failure mode. That work is worth doing and it should not be counted against the same yield as a finding that loses someone's data.
+
+**Require every audit output to split its findings into those with a user-visible failure mode and those without.** It takes one line, it costs nothing, and it is the only thing standing between a finding count and an honest assessment of what the pass was worth.
+
 ## EXTREME lenses: forcing functions that re-rank
 
 **These do not find new defects. They REORDER the ones you already have, and that is a different and often larger win.**

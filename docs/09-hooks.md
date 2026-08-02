@@ -259,3 +259,15 @@ This section is about git hooks (`.git/hooks/`, run by git itself on `commit`, `
 Git hooks are a different story. Git Bash hooks work under WSL, but a Windows git client that shells out through `cmd.exe` rather than Git Bash - GitHub Desktop is the common case - will fail silently or block commits entirely if a git hook is written in bash syntax (observed on Windows 11 with GitHub Desktop; this is git-client behaviour, not a Claude Code feature, so no official Claude Code page covers it - recheck if the client's shelling-out behaviour changes). This is a painful lesson that only needs to be learned once.
 
 If you're on Windows: write git hooks (`.git/hooks/`) as `.ps1` or `.bat` scripts. Claude Code hooks (`.claude/settings.json`) can stay bash.
+
+---
+
+## Before Renaming Any Tracked File
+
+A rename that updates every path reference correctly can still silently delete an enforcement mechanism.
+
+A file's name may be referenced by more than paths. A privacy blocklist, a lint rule, a commit-message scanner or a hook matcher can key on the **bare name as a string**. Rename the file, update every path, and nothing breaks visibly, because nothing was pointing at the path. The guard is simply gone, and it will stay gone because its absence produces no error.
+
+**Before renaming anything tracked, grep for the bare name as a string, not only as a path.** If it appears inside a matcher rather than a path, do not rename it. Split the file by concern instead, leaving the original name attached to whatever the matcher is protecting.
+
+The tempting move in that situation is the worst one: renaming to a clearer, more generic name usually makes the guard unrecoverable, because a generic name cannot be blocklisted without false positives.

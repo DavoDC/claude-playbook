@@ -62,6 +62,10 @@ One sentence of workflow context + a pointer beats three paragraphs that go stal
 
 **Stamp what the docs don't cover.** If a claim describes official Claude Code feature behavior, point at the docs page for it - don't restate it from memory. If a claim describes something observed in practice that no official page covers, say so explicitly: name the Claude Code version and platform it was observed on, so a reader can discount an old observation instead of trusting it at face value. Behaviour is tested, not remembered, and an unstamped claim reads with the same confidence as a documented one even when it is neither.
 
+**Update the existing entry point rather than adding a second one.** When a new capability looks like a variant of something that already exists, whether that is a skill, a script, a launcher or a flag, change the existing one. A second entry point over the same capability splits its users across two levels of quality, and its only real power is letting someone pick wrong. If the environment already determines the right setting, bake it in rather than offering the choice.
+
+**A number that is printed is not a number that is checked.** Every count, total, duration and success word a tool prints should be traced back to what it actually counts, at least once. Three separate cases sat in plain output for months and were missed because no one had ever asked whether the value was right, only whether the command ran.
+
 ---
 
 ## No internal paths - use hyperlinks

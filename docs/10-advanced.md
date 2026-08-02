@@ -261,6 +261,14 @@ else:
 
 Keep the wait short - this is a "someone else already has it, stand down" check, not a queue. The specific lock utility varies by platform and is not available in every environment (a plain `mkdir`-based lock works anywhere with a filesystem; `flock` is Unix-only; Windows needs a named mutex or an exclusive file handle), so pick whatever your stack already has rather than adding a new dependency for it.
 
+### A Stale Lock Is a Recoverable State, Not a Permanent Wait
+
+The lock pattern above covers the live case: a peer holds the lock, so stand down and let it finish. It has no path for the other case, which is a lock whose holder is dead - a crashed session, a killed process, a machine that rebooted mid-run - and that gap is worse than it looks, because the failure mode is silence rather than an error. A lock file left behind by a process that no longer exists blocks every future run of the same step forever, and nothing about the blocked run looks wrong: it exits cleanly with "a peer is already doing this," which was true once and is now simply false.
+
+Treating a held lock as live by default is the right assumption for the ordinary case and the wrong one for this case, so the fix is a discriminator run before deciding to wait, not a longer wait. Three checks, and all three should say stale before the lock gets broken: is the process ID recorded in the lock file still running under that name, rather than reused by an unrelated process the OS happened to hand the same PID to later; is the lock file's age past any duration the step has ever legitimately taken, with enough margin that a slow-but-real run doesn't get mistaken for a dead one; and does the recorded owner still hold whatever resource the lock is actually protecting, checked directly rather than inferred from the lock file's mere existence. Any one of the three coming back "still live" is enough to keep waiting - only when all three agree should the lock be broken.
+
+Breaking a stale lock should be logged, not done quietly, because a lock silently cleared on every stale-looking read is one bug away from a lock that never protects anything at all: two runs racing each other are exactly what the lock exists to prevent, and a discriminator that fires too eagerly recreates the same race under the appearance of safety.
+
 ---
 
 ## Freeze the Consumer Before Repairing a Broken Dependency

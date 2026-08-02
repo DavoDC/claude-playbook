@@ -113,6 +113,10 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 - [ ] Committed to git
 - [ ] Rule promoted to enforced-rules.md if applicable
 
+## Audit Habits
+
+- [ ] **Generate lenses before scanning, and record which ones you did not apply.** A skipped lens with a reason is a decision. An unlisted lens is a blind spot. See `docs/12-audit-lenses.md`.
+
 ---
 
 ## Recommended Order

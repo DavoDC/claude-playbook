@@ -29,6 +29,8 @@ The core data structure: a JSON file mapping `scope:lens` -> `{sha, date, findin
 
 The lens (content/staleness/security/etc.) lets you track different types of audit separately for the same scope. A content audit and a staleness audit of the same folder can be at different anchors.
 
+The delta tells you WHICH files to re-read. It does not tell you what to ask of them, and asking the same question of new files is how a fifth audit round confirms what the fourth one said. [Part 12](12-audit-lenses.md) covers the other half: generating the questions before you scan, and recording coverage in a form that makes "have we looked at this" answerable.
+
 ---
 
 ## Worked Examples

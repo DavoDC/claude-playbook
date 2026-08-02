@@ -115,6 +115,7 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [09b - Hook Recipes](docs/09-hooks-recipes.md) | Field note | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
 | [10 - Advanced Patterns](docs/10-advanced.md) | Field note | Commit-anchored delta, worked examples |
 | [11 - The Workspace Repo](docs/11-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
+| [12 - Audit Lenses](docs/12-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, and the re-ranking lenses |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
 
 Core files' referenced tools and snippets are asserted by `tools/selftest.sh` on every push; Field note files are dated patterns from practice that the harness does not check - see "What's Guaranteed vs What's Field Notes" above for the full distinction.

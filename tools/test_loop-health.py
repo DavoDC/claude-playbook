@@ -502,6 +502,263 @@ def case8():
         shutil.rmtree(d2, ignore_errors=True)
 
 
+# ---------------------------------------------------------------------
+# Case 9 (new, BUG 2/saturation regression): unreferenced_pct comes out at
+# exactly 100% because every logged reference points OUTSIDE the corpus.
+# Must be flagged as a broken instrument, reporting the 0-of-N intersection.
+# ---------------------------------------------------------------------
+def case9():
+    d = new_tempdir()
+    try:
+        rules_dir = os.path.join(d, "rules")
+        os.makedirs(rules_dir)
+        for rn in ("feedback_a.md", "feedback_b.md"):
+            with open(os.path.join(rules_dir, rn), "w", encoding="utf-8") as fh:
+                fh.write("content\n")
+
+        ref_log = os.path.join(d, "ref.log")
+        with open(ref_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(1)} sess-1 some/other/outside_a.md\n")
+            fh.write(f"{d_ago(2)} sess-2 some/other/outside_b.md\n")
+
+        rc, out, err = run(d, [
+            "--rules", rules_dir,
+            "--reference-log", ref_log,
+            "--guard-log", os.path.join(d, "no-such-guard.log"),
+            "--capture-log", os.path.join(d, "no-such-capture.log"),
+            "--json",
+        ])
+        ok = True
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        try:
+            report = json.loads(out)
+        except Exception as e:
+            ok = False
+            report = {}
+            detail.append(f"JSON PARSE FAILED: {e}")
+
+        if report.get("unreferenced_pct") != 100:
+            ok = False
+            detail.append(f"EXPECTED unreferenced_pct == 100, got "
+                          f"{report.get('unreferenced_pct')!r}")
+        defects = report.get("instrumentation_defects", [])
+        if not any("100%" in dd and "0 of 2" in dd for dd in defects):
+            ok = False
+            detail.append("EXPECTED a saturation defect reporting '100%' and "
+                          f"the 0-of-2 intersection; not found. defects={defects!r}")
+        if rc != 1:
+            ok = False
+            detail.append(f"EXPECTED non-zero exit for a saturation defect, got {rc}")
+        record("9 SATURATION AT 100%", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------
+# Case 10 (new, BUG 2/saturation regression): unreferenced_pct comes out at
+# exactly 0% because every rule file is referenced. Must still be flagged,
+# reporting the full N-of-N intersection so a reader can see it's the good
+# extreme, not just trust the bare 0%.
+# ---------------------------------------------------------------------
+def case10():
+    d = new_tempdir()
+    try:
+        rules_dir = os.path.join(d, "rules")
+        os.makedirs(rules_dir)
+        for rn in ("feedback_a.md", "feedback_b.md"):
+            with open(os.path.join(rules_dir, rn), "w", encoding="utf-8") as fh:
+                fh.write("content\n")
+
+        ref_log = os.path.join(d, "ref.log")
+        with open(ref_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(1)} sess-1 feedback_a.md\n")
+            fh.write(f"{d_ago(2)} sess-2 feedback_b.md\n")
+
+        rc, out, err = run(d, [
+            "--rules", rules_dir,
+            "--reference-log", ref_log,
+            "--guard-log", os.path.join(d, "no-such-guard.log"),
+            "--capture-log", os.path.join(d, "no-such-capture.log"),
+            "--json",
+        ])
+        ok = True
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        try:
+            report = json.loads(out)
+        except Exception as e:
+            ok = False
+            report = {}
+            detail.append(f"JSON PARSE FAILED: {e}")
+
+        if report.get("unreferenced_pct") != 0:
+            ok = False
+            detail.append(f"EXPECTED unreferenced_pct == 0, got "
+                          f"{report.get('unreferenced_pct')!r}")
+        defects = report.get("instrumentation_defects", [])
+        if not any("0%" in dd and "2 of 2" in dd for dd in defects):
+            ok = False
+            detail.append("EXPECTED a saturation defect reporting '0%' and "
+                          f"the 2-of-2 intersection; not found. defects={defects!r}")
+        if rc != 1:
+            ok = False
+            detail.append(f"EXPECTED non-zero exit for a saturation defect, got {rc}")
+        record("10 SATURATION AT 0%", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------
+# Case 11 (new): a genuine PARTIAL unreferenced_pct (neither 0 nor 100)
+# must NOT be flagged as a saturation defect, and the happy-path fixture
+# must still exit clean. Without this, a saturation check that fires on
+# everything would look identical to a correct one.
+# ---------------------------------------------------------------------
+def case11():
+    d = new_tempdir()
+    try:
+        rules_dir, ref_log, guard_log, cap_log = build_happy_fixture(d)
+        rc, out, err = run(d, [
+            "--rules", rules_dir,
+            "--reference-log", ref_log,
+            "--guard-log", guard_log,
+            "--capture-log", cap_log,
+            "--days", "90",
+            "--json",
+        ])
+        ok = True
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        try:
+            report = json.loads(out)
+        except Exception as e:
+            ok = False
+            report = {}
+            detail.append(f"JSON PARSE FAILED: {e}")
+
+        pct = report.get("unreferenced_pct")
+        if pct in (0, 100):
+            ok = False
+            detail.append(f"EXPECTED a partial unreferenced_pct (not 0 or 100), "
+                          f"got {pct!r}")
+        defects = report.get("instrumentation_defects", [])
+        if any("suspicious" in dd for dd in defects):
+            ok = False
+            detail.append(f"EXPECTED no saturation defect on a genuine partial "
+                          f"result, got defects={defects!r}")
+        if rc != 0:
+            ok = False
+            detail.append(f"EXPECTED exit 0 on a clean partial result, got {rc}")
+        record("11 SATURATION - PARTIAL DOES NOT FLAG", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------
+# Case 12 (new, BUG 3/parse-yield regression): a capture log full of
+# in-window dated lines in an unrecognised (comma-joined, no whitespace)
+# shape must report a PARSE YIELD COLLAPSE defect and must NOT also claim
+# the log is empty - the failure being prevented is a misclassification,
+# not a silence.
+# ---------------------------------------------------------------------
+def case12():
+    d = new_tempdir()
+    try:
+        rules_dir = os.path.join(d, "rules")
+        os.makedirs(rules_dir)
+        with open(os.path.join(rules_dir, "feedback_x.md"), "w", encoding="utf-8") as fh:
+            fh.write("content\n")
+
+        cap_log = os.path.join(d, "cap.log")
+        with open(cap_log, "w", encoding="utf-8") as fh:
+            for i in range(1, 5):
+                fh.write(f"{d_ago(i)},feedback_x.md,sometopic\n")  # no whitespace
+
+        rc, out, err = run(d, [
+            "--rules", rules_dir,
+            "--reference-log", os.path.join(d, "no-such-ref.log"),
+            "--guard-log", os.path.join(d, "no-such-guard.log"),
+            "--capture-log", cap_log,
+            "--json",
+        ])
+        ok = True
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        try:
+            report = json.loads(out)
+        except Exception as e:
+            ok = False
+            report = {}
+            detail.append(f"JSON PARSE FAILED: {e}")
+
+        defects = report.get("instrumentation_defects", [])
+        if not any("PARSE YIELD COLLAPSE" in dd for dd in defects):
+            ok = False
+            detail.append(f"EXPECTED a PARSE YIELD COLLAPSE defect for the capture "
+                          f"log; not found. defects={defects!r}")
+        if any("capture log is EMPTY" in dd for dd in defects):
+            ok = False
+            detail.append("EXPECTED the collapse to NOT also be reported as an "
+                          f"empty log (misclassification); defects={defects!r}")
+        if report.get("repeat_topics") != "UNKNOWN":
+            ok = False
+            detail.append(f"EXPECTED repeat_topics == UNKNOWN on collapse, got "
+                          f"{report.get('repeat_topics')!r}")
+        if rc != 1:
+            ok = False
+            detail.append(f"EXPECTED non-zero exit on a collapse defect, got {rc}")
+        record("12 PARSE YIELD COLLAPSE, not EMPTY", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------
+# Case 13 (new): a capture log with one line in each accepted shape (plain
+# "YYYY-MM-DD ..." and bracketed "[YYYY-MM-DD] ...") must parse BOTH and
+# cluster them into the same topic. Without this, a fix that merely swaps
+# which single shape is accepted looks identical to one that accepts both.
+# ---------------------------------------------------------------------
+def case13():
+    d = new_tempdir()
+    try:
+        rules_dir = os.path.join(d, "rules")
+        os.makedirs(rules_dir)
+        with open(os.path.join(rules_dir, "feedback_x.md"), "w", encoding="utf-8") as fh:
+            fh.write("content\n")
+
+        cap_log = os.path.join(d, "cap.log")
+        with open(cap_log, "w", encoding="utf-8") as fh:
+            fh.write(f"{d_ago(5)} feedback_x.md sametopic\n")     # plain shape
+            fh.write(f"[{d_ago(3)}] feedback_x.md sametopic\n")   # bracketed shape
+
+        rc, out, err = run(d, [
+            "--rules", rules_dir,
+            "--reference-log", os.path.join(d, "no-such-ref.log"),
+            "--guard-log", os.path.join(d, "no-such-guard.log"),
+            "--capture-log", cap_log,
+            "--json",
+        ])
+        ok = True
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        try:
+            report = json.loads(out)
+        except Exception as e:
+            ok = False
+            report = {}
+            detail.append(f"JSON PARSE FAILED: {e}")
+
+        tagged = report.get("repeat_topics_tagged", {})
+        if "sametopic" not in tagged or len(tagged.get("sametopic", [])) != 2:
+            ok = False
+            detail.append(f"EXPECTED repeat_topics_tagged['sametopic'] with both "
+                          f"lines clustered (2 entries), got {tagged!r}")
+        defects = report.get("instrumentation_defects", [])
+        if any("capture" in dd.lower() for dd in defects):
+            ok = False
+            detail.append(f"EXPECTED no capture-log defect when both accepted "
+                          f"shapes parse cleanly, got defects={defects!r}")
+        record("13 BOTH ACCEPTED FORMATS CLUSTER TOGETHER", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def main():
     if not os.path.exists(SCRIPT):
         print(f"FATAL: script not found at {SCRIPT}")
@@ -516,6 +773,11 @@ def main():
     case6()
     case7()
     case8()
+    case9()
+    case10()
+    case11()
+    case12()
+    case13()
 
     passed = sum(1 for _, ok, _ in results if ok)
     total = len(results)

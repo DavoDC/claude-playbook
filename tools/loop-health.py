@@ -31,6 +31,24 @@ from datetime import date, datetime, timedelta
 
 UNKNOWN = "UNKNOWN"
 
+DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+# Format-independent candidate scan: looks for a date-shaped token anywhere
+# in roughly the first 20 characters of a line, regardless of punctuation
+# around it or which column it landed in. Deliberately separate from the
+# lenient row parser below - this is the strict cross-check that catches the
+# lenient parser silently dropping rows it should have kept.
+CANDIDATE_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+CANDIDATE_HEAD_CHARS = 20
+
+# A collapse, not a drift, is what this guards against. A log with a mix of
+# historical line shapes will legitimately fail to parse some fraction of
+# its lines forever, and a tight floor fires on every such log until
+# someone turns the check off. Losing half a log to an unrecognised format
+# is still worth flagging as a defect; losing a handful of stray malformed
+# lines is normal and must not trip this.
+PARSE_YIELD_FLOOR = 0.5
+
 
 def parse_log(path, fields):
     """Read an append-only whitespace-delimited log. Returns [] if absent.
@@ -50,19 +68,86 @@ def parse_log(path, fields):
     return rows
 
 
+def _row_date(row):
+    """Recover the date from a parsed row, tolerant of surrounding
+    punctuation ("[2026-08-01]", "2026-08-01,") and of a shifted field
+    order (a newly inserted column pushes the date into a field keyed by
+    the wrong name). Scans every value in the row for a date-shaped token
+    rather than trusting the "date" key and slicing its first ten
+    characters - the old approach recovered nothing once either of those
+    happened, even though the date was sitting right there in the row.
+    """
+    for value in row.values():
+        m = DATE_RE.search(value)
+        if not m:
+            continue
+        try:
+            return datetime.fromisoformat(m.group()).date()
+        except ValueError:
+            continue
+    return None
+
+
 def within(rows, days):
     if rows is None:
         return None
     cutoff = date.today() - timedelta(days=days)
     kept = []
     for r in rows:
-        try:
-            when = datetime.fromisoformat(r["date"][:10]).date()
-        except ValueError:
-            continue
-        if when >= cutoff:
+        when = _row_date(r)
+        if when is not None and when >= cutoff:
             kept.append(r)
     return kept
+
+
+def count_window_candidates(path, days):
+    """Strict, format-independent count of lines that LOOK like an in-window
+    dated entry, computed straight from the raw file - never through
+    parse_log/within. This is the cross-check: if the lenient parser above
+    recovers far fewer in-window rows than this finds candidates, the gap is
+    the parser failing to recognise a line shape, not the log being empty.
+    """
+    if not path or not os.path.exists(path):
+        return 0
+    cutoff = date.today() - timedelta(days=days)
+    n = 0
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            m = CANDIDATE_DATE_RE.search(line[:CANDIDATE_HEAD_CHARS])
+            if not m:
+                continue
+            try:
+                when = datetime.fromisoformat(m.group()).date()
+            except ValueError:
+                continue
+            if when >= cutoff:
+                n += 1
+    return n
+
+
+def load_window(label, path, fields, days):
+    """Load and classify one log's window: "absent" (never instrumented),
+    "collapsed" (present, but the lenient parser recovered far fewer rows
+    than the strict candidate count says are actually in-window - a parser
+    defect, not a silence), "empty" (present, genuinely nothing to parse),
+    or "ok". Collapsed and absent both return no usable rows, but they are
+    different defects and must never be reported with the same message -
+    collapsed is a misclassification to fix, not a silence to shrug at.
+    """
+    if not path or not os.path.exists(path):
+        return "absent", None, None
+    parsed = within(parse_log(path, fields), days)
+    candidates = count_window_candidates(path, days)
+    if candidates > 0 and len(parsed) < candidates * PARSE_YIELD_FLOOR:
+        return "collapsed", None, (
+            f"{label} log: only {len(parsed)} of {candidates} lines that look "
+            "like in-window dated entries actually parsed - PARSE YIELD "
+            "COLLAPSE, most likely a line shape the parser does not "
+            "recognise yet, not a real result. Treating this metric as "
+            "UNKNOWN, not empty.")
+    if not parsed:
+        return "empty", None, None
+    return "ok", parsed, None
 
 
 def topic_of(filename):
@@ -106,15 +191,21 @@ def main():
         report["rule_count"] = UNKNOWN
         defects.append(f"rules directory not found: {args.rules}")
 
-    refs = within(parse_log(args.reference_log, ["date", "session", "path"]), args.days)
-    fires = within(parse_log(args.guard_log, ["date", "guard", "verdict"]), args.days)
-    caps = within(parse_log(args.capture_log, ["date", "rule", "topic"]), args.days)
+    ref_status, refs, ref_defect = load_window(
+        "reference", args.reference_log, ["date", "session", "path"], args.days)
+    fire_status, fires, fire_defect = load_window(
+        "guard", args.guard_log, ["date", "guard", "verdict"], args.days)
+    cap_status, caps, cap_defect = load_window(
+        "capture", args.capture_log, ["date", "rule", "topic"], args.days)
 
     # ---- Difference 1: rules that reach nothing --------------------------
-    if refs is None:
+    if ref_status == "absent":
         report["unreferenced_rules"] = UNKNOWN
         defects.append("no reference log: cannot tell which rules are ever loaded")
-    elif not refs:
+    elif ref_status == "collapsed":
+        report["unreferenced_rules"] = UNKNOWN
+        defects.append(ref_defect)
+    elif ref_status == "empty":
         report["unreferenced_rules"] = UNKNOWN
         defects.append("reference log is EMPTY over the window - instrumentation "
                        "is silent, which is not the same as zero")
@@ -122,14 +213,32 @@ def main():
         seen = {os.path.basename(r["path"]) for r in refs}
         orphans = [f for f in rule_files if f not in seen]
         report["unreferenced_rules"] = orphans
-        report["unreferenced_pct"] = (
-            round(100 * len(orphans) / len(rule_files)) if rule_files else UNKNOWN)
+        pct = (round(100 * len(orphans) / len(rule_files)) if rule_files else UNKNOWN)
+        report["unreferenced_pct"] = pct
+        # 0% and 100% are the two shapes a reference log tracking a
+        # DIFFERENT population than the corpus produces - not confident
+        # results. The intersection between logged references and the
+        # corpus is what tells a reader which situation they are in, so
+        # report it rather than the bare percentage.
+        if pct in (0, 100):
+            rule_set = set(rule_files)
+            intersecting = sum(
+                1 for r in refs if os.path.basename(r["path"]) in rule_set)
+            defects.append(
+                f"unreferenced_pct came out at a suspicious {pct}% - only "
+                f"{intersecting} of {len(refs)} logged references land "
+                "inside the corpus at all. Treat this as a broken "
+                "instrument, not a confident result, until the log is "
+                "shown to cover the corpus.")
 
     # ---- Difference 2: guards that never fire, and guards that always do --
-    if fires is None:
+    if fire_status == "absent":
         report["guard_fires"] = UNKNOWN
         defects.append("no guard log: cannot tell which guards are dead or noisy")
-    elif not fires:
+    elif fire_status == "collapsed":
+        report["guard_fires"] = UNKNOWN
+        defects.append(fire_defect)
+    elif fire_status == "empty":
         report["guard_fires"] = UNKNOWN
         defects.append("guard log is EMPTY over the window - either nothing "
                        "triggered a guard, or guards stopped logging. Check which.")
@@ -146,11 +255,14 @@ def main():
             if n >= 20 and blocks.get(g, 0) / n > 0.5]
 
     # ---- Difference 3: the same lesson arriving twice --------------------
-    if caps is None:
+    if cap_status == "absent":
         report["repeat_topics"] = UNKNOWN
         defects.append("no capture log: cannot measure repeat violations, which "
                        "is the loop's primary health signal")
-    elif not caps:
+    elif cap_status == "collapsed":
+        report["repeat_topics"] = UNKNOWN
+        defects.append(cap_defect)
+    elif cap_status == "empty":
         report["repeat_topics"] = UNKNOWN
         defects.append("capture log is EMPTY over the window - instrumentation "
                        "is silent, which is not the same as zero repeats")
@@ -185,9 +297,8 @@ def main():
                 continue
             dated = []
             for c in v:
-                try:
-                    when = datetime.fromisoformat(c["date"][:10]).date()
-                except ValueError:
+                when = _row_date(c)
+                if when is None:
                     continue
                 dated.append((when, c))
             if len(dated) < 2:

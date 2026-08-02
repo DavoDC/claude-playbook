@@ -22,12 +22,11 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 ## Environment Setup (do once, pays forever)
 
 - [ ] **Use Windows Terminal** (not cmd.exe or the default terminal) - you can paste images directly into the Claude Code chat window. Screenshot something, Ctrl+V, Claude sees it. This alone unlocks visual debugging.
-- [ ] **Point Claude at the official docs** - Claude has no awareness of its own features by default. Give it the reference so it can read them and suggest things you didn't know existed:
+- [ ] **Clone the Claude Code docs locally** - Claude has no awareness of its own features by default, so give it something it can search rather than a link it has to guess its way around:
   ```
-  https://code.claude.com/docs/en/
+  git clone https://github.com/ericbuess/claude-code-docs
   ```
-  Then ask Claude to read the docs and suggest features that match your workflow. Works especially well for initial setup.
-- [ ] **Clone the docs repo as a sibling of the workspace repo, not inside it** - if you want an always-current local copy (for offline reading, or so a session-start hook can pull and grep it), clone it next to the workspace repo, not nested underneath it: `workspace/` and `claude-code-docs/` as siblings under the same parent folder. "Clone the docs" alone is ambiguous - inside-or-beside are both reasonable readings of the same instruction, and picking the wrong one silently breaks any path that assumes the other. See `docs/11-workspace-repo.md` for the full convention.
+  Several community mirrors of the official docs exist and any maintained one works; none of them are official, so pull before you read. Put the clone beside the workspace repo, not nested underneath it - see `docs/11-workspace-repo.md` for why, and for the read-locally-cite-officially rule that goes with it. When you write a pointer for someone else, cite `https://code.claude.com/docs/en/` rather than your local path. Then ask Claude to read the docs and suggest features that match your workflow. Works especially well for initial setup.
 - [ ] **Read the Claude Code docs yourself** - hooks, MCP servers, statusline config, remote control - most users discover these months late.
 
 ---

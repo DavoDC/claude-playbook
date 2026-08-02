@@ -103,6 +103,12 @@ You'll sometimes want a local, read-only clone of something outside your own wor
 
 This matters because "clone the docs locally" on its own is ambiguous - inside-the-workspace and beside-the-workspace are both reasonable readings of the same instruction, and any automation you build on top (a session-start hook that auto-pulls the clone, a skill that greps it) has to guess which one you meant. Guess wrong and the automation doesn't error, it just silently no-ops: the directory check fails, the pull never runs, and nothing tells you. State the convention explicitly - external reference repos live beside the workspace repo, one level up from it - and write any automation that depends on the path to fail loudly (print a warning, don't just skip) when it isn't found there, rather than degrading silently.
 
+### Read Locally, Cite Officially
+
+A local clone and the official docs site do different jobs, and neither replaces the other. The clone is what you read from, because one grep searches the whole corpus at once and answers the question you actually have: does this feature exist anywhere, and under what name. Fetching a page cannot answer that, since it requires you to already know which page holds the answer - which is the thing you were trying to find out. Offline access and the absence of a network round trip per lookup are real but secondary; the searchability is the point. The official site is what you cite: a pointer written for a reader who has no clone has to be the public URL, never a path into your copy.
+
+Pull the clone before every read, and treat pull-then-grep as one operation. A mirror that is behind does not error, it answers from whatever was on disk the last time you pulled, and nothing in the output distinguishes that from a current answer. A fetched page cannot fail this way, because if it is wrong it is wrong now rather than wrong as of some date you never recorded. Community mirrors are unofficial and can lag the source, and that is the reason the pull is part of the rule rather than a performance tip.
+
 ---
 
 ## Cross-Machine Sync

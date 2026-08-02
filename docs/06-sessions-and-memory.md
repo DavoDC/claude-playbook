@@ -146,10 +146,10 @@ For scripts, utilities, and automation tools, default to Python. Compiled langua
 
 Claude Code has many features - hooks, MCP servers, custom slash commands, statusline config, remote control, thinking modes - but Claude has no awareness of them by default. Claude doesn't know what it can configure unless you tell it.
 
-A practical fix: point Claude at the official documentation:
+A practical fix: clone the docs locally so the whole corpus is greppable in one command, rather than pointing Claude at individual pages:
 
 ```
-https://code.claude.com/docs/en/
+git clone https://github.com/ericbuess/claude-code-docs
 ```
 
-Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.
+See `docs/11-workspace-repo.md` for where this clone should live and why. Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.

@@ -50,6 +50,8 @@ Never include private source attribution in commit messages. Describe the conten
 
 The playbook's job is opinionated workflow guidance - when to use a feature, how it fits into your workflow, what actually works. Official Claude Code docs cover what features exist and how they work technically. Don't duplicate that.
 
+Duplication means restating what the docs say inside playbook prose, where the restatement goes stale the moment the feature changes underneath it. Keeping a pulled local clone of the docs to read from is the opposite of duplication - it's how you avoid restating from memory in the first place, by checking the current source instead of trusting what you wrote down last time.
+
 **Rule:** When a playbook doc describes a Claude Code feature in detail, add a pointer:
 
 ```

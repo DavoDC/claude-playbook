@@ -90,6 +90,38 @@ Four questions to ask of a real run:
 - **Does a BOUND remove real data on an ordinary run?** Find every threshold that drops, skips or truncates, then check the real corpus for what it actually catches. One three-hundred-character bound dropped three real records in a nine-second run, two of them at identical sizes, which reveals a shared template rather than a coincidence and makes the population measurable.
 - **A warning that fires is not a warning that HELPS.** When a new guard fires on real input, ask whether it also fixes anything. A filename-collision warning fired correctly on two real records, and both still mapped to one filename, so the second silently claimed the first's state. The warning shipped. The data loss did not stop.
 
+### Validate your own probe, not only the tool
+
+The two invalid instruments above are both about the thing being measured: the wrong entry point, the mismatched data shapes. There is a third case, distinct from both, and it is about the measuring apparatus itself rather than its target.
+
+The instrument that needs checking first is usually the one you wrote thirty seconds ago without thinking about it. A composed shell probe reports on its LAST component, not on the thing you meant to measure. Pipe a command into anything and the status you read belongs to the pipe. Wrap it, background it, substitute it, and the same applies. The number that comes back is real and plausible and about the wrong subject, which is the exact profile of a finding that survives review. Nobody validates a one-liner: it feels too small to be wrong, and it is composed in the flow of investigating something else, which is exactly when attention is elsewhere.
+
+In one measured case, a check of whether a tool exits non-zero on bad input was written as the command piped into a truncating reader followed by an exit-code read. The status read was the reader's, which is always success, so the tool was recorded as exiting clean on an input it had in fact correctly rejected. The wrong conclusion was nearly published.
+
+Two rules, both cheap. **One property per invocation**, with nothing composed around it: run once with output discarded to read a status, run again to read output; two runs of a fast tool are free next to one confident wrong conclusion. And **show the probe can return both answers before believing either**: point it at a case that must pass and one that must fail. A probe that has only ever produced one value has not been demonstrated to measure anything, for the same reason a test that has never failed has not been demonstrated to assert anything.
+
+## Four input states that masquerade as results
+
+Any tool that measures by reading logs has a contract with those logs, and that contract is almost never checked. The tool is tested against inputs its author constructed, which are by definition inputs the author's assumptions were true of. The failure is not a crash, a crash is a good outcome. The failure is that each wrong-input state produces output that looks like a result, and some look like interesting results, which is worse than looking clean because someone acts on them.
+
+Four states, ordered by how convincing the resulting output looks.
+
+**ABSENT.** The log does not exist. Easy, usually handled, often the only one checked.
+
+**EMPTY.** Exists, no rows. Must be reported distinctly from absent, because "nothing was recorded" and "nothing happened" are different facts and only one is good news. A tool returning zero for both reports the loop healthy at the exact moment its instrumentation died. This is the log-level instance of the rule stated earlier for metrics generally: blank must fail the run as an explicit unknown, never pass as a suspiciously good zero.
+
+**SATURATED.** The computation ran and returned 0% or 100%. This one produces a number, so it reads as a finding rather than a gap. Both extremes are the signature of two populations that do not intersect. In one measured case a tool reported an entire rule corpus as never referenced, because the reference log tracked a different population and not one of its entries could ever have matched. A real result is almost always in between, and an extreme deserves a check of the intersection before it deserves a headline.
+
+**NO YIELD.** Exists, has rows in range, and the parser extracted almost none because the format moved. The most dangerous, because it defeats the emptiness check specifically: an unparseable full log produces exactly the row set an empty log produces. It also has the longest silent life, nothing errors, the file keeps growing, the metric reads clean indefinitely. In one measured case a log had gained an extra field partway through its life and a parser written against the older shape reported an empty window over a file holding hundreds of in-window entries. It is the same failure shape as the headline count that turned out to equal the number of log lines rather than the sum of anything processed, further up this page: a number that is confidently wrong rather than obviously missing.
+
+A short check list, four questions, about ten minutes for any tool. Does it distinguish absent from empty in the output a human reads, not just internally? On a 0% or 100% result, does anything verify the populations intersect at all? Does the parser compare its row count against a format-independent count of candidate lines, the cheapest version being a count of lines matching only a date at the start, which survives every change to the rest of the line? Does each state cause a non-zero exit, or only a message, since a message in a log nobody reads is not a guard?
+
+Building the guard so it is not itself noise costs one more step: each check needs a negative case or it fires on everything and is disabled within a week. Saturation needs three cases, 100% flags, 0% flags, and a genuine partial does not flag and exits clean. Yield needs a loose threshold, half is reasonable, because the check is for a collapse rather than a drift, and a tight threshold over mixed historical formats fires constantly. The yield case must assert the absence of the emptiness message as well as the presence of the yield message, because the defect prevented is a misclassification rather than a silence.
+
+The counter-measure that costs nothing: where a log's format may change, make the tolerant thing the parser and the strict thing the counter. Accept every historical shape you know of, then compare what you got against a count that does not depend on shape at all. The parser stays useful across the format change and the counter tells you when a new one arrived.
+
+Two more states, briefly, as a closing note. **TRUNCATED**: the log rotated or was capped, so the window silently holds less history than it claims, and any per-window rate is wrong by an unknown factor; the cheap check is to flag when the oldest in-window line is materially newer than the window start. **DUPLICATED**: the same event was recorded twice, by two hooks or a re-run, inflating every count by an unknown factor; the cheap check is exact-duplicate line proportion, and a non-trivial one is a defect in the writer rather than the reader. Both share the shape of the other four: the number that comes out is confidently wrong rather than obviously missing.
+
 ## Your own recent changes, as a subject
 
 No round ever points anything at this, and it is high-yield ground.
@@ -164,12 +196,6 @@ Ask it of any pass that reports a large finding count. In one twenty-six-finding
 **The single hardest result this framework has produced about itself.** On one day, a colleague using a tool in ordinary daily work reported four defects. The same day, a multi-agent audit of the same code produced twenty-six findings. The intersection was empty. A coverage gap between two processes examining one artefact would show partial overlap; zero overlap means the two are asking structurally different questions, and at least one of them is systematically unable to see what the other sees.
 
 Reading and operating are not the same activity. This framework makes reading much better. It does not make reading sufficient.
-
-### Say How Many of Your Findings a User Could Ever Reach
-
-A pass that reports twenty-six findings sounds better than one that reports four. It may be worse.
-
-Of one twenty-six-finding pass, the categories no user could ever hit were unjustified-constant items and comment-narrative items: real maintainability work with no user-visible failure mode. That work is worth doing and it should not be counted against the same yield as a finding that loses someone's data.
 
 **Require every audit output to split its findings into those with a user-visible failure mode and those without.** It takes one line, it costs nothing, and it is the only thing standing between a finding count and an honest assessment of what the pass was worth.
 

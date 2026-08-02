@@ -47,9 +47,59 @@ ALLOW = [
 ]
 
 
+# Lines that are pure structure and carry no prose of their own - blanked
+# entirely. Matched against the STRIPPED line, so leading indentation (nested
+# lists, indented code) does not defeat the match.
+_HRULE_RE = re.compile(r"^([-*_])\s*(?:\1\s*){2,}$")
+_HEADING_RE = re.compile(r"^#{1,6}(?:\s|$)")
+_TABLE_OR_QUOTE_RE = re.compile(r"^[|>]")
+
+# List markers: bullet (-, *, +) or ordinal (1. / 1)) followed by whitespace.
+# Requiring the trailing whitespace is what keeps this from also matching
+# "**bold**" - a line starting with emphasis has no space after the first
+# "*", so it is prose and falls through untouched instead of being blanked.
+_LIST_MARKER_RE = re.compile(r"^(?:[-*+]|\d+[.)])\s+(.*)$")
+# A markdown checkbox immediately after the list marker is also structure,
+# not prose - stripped separately so "- [ ] Do the thing" contributes "Do
+# the thing" rather than "[ ] Do the thing".
+_CHECKBOX_RE = re.compile(r"^\[[ xX]\]\s*")
+
+
+def _declassify_line(line):
+    """Return the prose contribution of one line: None to blank it entirely,
+    or the text to keep (marker stripped for list items, unchanged
+    otherwise)."""
+    stripped = line.strip()
+    if _HRULE_RE.match(stripped):
+        return None
+    if _HEADING_RE.match(stripped):
+        return None
+    if _TABLE_OR_QUOTE_RE.match(stripped):
+        return None
+    m = _LIST_MARKER_RE.match(stripped)
+    if m:
+        item = _CHECKBOX_RE.sub("", m.group(1)).rstrip()
+        # Force a sentence boundary at the end of each list item. Without
+        # this, an item that does not itself end in punctuation (common in
+        # short checklist entries and numbered steps) bleeds into whatever
+        # line follows it once markers are no longer blanking the line, and
+        # two files that happen to share a run of short list items can then
+        # be reported as sharing one long welded "sentence" that never
+        # existed as a unit in either source - the same false-boundary
+        # failure mode the numbered-marker defect produced, in a new spot.
+        if item and item[-1] not in ".!?":
+            item += "."
+        return item
+    return line
+
+
 def sentences(text):
     text = re.sub(r"```.*?```", " ", text, flags=re.S)
-    text = re.sub(r"^\s*[|>#\-*].*$", " ", text, flags=re.M)
+    text = "\n".join(
+        contribution
+        for contribution in (_declassify_line(line) for line in text.split("\n"))
+        if contribution is not None
+    )
     for s in re.split(r"(?<=[.!?])\s+", text):
         s = " ".join(s.split())
         if len(s.split()) >= MIN_WORDS:
@@ -75,12 +125,25 @@ def allow_entry_for(sentence):
 
 def main(root):
     seen = {}
+    files_scanned = 0
+    units_compared = 0
     for path in find_md_files(root):
+        files_scanned += 1
         rel = os.path.relpath(path, root).replace("\\", "/")
         with open(path, encoding="utf-8", errors="replace") as fh:
             for s in sentences(fh.read()):
+                units_compared += 1
                 h = hashlib.sha1(s.lower().encode()).hexdigest()
                 seen.setdefault(h, [s, []])[1].append(rel)
+
+    # Coverage figure, printed on both pass and fail: the raw pair of how
+    # many analysable units were compared and how many files they were drawn
+    # from. A verdict without this cannot be told apart from one that
+    # examined almost nothing and found nothing - which is exactly what let
+    # a real duplicate sit undetected before this script's line-blanking was
+    # fixed. A raw pair invites the question "is that enough files/units?";
+    # a percentage would invite a target instead.
+    coverage = f"coverage: {units_compared} sentence(s) compared / {files_scanned} file(s) scanned"
 
     dups = []
     cleared = []
@@ -104,10 +167,10 @@ def main(root):
 
     if not dups:
         extra = f" ({len(cleared)} scoped exception(s) applied)" if cleared else ""
-        print(f"OK: no unscoped sentence of {MIN_WORDS}+ words appears twice{extra}.")
+        print(f"OK: no unscoped sentence of {MIN_WORDS}+ words appears twice{extra}. root={root} {coverage}")
         return 0
 
-    print(f"FAIL: {len(dups)} duplicated passage(s).")
+    print(f"FAIL: {len(dups)} duplicated passage(s). root={root} {coverage}")
     for s, paths in dups:
         print(f"  in {', '.join(paths)}:")
         print(f"    {s[:200]}")
@@ -115,4 +178,5 @@ def main(root):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "."))
+    default_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else default_root))

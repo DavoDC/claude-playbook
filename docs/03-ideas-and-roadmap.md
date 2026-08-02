@@ -33,6 +33,39 @@ Numbering phases ("Phase 1", "Phase 2") creates pressure to complete them in ord
 
 The tier communicates urgency at a glance. When budget is tight, the decision is easy: TIER 0 only.
 
+### Routing: Which List Does This Belong On
+
+Picking the wrong list is the most common backlog defect, and the usual test ("is it about this repo?") gets it wrong regularly. The better test is **what unblocks the item**, not what it is about.
+
+| The item | Goes to | Why |
+|---|---|---|
+| Code, docs, tests or tooling scoped to ONE repo | that repo's `IDEAS.md` | `/dev-session` picks from here |
+| Work on the workspace itself: a hook, a skill, a rule, a workspace tool | the workspace's own `IDEAS.md` | The workspace is a repo and deserves the same treatment as any other. Most people never create this one, and it is why workspace improvements live in scattered notes |
+| The unattended run's work QUEUE, research, cross-repo sweeps | a separate queue file | A queue answers "what should tonight's run do", which spans every repo and includes work belonging to none. That is a different question from "what should be built in this repo next" |
+| Blocked on a named person, with a deadline and a real consequence | `pending-actions.md` | High bar, dated, and capped. An unbounded blocked list is a wish list |
+
+The distinction between the second and third rows is the one people collapse, and collapsing it is why a queue file grows to hundreds of items: repo-scoped engineering work has nowhere else to go, so it accumulates in the queue and the queue stops functioning as a queue.
+
+**Keep the specification in ONE file and point every backlog at it.** Copy the convention into each repo's backlog and you have created N copies that will disagree within a month, and improving the process becomes N edits instead of one. See `templates/BACKLOG-SPEC.md`.
+
+### The One Question That Derives the Tier
+
+Assigning a tier is a judgement someone makes and then defends. Deriving it from an answer is cheaper and more honest, and it needs exactly one question per item:
+
+**"Why is this necessary, and what fails if we skip it?"**
+
+Ask it of every item once the list has grown past roughly ten and the ordering has stopped being self-evident. The tier falls out of the answer:
+
+- "it is broken or loses data without this" -> TIER 0
+- "it enables other work, or the repo's main job is worse without it" -> TIER 1
+- "it improves something that already works" -> TIER 2
+- "it would be nice" -> TIER 3
+- **"I cannot answer" -> the most valuable group of the five**
+
+That last group is the point. An item whose necessity cannot be stated is either not understood yet or no longer wanted, and both of those are decisions worth taking now rather than carrying for another six months. A list where every item has an answer is well-ordered whether or not it has tier labels; a list with tier labels and no answers is decorated, not prioritised.
+
+Tiers, templates and validation checklists are scaffolding. The clarity is the work.
+
 ---
 
 ## The Roadmap System (for multi-repo work)
@@ -50,6 +83,18 @@ When a directive is complete, move the file to `roadmap/directives/archived/` an
 `pending-actions.md` holds cross-repo tasks only - things that span multiple repos or are workspace-level. Never put repo-specific tasks here. Those go in that repo's IDEAS.md.
 
 When a task is done: remove it from pending-actions.md, add a dated entry to completed-actions.md. Same discipline as IDEAS.md/HISTORY.md.
+
+---
+
+### Close Every Backlog Pass by Re-Ranking It
+
+Adding items to a backlog is easy and everybody does it. Re-ranking one is rare, and it is where the value is: **a ranking made under no constraint is mostly an artefact of the order things were found in.**
+
+Before closing any pass over a backlog, apply **one** extreme lens from [Part 12](12-audit-lenses.md) to the LIST rather than to the code, and write down what moved.
+
+This is the cheapest step in the whole process and the only one that improves items you are not touching. One measured instance: asking "what would you fix if you could never touch this repo again" of a 180-item backlog promoted a bottom-tier item to first place, because an override flag that silently destroyed hand-edited work had been correctly tiered as polish under "how valuable is this" and was the most important item in the repo under "what is unrecoverable". Nothing was learned about the code.
+
+"Nothing moved" is a real result and gets recorded as one.
 
 ---
 

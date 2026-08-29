@@ -34,6 +34,14 @@ If you're unsure whether something is safe to include: don't include it.
 
 ---
 
+## Practise what this repo publishes
+
+When you document a practice here, ask whether this repo can adopt it, and adopt it in the same change if it can. The privacy git hooks are the worked example: they are installed and active here, not just described, which is how a real leak in one of them was found. A snippet nobody runs is never wrong, and that is the problem with it.
+
+Where this repo genuinely cannot adopt something - it needs a private workspace, a paid service, or a codebase this one does not have - say so in the text. A reader must be able to tell advice under test from advice merely written down, because an unmarked claim reads as tested.
+
+---
+
 ## Playbook updates are manual-only
 
 Never update this repo automatically. Only when explicitly asked.
@@ -42,7 +50,7 @@ Never update this repo automatically. Only when explicitly asked.
 
 ## Commit message hygiene
 
-Never include private source attribution in commit messages. Describe the content only. The commit-msg hook blocks a set of private source-attribution terms; the term list lives in the hook itself, out of this repo.
+Never include private source attribution in commit messages. Describe the content only. `hooks/commit-msg` blocks this: it derives its token list at runtime from `.private-root` markers on whatever machine it runs on, so no private term is hardcoded anywhere in this repo. It reports line numbers and withholds the match, because printing the token would be the leak. Run `sh hooks/install.sh` once after cloning - `.git/hooks/` is not tracked, so a fresh clone has no protection until you do.
 
 ---
 
@@ -87,4 +95,5 @@ docs/         the guide, split by topic, numbered
 templates/    CLAUDE.md and enforced-rules starters
 tools/        statusline, budget and session-status scripts, plus a launcher
 skills/       skill SKILL.md files
+hooks/        this repo's own privacy git hooks, plus install.sh
 ```

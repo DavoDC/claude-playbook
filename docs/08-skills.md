@@ -114,18 +114,6 @@ Rank any list or backlog by leverage, using Aristotle's "who benefits, are they 
 
 ---
 
-### [/brainstorm](https://github.com/DavoDC/claude-playbook/blob/main/skills/brainstorm/SKILL.md) (generation interface)
-
-Generate options for a genuinely open-ended problem using a named method rather than free association: Six Thinking Hats to evaluate one candidate from six angles, SCAMPER to generate siblings of a candidate that already exists, total negation to break out of a framing, reverse brainstorming for safety and correctness work.
-
-**When to use:** "think broadly", "what else could we do", "give me options", "I'm stuck on how to approach this". Also when exactly one candidate exists and you want adjacent or better ones.
-
-**The thing it deliberately does not do is rank.** Generation and evaluation are different activities and blending them is why brainstorms produce three ideas: the first objection kills the second idea before the fourth one exists. This skill generates and hands off to `/prioritise`.
-
-[Full SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/brainstorm/SKILL.md)
-
----
-
 ## Daily Workflow Skills
 
 ### /end-session (heavily used)
@@ -151,9 +139,6 @@ Deep investigation of a topic, file, directory or repo. Two mechanisms make it d
 It uses a commit-anchored delta (see [Part 10](10-advanced.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
 
 And it generates its lenses before it scans, using the framework in [Part 12](12-audit-lenses.md), then states in its output which cells it walked and which it deliberately skipped. That second half is what stops the fifth pass over a repo confirming what the fourth one said: the delta tells you which files to re-read, and only the lens framework tells you what to ask of them.
-
-### [/cross-synth](https://github.com/DavoDC/claude-playbook/blob/main/skills/cross-synth/SKILL.md)
-Cross-synthesise any N subjects (repos, files, docs, configs, tests, features) side-by-side: find what's shared, what's missing, what's inconsistent, and what one subject can teach the others. Horizontal analysis - where `/deep-dive` goes deep on one thing, `/cross-synth` goes wide across many.
 
 ### [/process-feedback](https://github.com/DavoDC/claude-playbook/blob/main/skills/process-feedback/SKILL.md) (occasional)
 Takes a `feedback_*.txt` file written by the user (raw notes, corrections, wishes) and produces two outputs: new IDEAS.md entries for product work, and Claude rule files for feedback. The bridge between user notes and the improvement system.
@@ -199,9 +184,6 @@ More detailed than `/today`. Categorises all pending items into: can do now, nee
 ### /self-audit
 Workspace compliance check. Read-only - reports findings, never auto-fixes. Checks MEMORY.md health, pending actions for stale items, .gitignore gaps, skill integrity, hooks configuration.
 
-### [/validate-rules](https://github.com/DavoDC/claude-playbook/blob/main/skills/validate-rules/SKILL.md)
-Check that enforced-rules.md and feedback files are internally consistent and not contradicting each other. Also runs validation to ensure hook-enforced rules are actually implemented in the hooks.
-
 ### /pre-rebuild
 Pre-rebuild checklist before a major refactor or rebuild. Ensures you've captured the current state, understand what exists, and have a recovery plan before destroying anything.
 
@@ -210,9 +192,6 @@ Review the current diff for correctness bugs at configurable effort levels. No s
 
 ### /security-review *(build your own)*
 Security-focused code review. Looks for OWASP top 10, credential leaks, injection vulnerabilities. No starter provided - can be as simple as: "read the diff, check for the OWASP top 10, report findings grouped by severity."
-
-### [/release](https://github.com/DavoDC/claude-playbook/blob/main/skills/release/SKILL.md)
-Structured release process: version bump, changelog, tag, push.
 
 ### /save-memory *(build your own)*
 Manually save a piece of information to the memory system. No starter provided - straightforward: "write the fact to `memory/<category>/<name>.md`, add a pointer to `memory/MEMORY.md`, commit."
@@ -230,9 +209,6 @@ Undo the last N commits via `git reset --soft`, show what's staged, help recommi
 
 ### /health
 Workspace health check. Detects skill gaps, hook count anomalies, file bloat, stale peer-sync reviews, unindexed memory files.
-
-### [/skill-suggest](https://github.com/DavoDC/claude-playbook/blob/main/skills/skill-suggest/SKILL.md)
-Context-aware skill recommendations. Describe a task and it detects the intent (exploration, implementation, debugging, review, ...) and suggests the most relevant installed skills, with an optional `--detailed` mode for full guidance on each match. Uses keyword matching, so treat suggestions as a starting point, not a verdict.
 
 ### [/repo-status](https://github.com/DavoDC/claude-playbook/blob/main/skills/repo-status/SKILL.md)
 Multi-repo status overview. For each repo in a configured directory: current branch, uncommitted changes count, and unpushed commits count. Output as a compact table. Flags repos with dirty files, unpushed commits, or unexpected branches. Never fetches (no network requirement). Read-only.
@@ -266,3 +242,17 @@ For that class the right answer is usually **neither install nor delete**. Keep 
 **Match new corrections against the archive by lesson, not by name.** The same discipline applies to archived rules. When a fresh correction comes in, check whether an archived feedback file already covers that lesson - and if one does, the archival was premature and the rule should come back rather than be rewritten under a new name. Matching on file names alone misses this every time, because the second occurrence of a lesson almost never arrives with the same wording as the first. An archive nobody checks against is just a slower delete.
 
 **The corollary.** A process you run only every month or two is often better off as a plain doc than as a skill at all. The doc is the runnable artifact - you or Claude reads it and follows the steps - and it costs nothing on every session that doesn't need it, versus a skill's permanent description-line tax paid regardless of use. Reach for a skill when a process needs Claude to make judgment calls across several steps on a regular basis; reach for a doc when it's reference material consulted rarely.
+
+### What we retired, and why
+
+Earlier versions of this chapter listed five skills that are no longer installed. Naming them and their fate is worth more than the skills were: this project asks its own contributors for negative results, and a roster that quietly drops its own failures while asking everyone else for theirs is not honest about what it knows.
+
+Four - `/cross-synth` (cross-synthesise N subjects side by side), `/release` (version bump, changelog, tag), `/skill-suggest` (keyword-matched skill recommendations), and `/validate-rules` (consistency checks across rule and feedback files) - were retired together in a single sweep, on one criterion: zero recorded invocations over the review window. No further reason was recorded for any of them individually, and that is the honest state of the evidence rather than four separate design verdicts reconstructed after the fact.
+
+Two things about that sweep are worth more than the retirements themselves.
+
+**The sweep's instrument was wrong, and it proved so immediately.** A ranking skill retired in the same batch on the same zero-count had to be restored, because several installed thinking skills routed into it as a step in their own workflow - the invocation log counted direct calls and could not see the routing. That is the failure described in the promotion criterion above, and it was found the expensive way.
+
+**A retirement with no recorded reason cannot be reconsidered, only re-argued.** Each of the four could plausibly be re-derived as a real design call - a horizontal comparison is usually reachable with a directory diff, a release ritual that never cuts versioned releases needs no skill, a skill that recommends skills has to be invoked after you have already done the thinking it would save, and a manual rule validator loses to a hook that fires unprompted. Every one of those readings is plausible and none of them is evidenced. Record the reason at the moment of retirement, in one line, or the decision is not revisitable later - only re-litigable.
+
+The fifth, `/brainstorm`, is a different case and a more uncomfortable one: it was published here as part of the roster without ever having been run in the workspace this playbook documents. That is not a retirement, it is a claim that was never true, and it is the worst category an audit of a document like this can return. It is removed under the rule that governs everything else here - nothing stays published that the source environment does not actually practise.

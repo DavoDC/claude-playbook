@@ -76,20 +76,15 @@ Claude Code makes it available as `/<name>` in any session run from that workspa
 | [think](think/SKILL.md) | Full build workflow - /aristotle + 5-step engineering algorithm + instantiation check |
 | [socrates](socrates/SKILL.md) | Rule evaluator - 5 questions per principle, verdict table, deletes zombies, strengthens weak rules |
 | [prioritise](prioritise/SKILL.md) | Rank any list by leverage - Aristotle's "who benefits, are they a bottleneck?" lens |
-| [brainstorm](brainstorm/SKILL.md) | Generate options for a genuinely open-ended problem - Six Hats, SCAMPER, total negation, reverse brainstorming. Generates; does not rank |
 | [refine-ideas](refine-ideas/SKILL.md) | Clarify IDEAS.md priorities - one question per item ("why necessary?"), groups by answer |
 | [survey-repo](survey-repo/SKILL.md) | Quick codebase summary - language, purpose, key files, tests, entry points, open TODOs |
 | [deep-dive](deep-dive/SKILL.md) | Deep investigation of a topic, file, or repo - security analysis, code review, architecture |
-| [cross-synth](cross-synth/SKILL.md) | Cross-synthesise any N subjects - find similarities, differences, gaps, learning transfers |
 | [commit-chunks](commit-chunks/SKILL.md) | Commit changed files in logical chunks - one commit per feature/fix/topic |
 | [commit-all](commit-all/SKILL.md) | One-shot commit of everything in git status - no planning, no splitting |
 | [step-commits](step-commits/SKILL.md) | Plan changes as atomic commits upfront, implement one at a time |
 | [undo-commits](undo-commits/SKILL.md) | Undo last N commits via git reset --soft, recommit cleanly. Safe - never rebases |
 | [checkpoint](checkpoint/SKILL.md) | Named session checkpoints - create/list/verify restore points during long runs |
 | [human-voice](human-voice/SKILL.md) | Audit and rewrite text to remove AI patterns - for emails, READMEs, anything to a person |
-| [release](release/SKILL.md) | Create a tagged GitHub release - version detection, changelog, release notes |
-| [skill-suggest](skill-suggest/SKILL.md) | Context-aware skill recommendations based on your task description |
-| [validate-rules](validate-rules/SKILL.md) | Pre-commit validation - TDD ratio, em-dash check, rule file changes |
 | [process-feedback](process-feedback/SKILL.md) | Process a feedback file - product tasks AND Claude learnings (dual pass, both mandatory) |
 | [check-compact](check-compact/SKILL.md) | Check if context is large enough to warrant compaction, skip if not |
 | [reflection](reflection/SKILL.md) | Read recent session history, extract patterns, update workspace config and memory |

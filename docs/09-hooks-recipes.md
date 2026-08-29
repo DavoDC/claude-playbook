@@ -395,3 +395,19 @@ done
 ```
 
 This depends on one small convention: every hook file self-declares its event type in a header comment (`# PreToolUse hook`, near the top of the file). Without that, the check has nothing to scan for - a small discipline that pays for the whole thing. Worth running the same check inside your hook test suite too, not only interactively at session start, so registration drift shows up in a non-interactive run as well.
+
+### Destructive Script Takes a Target Parameter
+
+The recipes above are hooks, but the same discipline applies to any script one of them might call, or that you write to fix something a hook flagged: a script that renames, deletes, or otherwise mutates real state should accept a target-path parameter, defaulting to the real target, so the dangerous code path can be validated against a decoy before it ever touches production data. Writing the destructive logic carefully is not the same as testing it - an untested path is untested regardless of how carefully it was written, and the check that would actually catch a bug in it before the mutation happens is a dry run against a copy, not a read-through of the code.
+
+```bash
+#!/bin/bash
+# repair.sh [target-path]   (defaults to the real target if omitted)
+TARGET="${1:-$REAL_TARGET_PATH}"
+
+# Validate first: run this same script with a decoy TARGET (a copy of the
+# real file/directory) before trusting it against the real one.
+# ...destructive logic operates on "$TARGET" only, never a hardcoded path...
+```
+
+Evidence: applied to a repair script touching a live browser cookie database - the parameterized version let the destructive path be validated against a copy before it ever touched the real file.

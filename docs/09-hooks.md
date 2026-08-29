@@ -143,6 +143,14 @@ print(f'BLOCKED: {reason}', file=sys.stderr)
 sys.exit(2)
 ```
 
+### Error Handling Protects the Managed Runtime, Not a Crash in Foreign Native Code
+
+A try/except (or the equivalent guard in any managed language) only catches errors raised inside that runtime. A hook, or any script, that shells out to or embeds a call into foreign native code - a compiled binary, a native extension, a system library - can crash the whole process regardless of how carefully the surrounding logic is wrapped. The handler never engages, because the crash never became an exception the runtime could see; it just took the interpreter down with it. This matters for hooks specifically because a hook that wraps its logic in try/except and assumes that alone guarantees graceful failure has only covered the managed half of what it calls - the same fail-open assumption the sections above rely on stops holding the moment the failure happens below the runtime rather than inside it.
+
+The practical fix costs almost nothing: write a flushed log line immediately before any risky call into native code, naming what's about to run. If the process survives, the line is redundant. If it doesn't, that log is the only artifact left to diagnose from - there was never a stack trace, a caught exception, or even a non-zero exit code to read afterward, because the process simply stopped.
+
+Evidence: a scripting-language mod wrapped every call in the language's own error handler, but its first real call into native code crashed the whole process anyway, with the handler never engaging at all.
+
 ### Catastrophic Self-Lock: the Quoting Trap in Blocking Hooks
 
 Embedding Python inside `bash -c "..."` works fine until a blocked message needs a double-quote character. A `"` inside the Python string literal closes the outer shell's double-quoted argument early, producing a SyntaxError. For a passive hook that's the silent fail-open trap above - annoying but harmless. For a blocking hook whose fallback is `|| exit 2` (fail closed, which is the correct default for a security guard), that same SyntaxError now blocks every tool call - Read, Edit, Write, Bash, all of them. There is no self-repair path, because the tools needed to fix the hook are exactly the tools the hook is blocking (observed on Claude Code v2.1.220, Windows 11 with Git Bash; no official page covers this session-lock failure mode, so recheck if behaviour changes).
@@ -203,6 +211,14 @@ The `if:` field means an expensive hook (subprocess call, file I/O) costs zero o
 
 **One condition per handler.** There's no `&&` or `||` syntax. For multiple independent conditions, define separate hook handlers. For complex conditions that can't be expressed as a single permission rule, fall back to checking inside the hook script and exiting 0 early.
 
+### Allowlist Entries Are Literal String Matches
+
+A permission allowlist entry - the `if:` pattern above, or an entry in `settings.local.json`'s `allow` list - matches the exact invocation written, not the intent behind it. Writing the documentation for a command and the allowlist entry for it in the same commit does not guarantee the two describe the same invocation; they were typed by hand, twice, and nothing checks that they agree. Diff the documented invocation directly against the allowlist entry rather than trusting they were written consistently just because they were written together.
+
+The sharper version of this: never pre-authorize the destructive mode of a dual-mode tool as a side effect of an unrelated task. A permission entry loosened to unblock one docs-writing session can end up broader than that session needed, and it carries forward silently into every session after it.
+
+Evidence: a docs update and a permission allowlist entry were written in the same commit but described slightly different invocations of the same tool - the allowlist entry didn't actually cover what the docs said was now possible.
+
 ---
 
 ## Hooks Worth Having
@@ -250,6 +266,8 @@ Hooks can be registered in two places: a project's own `.claude/settings.json`, 
 The mistake worth naming is copying the hook's script files into each repo instead, reasoning that a self-contained copy is safer or more defensive. It isn't. If the user-level registration already covers every target, the copies do no protective work at all - they are inert duplicates riding along for zero benefit. What they do instead is multiply risk: any personal detail baked into the script (a home directory path, a machine name) now leaks into every repo carrying a copy, including public ones; the copies drift the moment one is edited and the others aren't; and a bug fix has to be applied once per repo instead of once total, with every application a fresh chance to miss one or reintroduce the bug.
 
 If a leak like this is ever found, resist the instinct to just sanitize the copies' contents. Stripping a hardcoded path out of several duplicated files fixes the string while leaving the actual problem - a private script living in several public places - fully intact for the next detail that gets added to it. The right question is why the file exists in each repo at all, not what's wrong with what's inside it. Private or cross-cutting infrastructure belongs in exactly one place: registered once, at the single point of control that already covers everything, pointing at one canonical copy that never ships inside a repo that could go public.
+
+The registration-point argument above is one instance of a more general rule: a generated or deployed file stamped "do not edit" should be edited at its source and redeployed, never hand-edited where it landed. The moment someone edits the deployed copy directly, it silently drifts out of sync with the source that's supposed to produce it, and the next regeneration either overwrites the fix or leaves it coexisting invisibly with content the source no longer matches. The failure runs the other way too: a generator's "managed set" only covers the exact artifacts it explicitly tracks, so an output hand-duplicated outside that set to save a step looks identical to a generated one at the moment it's created, then drifts stale the first time the source changes, because nothing is watching it.
 
 ## Settings Split - Critical
 

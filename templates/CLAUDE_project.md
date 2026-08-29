@@ -83,7 +83,7 @@ Local config: `config/config.json` (gitignored - never commit this)
 <!-- Named constraints are more reliable than implicit ones -->
 
 - [e.g. "Only the user executes integration. Claude prepares workflows and stops before running any integration. No exceptions, even dry-run."]
-- [e.g. "TagFixer MUST ONLY operate on NewMusic/. Never on the main library."]
+- [e.g. "The importer MUST ONLY operate on staging/. Never on the main library."]
 
 ---
 

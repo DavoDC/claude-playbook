@@ -332,7 +332,7 @@ workflows, but stops before running any integration. No exceptions, even dry-run
 ```
 
 ```
-TagFixer MUST ONLY operate on the NewMusic folder. Never on the library root.
+The importer MUST ONLY operate on the staging folder. Never on the library root.
 Never refactor this to accept a folderPath parameter.
 ```
 

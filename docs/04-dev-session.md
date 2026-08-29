@@ -39,7 +39,7 @@ Writes a one-sentence scope statement with explicit IN/OUT lists before reading 
 ```
 SCOPE: Fix duplicate detection - handle featured artists in track names
 IN SCOPE: regex pattern fix in duplicate_detector.py, test coverage
-OUT OF SCOPE: tag fixing, routing changes, anything in AudioMirror
+OUT OF SCOPE: tag fixing, routing changes, anything in the sync tool
 ```
 
 This is committed as `scope: ...` before implementation begins. It forces clarity upfront. High scope churn (lots of IDEAS.md changes mid-session) is a signal that scoping was skipped.

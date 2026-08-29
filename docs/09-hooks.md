@@ -304,6 +304,18 @@ sh hooks/install.sh
 
 Neither hook hardcodes any repo name or path, which is what makes it safe to keep in a public repo. Each derives its blocklist at runtime by globbing the parent of this repo for `.private-root` marker files: any sibling repo opts in by dropping a `.private-root` file at its own root, optionally with a repo-relative subfolder name (e.g. a feedback or notes folder) as its first non-comment line. The hook's token list is the private repo's directory name plus that subfolder's first path component - generated fresh on every commit, from whatever markers exist on the machine it runs on. See `guard.py`'s `.private-root` handling for the same convention used at Claude Code write-time, not just commit-time.
 
+**A privacy guard must report WHERE, never WHAT.** This is the rule that is easiest to get wrong and hardest to notice afterwards, because the wrong version looks more helpful. A hook that finds a private token and then echoes the matching line has printed that token into the terminal, into any CI log that captured the run, and into the transcript of any assistant that was committing on your behalf - which is a wider audience than the commit it just blocked. So the pre-commit hook prints file names and the commit-msg hook prints line numbers, and neither prints the match. A location is enough to act on and costs nothing if it leaks.
+
+The general form is worth stating on its own, because it applies to any check over sensitive data rather than to git hooks specifically: **a rule that names the thing it protects instantiates the leak it exists to prevent.** The public copy of a privacy rule says "no private repo names"; the private copy is where the actual names live. The same split applies to the guard's own output.
+
+That failure is not hypothetical, and it survived a review. These two hooks were written in the same sitting, from the same template, with the pre-commit one carrying a comment explaining exactly why it withholds the match - and the commit-msg one printing `grep -n` output directly underneath. Sharing a rationale in a comment does not propagate it to the sibling file, and a reviewer who has just read the good version is the least likely person to notice the bad one. **When one of a pair implements a safety rule, check the other for the same rule specifically, by name, rather than reading it for general correctness.**
+
+### This section is also a live installation
+
+Both hooks are installed and active in this repo, not merely documented in it. That is deliberate and it is worth copying: a repo that publishes advice is the cheapest possible test bed for it, and it is the only one where drift between the advice and the practice is visible for free. The commit-msg leak above was found precisely because the hook was a live thing to inspect rather than a snippet in a code fence - a snippet nobody runs is never wrong, which is exactly the problem with it.
+
+The discipline this asks for is small. When you document a practice here, ask whether this repo could adopt it, and if it can, adopt it in the same change. When it genuinely cannot - because the practice needs a private workspace, a paid service, or a codebase this one does not have - say so in the text, so a reader can tell the difference between advice under test and advice merely written down. An unmarked claim reads as tested, and most of the value of a playbook that eats its own cooking is lost the moment a reader cannot tell which parts are being eaten.
+
 ---
 
 ## Before Renaming Any Tracked File

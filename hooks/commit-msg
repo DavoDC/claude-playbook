@@ -35,8 +35,13 @@ if grep -qEi "$PATTERN" "$MSG_FILE" 2>/dev/null; then
     echo "This repo may be public - private sibling-repo names/paths must not appear in it."
     echo "Describe the change generically instead."
     echo ""
-    echo "Matched line(s):"
-    grep -nEi "$PATTERN" "$MSG_FILE"
+    # Report WHERE, never WHAT - the same rule the companion pre-commit hook
+    # follows, and for the same reason. Echoing the matched line prints the
+    # private token into the terminal, into any CI log, and into the
+    # transcript of an assistant committing on your behalf. A line number is
+    # enough to act on and is safe to paste anywhere.
+    echo "Matched on line(s) of the commit message - content withheld deliberately:"
+    grep -nEi "$PATTERN" "$MSG_FILE" | cut -d: -f1 | sed 's/^/  line /'
     echo ""
     exit 1
 fi

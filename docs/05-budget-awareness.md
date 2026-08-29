@@ -153,6 +153,16 @@ The most token-efficient approach:
 
 ---
 
+## The Bottleneck Is Often a Human Action, Not Model Budget
+
+Everything above measures whether the model has enough budget left to keep working. It is just as important to check the opposite direction: whether finished work is sitting idle because it is waiting on a small human action - a click, a yes/no answer, plugging something in, approving a change - rather than on more model capacity at all. This is easy to miss precisely because the natural instinct when budget is healthy is to keep building, and building is the wrong response to a queue that was never blocked on building in the first place.
+
+Keep an explicit ranked list of "waiting on a human action" items and work it down before starting new work, the same way you would check the budget axes above before starting new work. In one measurement session, several pieces of already-finished work were found sitting blocked purely on a trivial unblocking action, while measured model-budget usage across the same window was well under half of what was available - the constraint that week was never the model's budget, it was an unworked queue of small human acts.
+
+This is not an argument against delegating work to an agent when delegation is the right call - see the delegate-vs-do-directly guidance in [Part 10](10-advanced.md#when-to-delegate-vs-do-it-directly) for that decision. It is an argument for checking, before delegating or building more, whether the actual bottleneck is capacity to build at all, or a short list of things only a human can finish. Building more when the queue is full of unblocking actions just grows a backlog that was never short of finished work to begin with.
+
+---
+
 ## Building the System
 
 The whole thing (statusline.py + check-budget.sh + session-status.sh) is small enough to read end to end in one sitting. Here is how it is wired:

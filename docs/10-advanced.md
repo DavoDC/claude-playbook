@@ -79,6 +79,14 @@ The deconstruction revealed: the assumption was that Visual Studio installs to a
 
 This is a typical /aristotle outcome: the stated problem ("hardcoded path") dissolves into a better-framed problem ("runtime discovery"), and the solution that falls out of the reframing is simpler than any fix for the original problem.
 
+### Working Around an API Registration Wall
+
+Some platforms gate API access behind an application registration process that an individual developer can no longer complete - a corporate approval step, a closed waitlist, a category the platform stopped accepting new registrants into. The instinct is to keep probing for a way around the wall as an individual. There often isn't one, and repeating the attempt burns rounds without changing the outcome.
+
+The reframe: an established piece of free, open-source software talking to the same platform almost certainly already holds its own long-standing registration, obtained before the wall went up or through a category still open to software vendors rather than individuals. Switching to that client reaches the same data through ordinary sign-in, using the vendor's registration instead of a personal one you can no longer get. In one case, a personal-account API path was closed off entirely by a registration requirement individuals could no longer obtain; switching to an established open-source client that already held its own registration reached the same data with none of the blocked path involved at all.
+
+The boundary that keeps this legitimate: use the vendor's software as it is meant to be used, and never extract or borrow its client credentials to call the API directly from your own code. The first is walking through a door that is open to you; the second is copying someone else's key.
+
 ---
 
 ## Multi-Agent Orchestration
@@ -225,6 +233,10 @@ A yes/no probe against something unfamiliar - an SDK, an API, a config surface y
 
 Enumerate first instead. List what actually exists - the members, the methods, the config keys, the accepted values - before attempting any specific call. One enumeration call typically costs about the same as one guess, but it returns the whole answer space rather than a single bit, which makes the next call very likely to be right rather than the start of another guessing round. Repeated guessed calls against an unfamiliar interface, each costing a full round trip, is itself the signal: stop and switch to enumeration rather than trying a third or fourth guess.
 
+### Check for a Shipped Introspection Tool Before Building a Custom Probe
+
+A specific case of the enumerate-first habit above is worth naming on its own, because it is easy to skip past: before writing a custom probe against an unfamiliar system, check whether that system already ships its own introspection, dump, or debug tool. The platform vendor has frequently already built the enumeration tool for you, and a custom probe just duplicates work that a documented flag or command already does better. Look for it in the settings surface you already have open, in CLI help output (`--help`, `--dump-config`, `--debug`), and in the platform's own docs before reaching for a script. In one case, an already-configured header/dump tool was sitting in an already-open settings file the whole time - a single keypress resolved in seconds what two rounds of guessing at a custom probe could not. The signal to switch is the same one from the previous section: a second guessed probe is a round trip you could have spent looking for the tool that was already there.
+
 ### Build the Observation Harness Before You Iterate
 
 Never iterate on something you cannot observe. Before starting any round of AI-driven iteration on an app, game, or simulation, build the measurement rig first, cheaply, on the cheaper tier - before the expensive session starts.
@@ -234,6 +246,12 @@ For functional work (games, sims, anything with internal state), that means sepa
 For subjective work (art direction, feel, UX), the equivalent is an objective capture rig: a way to produce comparable before/after captures so a taste judgment has something concrete to point at, rather than relying on a description of what changed.
 
 Put the observation harness in the brief as an explicit deliverable for any AI-built game, sim, or app - it pays back on every subsequent round, whether the next round is run by a human or another model.
+
+### Replace the Human Keypress With a File-Based Trigger
+
+The observation harness above answers how you measure a change once it happens. A distinct question in the same iteration loop is what triggers the next observation, and it is worth asking separately: what step in this loop currently requires a human action - a keypress, a manual reload, a click to re-run - and can a file- or signal-based trigger replace it instead. A trigger built this way needs three properties to be safe to leave running unattended: it consumes itself before acting, so a crash mid-run cannot make the same trigger fire twice on restart; it costs nothing while idle, so it can sit for hours without burning resources; and it echoes a stable run-id to a fixed output location, so whatever is watching for the result always knows where to look regardless of which iteration produced it.
+
+This is worth building even when a harness already exists, because a harness that still waits on a human to press "reload" after every change has only solved the measurement half of the loop, not the round-trip-time half. In one case, an existing hot-reload-on-file-touch mechanism already built into a toolchain was repurposed as exactly this kind of trigger, cutting the human round-trip time in an iteration loop from several minutes to well under two.
 
 ---
 

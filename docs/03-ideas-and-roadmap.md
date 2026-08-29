@@ -30,6 +30,10 @@ Numbering phases ("Phase 1", "Phase 2") creates pressure to complete them in ord
 
 Tiers, templates and validation checklists are scaffolding. The clarity is the work.
 
+### Check What the Platform Already Does For Free Before Adding an Item
+
+**Before writing a new automation item onto IDEAS.md, state explicitly what the underlying platform already does without it, and what the increment is actually worth.** A backlog item is a proposal to spend build time, and build time spent duplicating something the platform already provides on its own timeline is a net loss even when the resulting tool works perfectly. If the honest answer to "what does this buy that isn't already happening" is only "sooner" or "tidier," the item probably shouldn't be built at all - it should be closed with that finding written down, the same way a shipped item gets a HISTORY.md entry. This check is cheap and easy to skip because the platform's existing behavior is rarely documented anywhere the backlog author is looking; one cleanup automation project got partway through implementation before discovering the platform it targeted already purged the exact folder it was built to clean, on a schedule of its own.
+
 ---
 
 ## The Roadmap System (for multi-repo work)
@@ -53,6 +57,8 @@ When a task is done: remove it from pending-actions.md, add a dated entry to com
 ### Close Every Backlog Pass by Re-Ranking It
 
 Adding items to a backlog is easy and everybody does it. Re-ranking one is rare, and it is where the value is - a ranking made under no constraint is mostly an artefact of the order things were found in. The re-ranking discipline (apply one extreme lens to the LIST, write down what moved) is specified in `templates/BACKLOG-SPEC.md`; the lens itself comes from [Part 12](12-audit-lenses.md).
+
+That periodic pass catches drift that accumulates gradually. A separate, sharper trigger deserves its own check: **when a new capability lands - a tool, a permission, an integration, anything that removes a constraint that used to be true - explicitly re-check which plan steps were only ordered the way they were because of the constraint that just disappeared.** An ordering written down under an old constraint keeps being followed after the constraint stops being true, because nothing forces a re-read of the reasoning behind a step someone else already scoped correctly at the time. One plan had ordered "search after OCR" because the records genuinely weren't machine-readable yet; an unrelated tool made a large volume of them machine-readable as a side effect, and the ordering kept being obeyed anyway until someone thought to re-check it against the capability that had just landed. Treat a landed capability as a prompt to re-open every item whose ordering depended on its absence, not just as a green light for whatever it directly unblocks.
 
 ---
 

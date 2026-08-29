@@ -119,6 +119,14 @@ A memory that names a specific function, file, or flag is a claim that it existe
 
 Every session gets a fragment written by `/end-session`. These are consolidated into `session-history.md` by the finalize script. This gives Claude a running history of what was done, what was learned, and what's pending. Claude reads this at session start to get context without you having to re-explain.
 
+### File Findings by Subject, Not by Run
+
+A test run, an experiment, or a debugging session tempts you to write a new dated file named after itself - `round-3-crash.md`, `test-round-4.md`. This does not scale, and it buries the durable lesson inside a narrative about one afternoon: by the tenth round you have ten files, and the rule that governs every future decision is sitting in whichever one happened to contain it.
+
+The fix is three distinct kinds of document, not one file per event. A subject document answers "what do we know about X" - durable, named for the subject, and edited in place as understanding improves, not appended to chronologically. A single evidence log answers "what actually happened on each run" - one file, newest first, one section per run, preserving the concrete details verbatim. And the narrative - what happened this session and why it mattered - is session history itself, already covered above.
+
+The reason this split matters is that evidence and analysis want opposite treatment. Evidence is immutable and accumulates - never rewrite what a run actually returned. Analysis is mutable and consolidates - a rule refined on round four should overwrite round three's version of it, not sit beside it as a second opinion. Filing everything by run number forces both into the same append-only shape, which is right for the evidence and wrong for the rule. This mirrors the reasoning behind one-file-per-rule feedback files above: the unit of storage should be the thing that persists, not the event that produced it. Before creating a file named for a round, a date, or an attempt number, ask which existing subject document should absorb the finding instead - create a new file only when a genuinely new subject appears, not a new instance of an old one.
+
 ---
 
 ## Common Gotchas

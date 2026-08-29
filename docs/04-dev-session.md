@@ -52,6 +52,8 @@ Before reading any implementation code, designs 3-5 test scenarios that must pas
 
 Follows TDD: write the failing test first, implement to make it pass, run tests. Never declares done with failing tests.
 
+One gap TDD alone does not close: a language the workspace has no local interpreter, compiler, or linter for. "The tests pass" and "the file is syntactically valid" are different claims, and a manual delimiter count - do the braces balance, do the quotes look closed - answers neither reliably past a few dozen lines, because a human scanning a diff is bad at exactly the kind of counting a parser does for free. Before declaring generated code in an unfamiliar language done, install a throwaway real parser or linter for it - a compiler's check-only mode, a language server, or a minimal standalone parser package usually takes under a minute to add - rather than trusting eyeballed delimiter matching. A several-hundred-line script had been "verified" this way, by manual counting alone, for some time before an actual parser was installed and surfaced real syntax defects within a minute of running it.
+
 ### Phase 4 - Verify in Real Environment
 
 Tests passing in isolation is not enough. Asks the user to confirm the thing works end-to-end before closing out. Also audits the README: if a new feature shipped, the README should reflect it.

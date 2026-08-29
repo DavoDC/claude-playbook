@@ -282,6 +282,18 @@ Git hooks are a different story. Git Bash hooks work under WSL, but a Windows gi
 
 If you're on Windows: write git hooks (`.git/hooks/`) as `.ps1` or `.bat` scripts. Claude Code hooks (`.claude/settings.json`) can stay bash.
 
+Note: `hooks/pre-commit` and `hooks/commit-msg` in this repo (below) are POSIX `sh`, which is the exception the paragraph above warns about - they are only exercised by commits run through Git Bash, never through a GUI client's own commit flow. If you commit through a Windows GUI client, port them to `.ps1`/`.bat` first.
+
+## Privacy Guard Git Hooks (`hooks/`)
+
+This repo ships two tracked git hooks - `hooks/pre-commit` and `hooks/commit-msg` - that block a commit whose staged content or message references a private sibling repo. `.git/hooks/` is never itself tracked by git, so a fresh clone has neither installed until you run:
+
+```
+sh hooks/install.sh
+```
+
+Neither hook hardcodes any repo name or path, which is what makes it safe to keep in a public repo. Each derives its blocklist at runtime by globbing the parent of this repo for `.private-root` marker files: any sibling repo opts in by dropping a `.private-root` file at its own root, optionally with a repo-relative subfolder name (e.g. a feedback or notes folder) as its first non-comment line. The hook's token list is the private repo's directory name plus that subfolder's first path component - generated fresh on every commit, from whatever markers exist on the machine it runs on. See `guard.py`'s `.private-root` handling for the same convention used at Claude Code write-time, not just commit-time.
+
 ---
 
 ## Before Renaming Any Tracked File

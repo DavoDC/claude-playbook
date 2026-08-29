@@ -1,0 +1,50 @@
+#!/bin/sh
+# Blocks staged content that references a private sibling repo.
+#
+# Generic and safe to publish: no repo name or path is hardcoded here. Any
+# sibling repo opts INTO this protection by dropping a `.private-root` marker
+# file at its own root (see docs/09-hooks.md for the marker format; guard.py
+# in the main playbook uses the same convention). This hook globs for those
+# markers under the parent of this repo and derives its token list from what
+# it finds - so the list is different on every machine, and this file never
+# needs editing to stay accurate.
+#
+# Install: run hooks/install.sh once after cloning.
+
+GH_ROOT="${GH_ROOT:-$(dirname "$(git rev-parse --show-toplevel)")}"
+
+PATTERN=""
+for t in $(
+    for marker in "$GH_ROOT"/*/.private-root; do
+        [ -f "$marker" ] || continue
+        repo_dir=$(dirname "$marker")
+        basename "$repo_dir"
+        first_line=$(grep -v '^#' "$marker" | grep -v '^[[:space:]]*$' | head -1)
+        [ -n "$first_line" ] && echo "$first_line" | cut -d/ -f1
+    done | sort -u
+); do
+    [ -z "$t" ] && continue
+    if [ -z "$PATTERN" ]; then
+        PATTERN="$t"
+    else
+        PATTERN="$PATTERN|$t"
+    fi
+done
+
+[ -z "$PATTERN" ] && exit 0
+
+MATCHES=$(git diff --cached -U0 | grep "^+" | grep -v "^+++" | grep -Ei "$PATTERN" 2>/dev/null)
+
+if [ -n "$MATCHES" ]; then
+    echo ""
+    echo "ERROR: staged content matches a token derived from a local .private-root marker."
+    echo "This repo may be public - private sibling-repo names/paths must not appear in it."
+    echo "Use generic language, or move this content into the private repo instead."
+    echo ""
+    echo "Matched line(s):"
+    echo "$MATCHES"
+    echo ""
+    exit 1
+fi
+
+exit 0

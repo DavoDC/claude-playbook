@@ -1,0 +1,44 @@
+#!/bin/sh
+# Blocks a commit message that references a private sibling repo.
+#
+# Companion to hooks/pre-commit - same token-derivation mechanism, same
+# .private-root marker convention, same reason it is safe to publish (no
+# repo name or path is hardcoded here; see hooks/pre-commit for the full
+# explanation). Install: hooks/install.sh.
+
+GH_ROOT="${GH_ROOT:-$(dirname "$(git rev-parse --show-toplevel)")}"
+MSG_FILE="$1"
+
+PATTERN=""
+for t in $(
+    for marker in "$GH_ROOT"/*/.private-root; do
+        [ -f "$marker" ] || continue
+        repo_dir=$(dirname "$marker")
+        basename "$repo_dir"
+        first_line=$(grep -v '^#' "$marker" | grep -v '^[[:space:]]*$' | head -1)
+        [ -n "$first_line" ] && echo "$first_line" | cut -d/ -f1
+    done | sort -u
+); do
+    [ -z "$t" ] && continue
+    if [ -z "$PATTERN" ]; then
+        PATTERN="$t"
+    else
+        PATTERN="$PATTERN|$t"
+    fi
+done
+
+[ -z "$PATTERN" ] && exit 0
+
+if grep -qEi "$PATTERN" "$MSG_FILE" 2>/dev/null; then
+    echo ""
+    echo "ERROR: commit message matches a token derived from a local .private-root marker."
+    echo "This repo may be public - private sibling-repo names/paths must not appear in it."
+    echo "Describe the change generically instead."
+    echo ""
+    echo "Matched line(s):"
+    grep -nEi "$PATTERN" "$MSG_FILE"
+    echo ""
+    exit 1
+fi
+
+exit 0

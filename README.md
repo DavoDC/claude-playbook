@@ -132,7 +132,7 @@ The templates don't compound. The habit does.
 
 ## Skill Files
 
-The `skills/` folder contains skills covering first-principles thinking (`/aristotle`, `/think`), git workflow (`/commit-chunks`, `/step-commits`, `/undo-commits`), code review (`/deep-dive`, `/survey-repo`), writing (`/human-voice`), and more.
+The `skills/` folder contains skills covering first-principles thinking (`/aristotle`, `/think`), git workflow (`/commit-chunks`, `/step-commits`, `/undo-commits`), code review (`/deep-dive`, `/survey-repo`, `/cross-synth`), writing (`/human-voice`), and more.
 
 To install: copy a skill folder to `.claude/skills/<name>/` in your workspace. Claude Code makes it available as `/<name>`.
 

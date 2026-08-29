@@ -56,6 +56,22 @@ Enumerate the variant axes **before** the pass, not after: case, separators (spa
 
 Before closing any investigation that ended in an absence, re-run the search one notch broader than whatever you used. The cost is one tool call and the thing it catches is a whole wrong conclusion.
 
+### Reading the Payload Beats Reaching for a Known Cause
+
+When a failure repeats, the cheapest and most dangerous hypothesis available is the one you already have on file. A previously-diagnosed cause is attractive because it is cheap to believe and it explains the symptom at the right level of vagueness - two different bugs can produce the identical user-visible failure, and only the full error payload distinguishes them.
+
+An identical-looking failure recurred across four consecutive runs and was attributed each time to a bug that had genuinely caused an earlier round of failures. The full stack dump, argument list and echoed value had been captured in the output on all four runs. Read closely, it showed the wrong-receiver theory was false: the actual argument passed was a boolean where an object was expected, stated plainly a few lines down, in output that had been captured and then skimmed rather than read. The evidence was not missing. It was present, unexamined, and its presence made the situation feel already investigated.
+
+Before reusing a previous diagnosis, ask what observation would distinguish the old cause from a new one, and check whether that observation is already sitting in output you have not actually read. If a failure repeats unchanged, the next action is to read the failure more closely, never to re-run it - the same two-strikes-and-stop discipline the retry-discipline rule above describes, applied to reading rather than to re-attempting.
+
+### Search Where the User's Own Workarounds Put the Evidence
+
+A search for evidence of some habit or behaviour can return a clean, confident zero and still be wrong, because the very thing being searched for has already been noticed and worked around by the person whose data you are searching. Filters, archiving habits, renaming conventions and routing rules all relocate data out of wherever a naive search assumes it lives - and the more diligently someone has organised around a problem, the more thoroughly that organisation hides the evidence that the problem existed.
+
+A check for prior contact with several senders searched a top-level inbox and returned no hits for every one of them, including senders that were known to be genuine. The inbox held nothing directly - years-old filing rules had been silently routing that exact mail into subfolders the entire time, for reasons unrelated to the search being run. The strongest evidence available had been real all along; the search was just pointed at an empty room.
+
+Before searching a user's data for evidence of a habit, find out what they have already built to cope with that habit - rules, filters, folder conventions - because their fix has probably relocated the evidence away from where a default search looks. Treat a clean zero on a plausible query as a scope bug until proven otherwise, the same discipline the section above applies to search terms: state the bound the search actually had, and widen it one notch before accepting the absence as a finding.
+
 **Git safety:**
 > Claude commits only; user pushes. Never use --no-verify.
 

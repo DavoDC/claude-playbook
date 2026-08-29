@@ -117,6 +117,16 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 
 - [ ] **Generate lenses before scanning, and record which ones you did not apply.** A skipped lens with a reason is a decision. An unlisted lens is a blind spot. See `docs/12-audit-lenses.md`.
 
+## Habits Worth Having
+
+- [ ] **A live process under `--watch` or auto-reload has no channel for "don't reload yet"** - it fires on its own timer regardless of an explicit instruction to hold off. Flag this the moment such an instruction is given, not after it's been silently ignored.
+- [ ] **Verify a backup target is a different physical disk, not just a different drive letter.** Two drive letters can be partitions of the same disk - walk the disk-to-partition-to-volume chain before trusting a target as real redundancy.
+- [ ] **When a live user's report of their screen conflicts with your own reading of a screenshot, defer to the user immediately.** A screenshot is one static frame stripped of hover and focus state; the human has the running system.
+- [ ] **Before hardcoding a host address, port, or handle, check the property that stability actually depends on** (e.g. a lease about to expire), not just the value observed right now.
+- [ ] **Never bind a human to type a visually-ambiguous character** (O vs 0, l vs 1 vs I) in a keybind, filename, or code - the misread costs a real round trip.
+- [ ] **When a "keep or revert external changes" dialog fires, name which specific deliberate change it's describing before answering it** - never answer purely from the dialog's wording.
+- [ ] **Before diagnosing a missing list/menu item as broken, check whether inclusion in that list is opt-in.**
+
 ---
 
 ## Recommended Order

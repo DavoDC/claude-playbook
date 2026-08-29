@@ -97,6 +97,16 @@ Over time, the workspace becomes a detailed model of how you work. Not because o
 
 ---
 
+## Secrets That Get Into Git Anyway
+
+Keeping secrets out of git (above) is the design-time rule. Two things go wrong even when you follow it.
+
+**An exact-path gitignore rule protects the file, not the secret.** `config/config.json` in `.gitignore` stops that one file from being staged, but it does not follow the file when a copy is made - and a copy is exactly what a credential rotation or migration produces, as a `.bak`, a suffixed backup, or an editor copy. The copy is usually the one holding the fresher secret, and it sails past a rule that looks like it covers this case. Write ignore rules for anything holding a live credential as a glob (`config.json*`, not `config.json`), and verify coverage with `git check-ignore -v <path>` rather than assuming - a rule that looks right and a rule that matches are different things, and the two diverge most often during exactly the operations, rotations and migrations, where the file being copied is most valuable.
+
+**A history rewrite that verifies clean is not necessarily finished.** `git filter-repo` (or `filter-branch`) plus a force push removes the offending commits from the remote, but it does not remove the local objects - anything still named by a reflog entry stays reachable, and the default reflog expiry holds those entries for months. Worse, a GUI git client that syncs in the background can run a fetch in the gap between the rewrite and the push, pull the un-rewritten history back from a remote that has not been updated yet, and silently restore the removed objects to the local store - `git fsck --unreachable` will not catch this, because it respects reflogs. Treat the rewrite as finished only after: push, then `git reflog expire --expire=now --expire-unreachable=now --all`, then `git gc --prune=now`. Check with `du -sh .git` or `git count-objects -vH` before and after, rather than trusting a tool that respects reflogs. The dangerous window is the gap between the rewrite and the push - avoid touching a background-syncing GUI client during it, or push promptly enough to close the window.
+
+---
+
 ## External Reference Repos (like the docs)
 
 You'll sometimes want a local, read-only clone of something outside your own work - the official docs, a library you're reading source for, anything you pull but never push to. Keep these clones as siblings of the workspace repo, not nested inside it: a parent folder holding `workspace/` and `docs-repo/` next to each other, not `workspace/docs-repo/`.
@@ -128,3 +138,13 @@ This is the unsexy reason the workspace-repo pattern is non-negotiable: without 
 Push the workspace repo to GitHub, but **set it to private**. The content that accumulates here is not suited for a public repo - session history mentions what you worked on, feedback files document your specific failure modes, memory files contain personal context and preferences. Even things that seem innocuous (project names, internal tooling, working patterns) add up over time into a detailed picture you probably don't want public.
 
 Private GitHub gives you all the sync benefits without the exposure risk. If you want to share your skills or config templates with others, the pattern for that is a separate public repo - exactly what this playbook is.
+
+---
+
+## Publishing Is Not Distribution
+
+Making a repo public, adding a donation badge, writing a licence, or cutting a release changes who is *allowed* to find your work. None of those acts changes whether anyone *does*. It is worth naming this explicitly because publishing work is uniquely seductive to track as progress: it is legible, fully within your own control, and you can tick it off in one sitting. A distribution act - a post, an announcement, actually asking someone to look - is uncomfortable in exactly the ways publishing is not: it involves a stranger, it can be ignored, and it produces a number you might not like. So a plan quietly refills with the comfortable half indefinitely.
+
+The scale of the gap is worth having a number for. A measured portfolio of several dozen public repositories, most carrying a correctly placed donation badge, produced a low single-digit total of stars and forks across the entire portfolio and zero earned revenue over a multi-month window - despite every item on the publishing checklist being complete: licences added, badges placed, hardcoded paths removed. Not one of those tasks tells a human being the tool exists.
+
+Before adding a publishing task to a plan, ask what distribution act it is a precondition for, and schedule that act in the same breath. A licence with no announcement behind it is not a step toward reach. And when a reach or revenue goal has produced nothing over a long stretch, do not conclude that more supply is needed - check first whether a single distribution act has ever actually been performed. Publishing tasks are portfolio hygiene: worth doing, never worth counting as progress toward an audience.

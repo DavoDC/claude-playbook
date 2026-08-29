@@ -844,6 +844,66 @@ def case14():
 
 
 # ---------------------------------------------------------------------
+# Case 16 (regression, found against a real log): the guard-log branch
+# needs the same misaligned-fields check the capture-log branch gets in
+# case 14. A real guard log shaped "[date time] guard | VERDICT: message"
+# parses without error under a whitespace split - the "guard" field ends
+# up holding an "HH:MM:SS]" time fragment, and the breakdown duly reports
+# timestamps as guard names. Every row parses, so nothing trips the yield
+# floor, and the tool returns a confident wrong answer instead of a
+# defect. The synthetic cases never caught this, because they only ever
+# feed this branch clean whitespace-delimited rows.
+# ---------------------------------------------------------------------
+def case16():
+    d = new_tempdir()
+    try:
+        rules_dir = os.path.join(d, "rules")
+        os.makedirs(rules_dir)
+        with open(os.path.join(rules_dir, "feedback_x.md"), "w", encoding="utf-8") as fh:
+            fh.write("content\n")
+
+        guard_log = os.path.join(d, "guard.log")
+        with open(guard_log, "w", encoding="utf-8") as fh:
+            for i in range(1, 11):
+                fh.write(f"[{d_ago(i)} 19:5{i % 10}:4{i % 10}] write-guard | "
+                         f"BLOCKED: em dash in an added line, item {i}\n")
+
+        rc, out, err = run(d, [
+            "--rules", rules_dir,
+            "--reference-log", os.path.join(d, "no-such-ref.log"),
+            "--guard-log", guard_log,
+            "--capture-log", os.path.join(d, "no-such-cap.log"),
+            "--json",
+        ])
+        ok = True
+        detail = [f"exit code: {rc}", out, "STDERR: " + err]
+        try:
+            report = json.loads(out)
+        except Exception as e:
+            ok = False
+            report = {}
+            detail.append(f"JSON PARSE FAILED: {e}")
+
+        defects = report.get("instrumentation_defects", [])
+        if not any("MISALIGNED FIELDS" in dd for dd in defects):
+            ok = False
+            detail.append("EXPECTED a MISALIGNED FIELDS defect for the guard "
+                          f"log; not found. defects={defects!r}")
+        if report.get("guard_fires") != "UNKNOWN":
+            ok = False
+            detail.append(f"EXPECTED guard_fires == UNKNOWN on misalignment, "
+                          f"got {report.get('guard_fires')!r} - any breakdown "
+                          "here is timestamps reported as guard names.")
+        if rc != 2:
+            ok = False
+            detail.append(f"EXPECTED exit code 2 (could not measure) on a "
+                          f"misaligned guard log, got {rc}")
+        record("16 MISALIGNED FIELDS on the guard log", ok, "\n".join(detail))
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------
 # Case 15 (new, exit-code contract): the three outcomes need three exit
 # codes, checked directly rather than inferred from other cases - 0 for a
 # clean measured run, 1 for a measured run with a real system finding, 2
@@ -970,6 +1030,7 @@ def main():
     case13()
     case14()
     case15()
+    case16()
 
     passed = sum(1 for _, ok, _ in results if ok)
     total = len(results)

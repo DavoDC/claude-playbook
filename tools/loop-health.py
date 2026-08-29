@@ -312,6 +312,28 @@ def main():
         report["guard_fires"] = UNKNOWN
         defects.append("guard log is EMPTY over the window - either nothing "
                        "triggered a guard, or guards stopped logging. Check which.")
+    elif fires and (sum(1 for r in fires if _field_shape_ok(r.get("guard", ""))
+                        and _field_shape_ok(r.get("verdict", "")))
+                    / len(fires) < MISALIGNED_FLOOR):
+        # Found by the first run against a real guard log rather than by the
+        # synthetic suite, which only ever feeds this branch clean
+        # whitespace-delimited rows. A real log that was pipe- and
+        # bracket-delimited rather than "<date> <guard> <verdict>" parsed with
+        # no error and no defect: split(None, 2) handed the HH:MM:SS] time
+        # fragment to the "guard" field, and the breakdown below duly reported
+        # timestamps as guard names. A confident wrong answer, silently. The
+        # capture-log branch below already had exactly this check; this branch
+        # did not, and both parse the same way and are equally exposed.
+        shaped_ok = sum(1 for r in fires if _field_shape_ok(r.get("guard", ""))
+                        and _field_shape_ok(r.get("verdict", "")))
+        report["guard_fires"] = UNKNOWN
+        defects.append(
+            f"guard log: only {shaped_ok} of {len(fires)} in-window rows have "
+            "plausible guard/verdict fields (short, no internal whitespace, no "
+            "sentence punctuation) - MISALIGNED FIELDS, most likely the log's "
+            "column layout does not match what this tool expects, not a real "
+            "guard-fire distribution. Treating this metric as UNKNOWN, not a "
+            "clustering result.")
     else:
         per_guard = Counter(r["guard"] for r in fires)
         blocks = Counter(r["guard"] for r in fires

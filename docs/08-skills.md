@@ -199,7 +199,7 @@ More detailed than `/today`. Categorises all pending items into: can do now, nee
 ### /self-audit
 Workspace compliance check. Read-only - reports findings, never auto-fixes. Checks MEMORY.md health, pending actions for stale items, .gitignore gaps, skill integrity, hooks configuration.
 
-### [/validate-rules](https://github.com/DavoDC/claude-playbook/blob/main/skills/validate-rules/SKILL.md)
+### /validate-rules *(build your own)*
 Check that enforced-rules.md and feedback files are internally consistent and not contradicting each other. Also runs validation to ensure hook-enforced rules are actually implemented in the hooks.
 
 ### /pre-rebuild
@@ -211,8 +211,8 @@ Review the current diff for correctness bugs at configurable effort levels. No s
 ### /security-review *(build your own)*
 Security-focused code review. Looks for OWASP top 10, credential leaks, injection vulnerabilities. No starter provided - can be as simple as: "read the diff, check for the OWASP top 10, report findings grouped by severity."
 
-### [/release](https://github.com/DavoDC/claude-playbook/blob/main/skills/release/SKILL.md)
-Structured release process: version bump, changelog, tag, push.
+### /release *(build your own)*
+Structured release process: version bump, changelog, tag, push. No starter provided - the steps are specific enough to your versioning scheme and release channel that a generic one would need rewriting anyway.
 
 ### /save-memory *(build your own)*
 Manually save a piece of information to the memory system. No starter provided - straightforward: "write the fact to `memory/<category>/<name>.md`, add a pointer to `memory/MEMORY.md`, commit."
@@ -231,7 +231,7 @@ Undo the last N commits via `git reset --soft`, show what's staged, help recommi
 ### /health
 Workspace health check. Detects skill gaps, hook count anomalies, file bloat, stale peer-sync reviews, unindexed memory files.
 
-### [/skill-suggest](https://github.com/DavoDC/claude-playbook/blob/main/skills/skill-suggest/SKILL.md)
+### /skill-suggest *(build your own)*
 Context-aware skill recommendations. Describe a task and it detects the intent (exploration, implementation, debugging, review, ...) and suggests the most relevant installed skills, with an optional `--detailed` mode for full guidance on each match. Uses keyword matching, so treat suggestions as a starting point, not a verdict.
 
 ### [/repo-status](https://github.com/DavoDC/claude-playbook/blob/main/skills/repo-status/SKILL.md)
@@ -267,7 +267,7 @@ For that class the right answer is usually **neither install nor delete**. Keep 
 
 **The corollary.** A process you run only every month or two is often better off as a plain doc than as a skill at all. The doc is the runnable artifact - you or Claude reads it and follows the steps - and it costs nothing on every session that doesn't need it, versus a skill's permanent description-line tax paid regardless of use. Reach for a skill when a process needs Claude to make judgment calls across several steps on a regular basis; reach for a doc when it's reference material consulted rarely.
 
-**Retiring from your own machine is not a reason to unpublish.** The two decisions answer different questions and the counter only informs one of them. Retirement asks "is this worth its description-line tax in every one of MY sessions", which is a fact about one person's habits. Publishing asks "would somebody with different repos and a different job find this idea valuable", which invocation counts say nothing about whatsoever. A skill can be dead weight on the machine that wrote it and the single most useful file in the library for the person who clones it. The only grounds for pulling something out of a shared library are that it leaks something private, or that the idea is actually wrong. "We stopped running it" is neither.
+**Retiring from your own machine is not a reason to unpublish.** The two decisions answer different questions and the counter only informs one of them. Retirement asks "is this worth its description-line tax in every one of MY sessions", which is a fact about one person's habits. Publishing asks "would somebody with different repos and a different job find this idea valuable", which invocation counts say nothing about whatsoever. A skill can be dead weight on the machine that wrote it and the single most useful file in the library for the person who clones it. The only grounds for pulling something out of a shared library are that it leaks something private, that the idea is actually wrong, or that the person whose library it is says so. "We stopped running it" is none of those, and the third one is a decision rather than an inference - which is the whole point of the paragraph below.
 
 The failure this prevents is worth naming because it is not hypothetical here. That rule was written down, and then a later maintenance pass removed four skills from the published set anyway, on exactly the zero-usage criterion the rule forbids, having read the archive index rather than the rule. The archive index recorded the retirements as facts; the rule that said those facts were not grounds for unpublishing lived one file away and was never opened. **When a decision has a written rule, the rule is the input, and the record of past actions is not a substitute for it.** An index tells you what was done, never what should be done, and the two are easy to confuse when the index is the more convenient file to read.
 

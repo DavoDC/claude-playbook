@@ -253,6 +253,16 @@ The observation harness above answers how you measure a change once it happens. 
 
 This is worth building even when a harness already exists, because a harness that still waits on a human to press "reload" after every change has only solved the measurement half of the loop, not the round-trip-time half. In one case, an existing hot-reload-on-file-touch mechanism already built into a toolchain was repurposed as exactly this kind of trigger, cutting the human round-trip time in an iteration loop from several minutes to well under two.
 
+### A Green Test Suite Does Not Prove the Live Process Survived
+
+**A test suite passing after a risky edit is not evidence that the live process the edit was applied to is still running.** An offline suite exercises logic against mocks and fixtures; it cannot reproduce the specific races that only show up against the real environment - a process exiting between being listed and being queried, a library timing out under real load, a genuine network flake - because those races are exactly what the mocks were built to remove. A hot-reload or auto-restart mechanism will happily execute a change that crashes the process outright and fails to come back up, while the suite that ran against the edit stays green throughout, because it never touched the live process at all and has no way to notice it is gone.
+
+In one case, a run of edits to a long-running watched process each triggered a real self-restart; the full test suite passed at every step, because it mocked the process-listing library and so never exercised the actual race - a process exiting between being listed and being queried, which raised an exception the headless process swallowed uncaught. The dashboard the process served went dark and stayed dark, undetected by anything in the suite, for the simple reason that nothing in the suite was watching the live process to begin with.
+
+**How to apply:** treat every save under hot-reload or auto-restart as a live deploy, not as a source edit protected by tests. After any edit risky enough to touch process, OS, or network calls, check the live process directly - hit its health endpoint, check the process list, tail its newest log - before making the next edit, rather than batching several risky edits and checking once at the end. An earlier edit in the batch could be the one that killed it, and every edit stacked on top of an already-dead process is wasted work that looks productive until the first liveness check.
+
+This is the process-liveness counterpart to the file-trigger and observation-harness material above: those answer whether the artifact's logic is correct and whether the loop can run without a human in it; this one answers a different question entirely - whether the process those triggers are driving is actually still there to run the logic - and a green suite is silent on it either way.
+
 ---
 
 ## Concurrent Sessions On One Working Tree

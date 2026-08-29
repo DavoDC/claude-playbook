@@ -95,6 +95,8 @@ Over time, the workspace becomes a detailed model of how you work. Not because o
 - **Private names, personal data** - if you ever make the workspace public, this is a liability
 - **Temporary scratch files** - use a `TEMP/` folder with delete-after markers, not the main memory structure
 
+Scratch belongs in exactly one of two tiers, with nothing in between: a stable location for anything durable, and a clearly temporary one for work in progress - never a temporary folder used with the intention of "graduating" a file out of it once it proves useful. A durable artifact should be born directly where it belongs, not written into scratch space first and moved later; the middle tier is where files accumulate well past their real lifetime, because nothing ever forces the graduation to actually happen. And the delete-after condition attached to a scratch file has to be phrased as a test still to be run, never as a claim already settled: a condition reading "the rotation has been completed" is indistinguishable, to whoever next scans a list of scratch files, from an assertion that it was - and that phrasing alone was once enough to nearly delete a file whose underlying work was still open. Write it as a check against a named source of truth instead - "delete after `<progress file>` shows stage N closed" - so the condition is something to go answer, not something already answered.
+
 ---
 
 ## Secrets That Get Into Git Anyway

@@ -52,6 +52,37 @@ except Exception as e:
 
 **Rule:** exit 2 only when you have a specific, intentional reason to block. Every other exit path is exit 0.
 
+### Choose the Delivery Channel by Audience, Never by Loudness
+
+The exit code decides whether the tool call proceeds. It does not decide who reads what the hook has to say, and those are separate questions that are easy to conflate. A hook has three delivery channels and they have three different audiences:
+
+- **`hookSpecificOutput.additionalContext`** goes to the agent. Use it when the right response is for the model to change what it does next.
+- **A top-level `systemMessage`** goes to the human. Use it when the right response is a person deciding something, or when the tooling itself is unhealthy in a way the model cannot fix.
+- **Exit 2** stops the work. Use it when nothing should proceed until the condition is resolved.
+
+**Plain stderr is not a fourth channel.** On a hook that exits 0, on most events, stderr goes nowhere a human or the model will ever see. Writing an advisory to stderr and exiting 0 is the most natural-looking way to write a hook and it is a silent no-op.
+
+This produced a whole family of defects in one workspace, found in a single audit: a budget monitor, a compaction counter, and every warning path in two guard scripts, all of them correct, all of them registered, all of them firing on schedule, and all of them writing to stderr and exiting 0. Several had been considered finished for months. Each one logged evidence that it was working, which is why none of them was suspected. A separate one used `exit 1` for a policy it was meant to enforce, which does not block, so it spent its entire life detecting violations correctly and permitting every one of them.
+
+The rule that resolves all of them, stated as a question to ask of any new hook: **who needs to act on this, and does the channel I chose actually reach them?** Not "how important does this feel". Importance is what pushes an author toward stderr and shouting; it is exactly the wrong axis. Routine housekeeping the model should act on is `additionalContext` even though it feels minor. A privacy check that has silently degraded to fail-open is `systemMessage` even though nothing is broken yet, because a person has to know. A suggestion is never exit 2, because a suggestion that blocks is not a suggestion.
+
+One mechanical constraint that bites the moment a hook has more than one thing to say: **emit one JSON object per run, not one per finding.** Several advisory sites can fire in a single invocation, and two concatenated JSON objects are not valid output, so the second silently destroys the first. Queue the messages and emit once at the end, and make a blocking exit suppress the queued advisory output entirely, so a run that blocks never also carries advice on stdout. The same constraint applies at session start: once any structured output is emitted for an event, plain stdout lines cannot coexist with it in the same run, so anything that used to be printed has to move inside the object.
+
+### A Mechanism That Runs and Logs Is Not a Rail
+
+Every one of the defects above passed the checks people actually run. Each was registered in settings. Each executed. Each produced log output proving it had executed. None of them reached anybody.
+
+So the standard for calling an enforcement mechanism finished has two halves, and the usual review only does the first:
+
+1. Something proves it **fires** on the condition it targets.
+2. Something proves it **reaches its audience**, and **fails when broken**.
+
+The second half is what turns a mechanism into a rail, and the cheap way to get it is mutation testing: keep a small script that reintroduces each historical defect one at a time and asserts that a specific named test goes red. A fix without an entry there is a claim; a fix with one is a rail. It costs a few lines per defect and it is the only thing that stops a rail quietly rotting back into a mechanism when someone refactors it later.
+
+**Assert the channel and the exit code. Never assert the message wording.** This is not a style preference, it is the specific reason that family of defects survived so long. A test that greps stderr for the word BLOCKED passes against a hook that detects the violation, prints BLOCKED, and exits 1 without blocking anything. The wording was always right. The wording was never the thing that was broken.
+
+Worth stating plainly because it generalises past hooks: the same shape appears anywhere a layer reports a condition and a layer above it decides what to do with the report. It is not a hook-specific bug, and an audit scoped to hooks will not enumerate it.
+
 ### Blast Radius Triage: Blocking vs Passive Hooks
 
 Before writing a hook, ask one question: can this hook exit 2 and block a tool call? The answer decides how paranoid to be about its failure modes, because the blast radius of a bug is completely different between the two kinds.

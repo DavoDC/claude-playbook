@@ -195,6 +195,20 @@ Half the failure in this case was worse and worth checking for in your own instr
 
 ---
 
+### A Tool Is Not Adopted Until Something Calls It
+
+Adopting an idea produces a file. Adopting a *practice* produces a file and a caller. It is remarkably easy to ship the first and believe you have done the second, because everything about the first feels like completion: the tool exists, it has tests, the tests pass, running it by hand gives the right answer, and there is a commit.
+
+Then it never runs again, because nothing invokes it.
+
+The instance worth recording is that this happened inside the fix for a defect family whose entire theme was mechanisms that run but reach nobody. A checking tool was written, tested, verified by hand, committed, and wired to nothing at all. The audit that had just finished enumerating every unreached mechanism did not catch it, and the reason is structural rather than careless: **that audit enumerated registered event handlers.** A file sitting in a tools directory is outside its generator by construction, so no amount of running it more carefully would have found this.
+
+Two rules come out of it.
+
+**The caller ships in the same commit as the tool.** Not the next commit, not the follow-up task. If you cannot name the trigger, the tool is not finished, and a tool that is finished-except-for-the-trigger is indistinguishable from one that was never written.
+
+**When an audit finds a class of defect, ask what its generator could not have seen.** Every enumeration has a boundary, and the boundary is invisible from inside the pass. Name the population the generator walked, then name one thing that is definitionally outside it, and go and look there by hand. That is where the next instance of the same defect is, and it is the only part of the audit that cannot be automated by extending the audit.
+
 ### Composition Defects: Correct Parts, Wrong Whole
 
 A change assembled from independently-written pieces can consist entirely of correct pieces and still be wrong, because the defect lives in the composition, and every review looked at a part.

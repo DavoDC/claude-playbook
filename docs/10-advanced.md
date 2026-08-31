@@ -173,7 +173,21 @@ This generalizes the three-model table above into a habit worth naming on its ow
 
 The failure mode is easy to fall into, because it's seductive in exactly the moment it happens: the premium session already has the full context loaded, and it genuinely feels faster to just do the mechanical part itself rather than delegate it. That instinct is usually wrong on a shared or rate-limited budget - every token the premium tier spends on work a cheaper tier could do is a token unavailable for the judgment call only the premium tier can make, and on a shared weekly or session budget it can also be quietly stolen from a different task's allocation.
 
-**How to apply:** once the plan is made and the hard calls are locked, the premium session writes briefs, not code. Delegate implementation to parallel subagents on the cheaper execution tier, and keep the premium session for the things only it should spend on: architecture calls, reviewing what comes back, and the next decision. Fan out whenever the work is mechanical and the spec is already written - which is exactly what a good plan produces.
+**How to apply:** once the plan is made and the hard calls are locked, the premium session writes briefs, not code. Delegate implementation to parallel subagents on the cheaper execution tier, and keep the premium session for the things only it should spend on: architecture calls, reviewing what comes back, and the next decision. Fan out whenever the work is mechanical and the spec is already written - which is exactly what a good plan produces, subject to the budget check immediately below.
+
+### Measure the Budget Before Fanning Out, and Cap the Width
+
+A fan-out is the most budget-expensive shape available, and it is the one shape where the cost is not visible while it is being incurred. Every worker draws on the same shared allowance, none of them can see that allowance, and none of them can see each other. The orchestrator spends once and then loses the ability to observe or intervene.
+
+What that looks like when it goes wrong: a wide batch dispatched in one go, most of the workers killed partway through when the shared window ran out, and nothing returned from any of them. Not degraded results - no results, and the elapsed budget spent anyway. The failure is all-or-nothing in the worst direction, because a worker cut off mid-task has produced nothing while having cost nearly everything.
+
+Three rules, each of which is cheap and none of which is obvious until after the first time:
+
+- **Measure the remaining budget before the first dispatch, not after.** An unmeasured figure is the actual failure here. The check costs one command; the alternative costs the batch.
+- **Cap the width, and cap it lower than feels necessary.** A handful of concurrent workers is a reasonable ceiling, and fewer when each brief is long, because a long brief multiplies the fixed per-worker cost by the width before any real work starts. Two waves of two that both finish beat one wave of eight that does not.
+- **Every worker writes its report to a file as it goes, not at the end.** This is the single highest-value instruction in any parallel brief. When a batch does get cut off, the workers that were writing incrementally have left usable partial results on disk, and the ones that were composing a final summary have left nothing. In the incident above, this instruction is the only reason the work did not have to start from zero.
+
+Resuming a stalled batch is a narrow re-dispatch of the specific gaps, one or two workers at a time, not a re-run of the original width.
 
 ### Brief-First Handoffs to a Premium or Rate-Limited Tier
 

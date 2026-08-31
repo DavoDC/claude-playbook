@@ -148,6 +148,16 @@ State the real counter-argument plainly, because it is the reason this is harder
 
 A checker's own subject list can go stale by exactly the same shrinking-population mechanism, one level up. The coverage pair above catches a corpus shrinking under a checker that still scans the whole thing it is told to scan; it says nothing about a checker whose subject list - the patterns, rules or paths it looks for - is itself a hand-maintained copy of a real list living somewhere else. That copy stops being updated the moment the real list changes, and the checker keeps reporting a clean pass while covering a shrinking fraction of what actually exists, invisible to the coverage figure because the figure only ever measures against the checker's own, already-stale, idea of the corpus. In one case, a verifier's own hardcoded pattern dictionary covered a small fraction of the real patterns present in the artefact it was checking, while still reporting a clean pass. The fix is the same discipline as building the corpus from the artefact rather than assuming it: derive the checker's subject list from the artefact it is checking, at run time, rather than restating a copy of it in the checker's own source.
 
+## Correlated readers are not corroboration
+
+Splitting a large reading job across parallel workers is the right move, and the natural convenience is to hand each of them the same list of "things already covered, skip these". That single shared list destroys the property the parallelism was bought for.
+
+Agreement between workers reads as corroboration. It is not, if they were all told the same thing: they agree because of the instruction, not because of the material. Worse, their misses correlate too, and they cluster precisely where the shared list was thin or wrong, which is exactly the region where an independent second read would have paid off most. A real instance had a hand-written shared skip list across eight parallel readers, and a couple of dozen already-covered items still came through, bunched in the same places.
+
+Two acceptable shapes. Either derive each worker's exclusion list independently, and accept the duplicated effort as the price of an uncorrelated second opinion, or keep the shared list and **state up front that overlap is expected and that agreement carries no evidential weight**. What is not acceptable is a shared list plus a coverage claim, because the coverage claim is then measuring the list rather than the corpus.
+
+The same caution applies to asking a second worker to check a first worker's output when both were given the same brief. Independence is a property of the inputs, not of the process count.
+
 ## Four input states that masquerade as results
 
 Any tool that measures by reading logs has a contract with those logs, and that contract is almost never checked. The tool is tested against inputs its author constructed, which are by definition inputs the author's assumptions were true of. The failure is not a crash, a crash is a good outcome. The failure is that each wrong-input state produces output that looks like a result, and some look like interesting results, which is worse than looking clean because someone acts on them.
@@ -198,6 +208,20 @@ That collapse is tolerable exactly as long as a human reads every run's output, 
 The fix is a third exit state: 0 for measured-and-clean, 1 for measured-with-findings, 2 for could-not-measure. Every one of the input-state classifications above - absent, empty, saturated, no yield, truncated, duplicated - maps to exit 2, because every one of them means the tool never got a trustworthy read on the system, not that the system is fine or that it is broken. State the mapping explicitly in the tool's own `--help` text, since that is the one place a wrapper author reliably looks before deciding how to react to a non-zero exit.
 
 State the counter-argument, because it is a real one: exit code 2 conventionally means "usage error" in some command-line traditions - wrong flags, missing arguments - which is a different meaning from "ran correctly but could not get a trustworthy read on real data." Pick whichever mapping suits the surrounding tooling, but pick one on purpose and document it, rather than inheriting whatever the error-handling code happened to fall into.
+
+### The layer above can throw away a correct diagnosis
+
+The three-state rule assumes the tool that could not measure is the one reporting. The harder version is when the tool gets it right and the layer consuming it destroys the distinction.
+
+A status reporter composed its line by running an underlying budget checker and extracting percentages from its output with pattern matches. The underlying checker was behaving perfectly: when it could not read its data source it said so, in plain words, with a specific reason. Those words contained no percentages, so every pattern match returned empty, and the reporter interpolated the empty strings into its template and exited zero. The result was a well-formed status line with blank fields and a success exit code. A blank looks like an answer. Sessions read it and carried on entirely unmeasured, and the fault was only noticed when a person happened to say out loud that they had never got a reading.
+
+Three things generalise:
+
+- **Extracting a value by pattern match needs an explicit missing case.** A pattern that does not match yields empty, and empty formats fine. Check for the empty case and route it to the could-not-measure state rather than into the template.
+- **Pass the underlying reason through.** The layer below had already written a perfectly good explanation. Discarding it and substituting silence is a strictly worse output than having no check at all, because it manufactures false confidence.
+- **A diagnostic that is correct at every layer but the last one is broken.** When looking for this class, do not audit the component that produces the measurement. Audit the thing that renders it, which is usually smaller, newer, considered trivial, and untested.
+
+This is the same family as an advisory routed to a channel nobody reads. Both are a correct signal destroyed on the way to its audience, and neither is visible from the component that generates the signal, so an audit scoped to the generating component will not enumerate either.
 
 ## Your own recent changes, as a subject
 

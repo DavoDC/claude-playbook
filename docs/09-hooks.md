@@ -282,6 +282,36 @@ Each log file gets a single line appended per event. No truncation, no rotation 
 
 ---
 
+## Two Ways a Guard Gets Walked Around Without Anybody Noticing
+
+Both of these were live in a guard that had been running for months, both were found while fixing something unrelated, and both are the kind of defect that leaves no trace when it is exercised, because the guard's normal behaviour is to say nothing.
+
+### A sanitiser applied to one check is a bypass for the others
+
+A command guard usually runs many independent checks over one input string. Sooner or later one of those checks produces a false positive on data the command carries rather than on the command itself, and the natural fix is to compute a narrowed version of the input with the data stripped out.
+
+The trap is applying that narrowed value to the check that motivated it and leaving the other checks reading the raw string. That asymmetry is not merely untidy, it is a bypass in one direction and a false positive in the other, and only the false-positive half is ever reported by anyone, because the bypass half is silent by construction. In the real instance, the narrowing was written for the dangerous-verb check, and every other check in the file kept scanning the raw string.
+
+The narrowing itself was also wrong in a way worth naming separately: **never narrow by splitting on a delimiter and keeping one side.** Splitting on the opening marker and taking the part before it discards everything after the embedded data, including anything chained on after it ends. The correct shape excises the region between the opening marker and its terminator, preserving the invoking line, the terminator, and everything that follows. And when the terminator cannot be found, **fail closed**: return the input unchanged so every check still sees everything, rather than returning a truncated string that quietly stops matching.
+
+The rule: apply a narrowed input to every check or to none.
+
+### Resolve paths through their targets, not merely to absolute form
+
+A guard that decides based on where a path is must resolve links, not just make the path absolute. Absolute-path resolution normalises the text of a path; it does not follow a link to where the path actually lands.
+
+The concrete failure: a scheme that marks certain directories to control what may be written where. A link placed inside a marked directory, pointing out at an unmarked one, presented an absolute path under the marked directory, inherited the marked directory's permissions, and allowed exactly the write the guard exists to stop. On common systems, creating a directory link of that kind needs no elevated privilege, so the vector is reachable by ordinary means and by accident as well as intent.
+
+Use full link resolution in any check whose answer depends on a path's real location. It is a one-word change and it is the difference between a guard and a suggestion.
+
+### Prove both directions, against current code, before you change anything
+
+The verification that catches these is a pair of small sets: cases that **must block** and cases that **must allow**. Run both against the code as it stands *before* making a change, so you can tell a fix from a coincidence, and include the specific case that was bypassing as a must-block entry. The must-allow half matters as much as the must-block half, because tightening a guard until it blocks everything is the easy failure that then gets reverted wholesale.
+
+Do this with a probe written independently of the change, not with the tests that shipped alongside it. A test written by whoever wrote the fix tends to encode the same understanding that produced the defect.
+
+---
+
 ## Hooks Never Load From a Sibling Directory
 
 A hook only fires when it's registered in the `.claude/settings.json` of the directory Claude Code was launched from. There is no parent-directory fallback, and adding another directory to the session's awareness does not extend hook execution to it either - only a narrow slice of settings (things like enabled plugins and known marketplaces) is read from an added directory, and hooks aren't in that list. An auto-loaded instructions file follows the same rule from the other direction: Claude walks up from the working directory and lazily loads instruction files it finds in subdirectories as it reads into them, but it never reaches into a sibling directory to load one.

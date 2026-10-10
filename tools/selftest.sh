@@ -23,6 +23,11 @@
 #   8. no long sentence appears in two places across this repo's .md files,
 #      outside a short, scoped allow list (tools/selftest_dedup.py holds
 #      the exceptions and the reason for each).
+#   9. the token-baseline and session-brief tools pass their built-in
+#      selftests, each including a positive control that must be flagged.
+#  10. the generic privacy scan passes its own positive and negative controls
+#      (including history mode), the installed hooks match the tracked ones,
+#      and the whole working tree is clean under it.
 #  11. the backlog tool's tests (tools/backlog_tests/run.py) all pass.
 #  12. the shorthand-term hook and its glossary template pass their tests
 #      (hooks/examples/test_shorthand_detector.py).

@@ -2,7 +2,7 @@
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
-Recipes moved out of `docs/08-hooks.md` to keep that file focused on the mechanics (events, exit codes, the fail-open trap, the quoting trap, the `if:` field). Start there first if you haven't read it yet - this file assumes that context.
+Ready-to-adapt hook recipes. They assume the mechanics in [Part 8](08-hooks.md) (events, exit codes, the fail-open trap, the quoting trap, the `if:` field), so read that first.
 
 ### Write Guard (PreToolUse on Edit/Write)
 
@@ -42,7 +42,8 @@ Checks token usage after tool calls and warns approaching 75% context, preventin
 ```bash
 #!/bin/bash
 # budget-check.sh - PostToolUse hook
-CTX_PCT=$(python3 -c "
+PY=$(command -v python || command -v python3)
+CTX_PCT=$($PY -c "
 import json, os, tempfile
 try:
     f = os.path.join(tempfile.gettempdir(), 'claude-statusline-data.json')
@@ -181,7 +182,7 @@ Wire it up in `.claude/settings.json`:
 "PreToolUse": [
   {
     "matcher": "Write|Edit",
-    "hooks": [{ "type": "command", "command": "python3 /path/to/size-guard.py" }]
+    "hooks": [{ "type": "command", "command": "python /path/to/size-guard.py" }]
   }
 ]
 ```
@@ -213,7 +214,8 @@ This is the mechanical form of the "#1 Rule" in every CLAUDE.md: every user prom
 #!/bin/bash
 # lesson-detector.sh - UserPromptSubmit hook
 
-python3 -c "
+PY=$(command -v python || command -v python3)
+$PY -c "
 import sys, json
 
 d = json.loads(sys.stdin.buffer.read())
@@ -371,7 +373,25 @@ The minimal useful set: today's date (stops date-guessing), current git branch (
 
 ### Feedback Folder Enforcer
 
-Blocks `feedback_*.md` files written outside the correct folder; they accumulate fast and become unfindable if spread across the repo.
+Blocks `feedback_*.md` files written outside the correct folder; they accumulate fast and become unfindable if spread across the repo. Register it as a `PreToolUse` hook on `Write|Edit`. It denies only, and fails open on any parse error.
+
+```bash
+#!/bin/bash
+# feedback-folder-enforcer.sh - PreToolUse hook on Write|Edit
+PY=$(command -v python || command -v python3) || exit 0
+$PY -c "
+import sys, json
+try:
+    p = json.load(sys.stdin).get('tool_input', {}).get('file_path', '')
+except Exception:
+    sys.exit(0)
+p = p.replace(chr(92), '/')
+name = p.rsplit('/', 1)[-1]
+if name.startswith('feedback_') and name.endswith('.md') and '/memory/feedback/' not in p:
+    sys.stderr.write('Feedback files belong in memory/feedback/, not here: ' + p + '\n')
+    sys.exit(2)
+"
+```
 
 ### Hook Registration Parity Check (SessionStart)
 

@@ -176,12 +176,12 @@ In `.claude/settings.json`:
 {
   "statusLine": {
     "type": "command",
-    "command": "python3 /path/to/tools/statusline.py"
+    "command": "python /path/to/tools/statusline.py"
   }
 }
 ```
 
-Platform caveat: the bare name `python3` is not a real interpreter everywhere. On Windows it can be a Store stub that hangs and ignores timeouts, so use `python` or a full interpreter path there, and run it by hand once before trusting it in a hook or status line.
+Platform caveat: this playbook's snippets use `python` because the bare name `python3` is not a real interpreter everywhere. On Windows it can be a Store stub that hangs and ignores timeouts. Where only `python3` exists (some Linux and macOS installs), use that or a full interpreter path, and run the command by hand once before trusting it in a hook or status line. Shell scripts pick an interpreter with `PY=$(command -v python || command -v python3)`.
 
 The key is camelCase and `"type": "command"` is mandatory. A wrong key is accepted silently, so the symptom is not an error but every budget check below reporting no data forever.
 
@@ -217,7 +217,7 @@ The key: the temp file is written by `statusline.py` whenever Claude Code polls 
 
 ### Step 3 - check-budget.sh reads the temp file
 
-Reads from `$(python3 -c "import tempfile; print(tempfile.gettempdir())")/claude-statusline-data.json` and extracts:
+Reads from `claude-statusline-data.json` in the system temp directory (found with Python's `tempfile.gettempdir()`) and extracts:
 - `rate_limits.five_hour.used_percentage` and `resets_at` (Unix timestamp)
 - `rate_limits.seven_day.used_percentage` and `resets_at`
 - `context_window.used_percentage`
@@ -235,7 +235,8 @@ Emits a warning line if `five_hour >= 83` including the seconds until reset:
 ### Step 4 - session-status.sh wraps it all
 
 ```bash
-MODEL=$(python3 -c "
+PY=$(command -v python || command -v python3)
+MODEL=$($PY -c "
 import json, os, tempfile
 d = json.load(open(os.path.join(tempfile.gettempdir(), 'claude-statusline-data.json')))
 print((d.get('model') or {}).get('display_name', 'Unknown'))

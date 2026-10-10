@@ -20,7 +20,7 @@ Which files are special Claude configuration and which are just personal files i
 | `CLAUDE.md` (inside a repo) | Project-specific context and constraints | When Claude's CWD is that repo |
 | `.claude/settings.json` | Hooks (shell scripts triggered by events) | Always active |
 | `.claude/settings.local.json` | Permissions and MCP server config | Always active |
-| `.claude/rules/enforced-rules.md` | Hard rules that override casual defaults | Read at session start (add to CLAUDE.md's session checklist) |
+| `.claude/rules/enforced-rules.md` | Hard rules that override casual defaults | Every session, automatically (rules files without `paths` frontmatter load like CLAUDE.md) |
 
 ### Your Personal Files (not auto-loaded, just tracked data)
 
@@ -33,7 +33,7 @@ Which files are special Claude configuration and which are just personal files i
 
 **The key distinction:** CLAUDE.md files load *automatically* and shape every response. Your memory files are just markdown - Claude reads them when you tell it to, or when a skill reads them as part of its workflow.
 
-MEMORY.md and enforced-rules.md are "extended CLAUDE.md": not auto-loaded by Claude Code, but listed in CLAUDE.md's session start checklist so they effectively are. That lets you offload detailed rules (keeping CLAUDE.md under 150 lines) without losing coverage.
+`.claude/rules/enforced-rules.md` is "extended CLAUDE.md": Claude Code loads every file in `.claude/rules/` that has no `paths` frontmatter at launch, with the same priority as CLAUDE.md. That lets you offload detailed rules (keeping CLAUDE.md under 150 lines) without losing coverage. `MEMORY.md` is not loaded this way, so list it in CLAUDE.md's session start checklist.
 
 ---
 
@@ -143,7 +143,7 @@ Define exactly how you want Claude to write:
 - Document as you go - write findings immediately, don't accumulate in context.
 - No unexplained acronyms - define on first use.
 - Write markdown at full width, one paragraph per line - don't hard-wrap prose at 70-80 characters. Renderers reflow paragraphs anyway, so a hard wrap is invisible to a reader and just adds noisy diffs where one edit touches several wrap-points instead of one line. Lists, tables, code blocks, and ASCII diagrams keep their natural shape - this is about prose only.
-- Never write exact counts in any doc - test counts, skill counts, config entry counts, anything that changes as work continues. They go stale silently: the doc doesn't know a test got added, the reader assumes the number shown is current, and it's already wrong. Use a qualifier instead ("several", "over a dozen", "comprehensive as of DATE") or drop the number entirely. This applies to your own CLAUDE.md and feedback files just as much as a public README - see Part 7 for what happens when a skills list hardcodes usage counts.
+- Never write exact counts in any doc - test counts, skill counts, config entry counts, anything that changes as work continues. They go stale silently: the doc doesn't know a test got added, the reader assumes the number shown is current, and it's already wrong. Use a qualifier instead ("several", "over a dozen", "comprehensive as of DATE") or drop the number entirely. This applies to your own CLAUDE.md and feedback files just as much as a public README.
 ```
 
 The em/en dash rule sounds trivial but matters if you have a write-guard hook - em dashes in files will block edits.

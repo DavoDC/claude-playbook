@@ -103,7 +103,7 @@ See `docs/12-workspace-repo.md` for the full explanation of why this matters.
 - [ ] Context budget monitor (warns before compaction)
 - [ ] Session logger (tracks skill usage)
 - [ ] Settings split: hooks in settings.json, permissions in settings.local.json
-- [ ] **Git hooks** - `sh hooks/install.sh` in this repo installs `pre-commit` and `commit-msg` into `.git/hooks/`, which block staged content or commit messages that reference a private sibling repo (derived at runtime from any `.private-root` marker under the parent folder - see `docs/08-hooks.md`). `.git/hooks/` is never tracked by git, so this install step is required again after every fresh clone.
+- [ ] **Git hooks** - `sh hooks/install.sh` in this repo installs `pre-commit` and `commit-msg` into `.git/hooks/`, which block staged content or commit messages that reference a private sibling repo (derived at runtime from any `.private-root` marker under the parent folder - see `docs/11-privacy-hooks-public-repo.md`). `.git/hooks/` is never tracked by git, so this install step is required again after every fresh clone.
 
 ## The Feedback Habit
 
@@ -117,17 +117,6 @@ See `docs/12-workspace-repo.md` for the full explanation of why this matters.
 - [ ] **Generate lenses before scanning, and record which ones you did not apply.** A skipped lens with a reason is a decision. An unlisted lens is a blind spot. See `docs/13-audit-lenses.md`.
 - [ ] **For every prose rule about your docs, ask whether a check can see a violation; if so, make it a config rule.** See `docs/24-config-driven-doc-linting.md`.
 - [ ] **Before filing an upstream bug or opening a pull request, cold-read the text as a stranger and re-run the reproduction from scratch.** See `docs/25-bug-reports-and-pr-descriptions.md`.
-
-## Habits Worth Having
-
-- [ ] **A live process under `--watch` or auto-reload has no channel for "don't reload yet"** - it fires on its own timer regardless of an instruction to hold off. Flag this the moment such an instruction is given, not after it's silently ignored.
-- [ ] **Verify a backup target is a different physical disk, not just a different drive letter.** Two letters can be partitions of one disk - walk the disk-to-partition-to-volume chain before trusting a target as redundancy.
-- [ ] **When a live user's report of their screen conflicts with your reading of a screenshot, defer to the user immediately.** A screenshot is one static frame without hover and focus state; the human has the running system.
-- [ ] **Before hardcoding a host address, port, or handle, check the property that stability actually depends on** (e.g. a lease about to expire), not just the value observed right now.
-- [ ] **Never bind a human to type a visually-ambiguous character** (O vs 0, l vs 1 vs I) in a keybind, filename, or code - the misread costs a real round trip.
-- [ ] **When a "keep or revert external changes" dialog fires, name which specific deliberate change it's describing before answering it** - never answer purely from the dialog's wording.
-- [ ] **Before diagnosing a missing list/menu item as broken, check whether inclusion in that list is opt-in.**
-- [ ] **Publishing is hygiene, not distribution.** A licence, README, public flip or release changes who may find the work, not whether anyone does; before adding a publishing task, schedule the distribution act (a post, an announcement, an ask) it is a precondition for.
 
 ---
 

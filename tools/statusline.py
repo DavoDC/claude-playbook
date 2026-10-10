@@ -5,7 +5,7 @@ Configure in .claude/settings.json:
   {
     "statusLine": {
       "type": "command",
-      "command": "python3 /path/to/tools/statusline.py"
+      "command": "python /path/to/tools/statusline.py"
     }
   }
 

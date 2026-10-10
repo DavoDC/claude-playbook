@@ -1,7 +1,7 @@
 # Enforced Rules
 
 <!-- This file lives at .claude/rules/enforced-rules.md -->
-<!-- It is auto-loaded by Claude Code and applies to every session across all repos. -->
+<!-- It applies to every session in this repo; load behaviour is in docs/01-claude-md.md. -->
 <!-- Keep rules short (one bullet, under 120 chars), with a feedback file reference. -->
 <!-- See docs/02-improvement-loop.md for how to use and grow this file. -->
 <!-- Size: set a hard byte limit and a lower soft limit for this file, enforced by a hook. -->

@@ -5,7 +5,8 @@
 
 # Parse JSON using a Python one-liner (more reliable than jq on all platforms)
 # Python finds the file using the same tempfile logic as statusline.py
-BUDGET_JSON=$(python3 << 'PYEOF'
+PY=$(command -v python || command -v python3)
+BUDGET_JSON=$($PY << 'PYEOF'
 import json, sys, os, tempfile
 from datetime import datetime, timedelta
 
@@ -124,7 +125,7 @@ PYEOF
 
 # Function for session-context.sh to source
 format_budget_status() {
-    python3 << 'PYEOF'
+    $PY << 'PYEOF'
 import json, sys, os, tempfile
 from datetime import datetime
 

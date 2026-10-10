@@ -2,7 +2,7 @@
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G31WKOCN) [![selftest](https://github.com/DavoDC/claude-playbook/actions/workflows/selftest.yml/badge.svg)](https://github.com/DavoDC/claude-playbook/actions/workflows/selftest.yml)
 
-For people who use Claude Code daily and are tired of re-correcting the same mistakes and hitting rate limits mid-task: a budget-aware, self-improving setup, distilled from hundreds of sessions of real use across multiple projects. Not theory - what actually worked and what didn't.
+For people who use Claude Code daily and are tired of re-correcting the same mistakes and hitting rate limits mid-task: a budget-aware, self-improving setup, distilled from sustained real use across multiple projects. Not theory - what actually worked and what didn't.
 
 ---
 
@@ -32,7 +32,7 @@ Copy `templates/CLAUDE_workspace.md` to your workspace root as `CLAUDE.md`. Read
 
 **Step 2 - Enforced rules (2 min)**
 
-Copy `templates/enforced-rules.md` to `.claude/rules/enforced-rules.md`. This file is auto-loaded by Claude Code and applies everywhere.
+Copy `templates/enforced-rules.md` to `.claude/rules/enforced-rules.md`. It applies everywhere (load behaviour: [Part 1](docs/01-claude-md.md)).
 
 **Step 3 - Install the statusline (5 min)**
 
@@ -42,7 +42,7 @@ Copy `tools/` to somewhere in your workspace. In `.claude/settings.json`, add:
 {
   "statusLine": {
     "type": "command",
-    "command": "python3 /path/to/tools/statusline.py"
+    "command": "python /path/to/tools/statusline.py"
   }
 }
 ```
@@ -98,7 +98,7 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 |------|------------|
 | `docs/` | Full guide split by topic - start with `01-claude-md.md` |
 | `templates/` | Ready-to-use CLAUDE.md, enforced-rules and backlog (IDEAS/HISTORY) starters |
-| `tools/` | statusline, budget and session-status scripts, loop-health measurement, the `backlog.py` backlog editor (spec: `templates/BACKLOG-SPEC.md`, config: `config/backlog.example.json`), the `doc_lint/` config-driven doc linter (ruleset: `tools/doc_lint/doc_lint.config.json`), the `check-capacity.py` file and group size checker (config: `config/capacity.example.json`), the `scratch-overdue.py` delete-after marker checker, the `prose-lint.py` wrap, dash and commit-subject linter, plus a launcher |
+| `tools/` | statusline, budget and session-status scripts, loop-health measurement, the `backlog.py` backlog editor (spec: `templates/BACKLOG-SPEC.md`, config: `config/backlog.example.json`), the `doc_lint/` config-driven doc linter (ruleset: `tools/doc_lint/doc_lint.config.json`), the `check-capacity.py` file and group size checker (config: `config/capacity.example.json`), the `scratch-overdue.py` delete-after marker checker, the `prose-lint.py` wrap, dash and commit-subject linter, plus a launcher, and the `self-audit/` procedure for reviewing your own setup against this playbook (`tools/self-audit/README.md`) |
 | `skills/` | skill files - thinking, git, review, and workflow tools |
 | `hooks/` | git hooks that keep private details out of commits, a `privacy-scan.sh history` pre-publish scan, plus an installer |
 

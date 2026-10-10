@@ -18,8 +18,6 @@ These are POSIX `sh`, so they run only for commits through Git Bash, never a GUI
 
 ## A Privacy Guard Must Report WHERE, Never WHAT
 
-The same `commit-msg` slot can also run the message-shape checks from [Part 24](24-config-driven-doc-linting.md).
-
 A hook that finds a private token and echoes the matching line has printed it into the terminal, any CI log that captured the run, and the transcript of any assistant committing on your behalf, a wider audience than the commit it blocked. The wrong version looks more helpful, which is why it is easy to write. So the pre-commit hook prints file names and the commit-msg hook prints line numbers; neither prints the match. A location is enough to act on and costs nothing if it leaks.
 
 The general form applies to any check over sensitive data: a rule that names the thing it protects instantiates the leak it exists to prevent. The public copy of a privacy rule says "no private repo names"; the private copy is where the names live. The same split applies to the guard's own output.
@@ -34,8 +32,6 @@ The marker mechanism protects only against names of sibling repos and does nothi
 
 ## Before Making a Repo Public: Scan History
 
-A public bug report or pull request description is the same exposure in a smaller space; `privacy-scan.sh msg FILE` works on a saved draft of one (see [Part 25](25-bug-reports-and-pr-descriptions.md)).
-
 A hook sees what is about to be committed. Publishing exposes every commit ever made, including files deleted long ago and messages written before the rules existed, so the pre-publish question is about history, not the tree. `sh hooks/privacy-scan.sh history` answers it with the same two layers (generic shapes plus your `private-terms.txt`) over every commit message and every distinct file version reachable from any branch or tag, and also checks old file names against your terms. Output is a path with a short blob id, or `commit` with a short commit id, plus line numbers, never the match. `PRIVACY_TERMS_FILE` points it at a different term list, for scanning a repo other than the one the list lives in.
 
 The routine is: put the terms in the untracked list, run the history scan, fix what it names, and run it again until it exits 0. A hit in an old file version means the tree is clean but the history is not; fixing it needs a history rewrite (see the section below), and every rewritten commit gets a new id, so do it before anyone clones. The scan reads every object, so it takes minutes on a long history; run it once at the decision point, not in a hook. It does not scan author names or emails in commit metadata, binary files, or anything outside git, so check those by eye. A clean run means the shapes and terms you listed are absent, not that nothing sensitive remains.
@@ -47,3 +43,7 @@ Keeping secrets out of git (see [Part 12](12-workspace-repo.md)) is the design-t
 **An exact-path gitignore rule protects the file, not the secret.** `config/config.json` in `.gitignore` stops that one file from being staged, but not a copy - and a copy is exactly what a credential rotation or migration produces, as a `.bak`, a suffixed backup, or an editor copy. The copy usually holds the fresher secret and sails past the rule. Write ignore rules for anything holding a live credential as a glob (`config.json*`, not `config.json`), and verify coverage with `git check-ignore -v <path>` rather than assuming.
 
 **A history rewrite that verifies clean is not necessarily finished.** `git filter-repo` (or `filter-branch`) plus a force push removes the offending commits from the remote, but not the local objects - anything named by a reflog entry stays reachable, and the default expiry holds entries for months. Worse, a GUI git client syncing in the background can fetch in the gap between the rewrite and the push, pull the un-rewritten history back from the not-yet-updated remote, and silently restore the removed objects - `git fsck --unreachable` will not catch this, because it respects reflogs. Treat the rewrite as finished only after: push, then `git reflog expire --expire=now --expire-unreachable=now --all`, then `git gc --prune=now`. Check with `du -sh .git` or `git count-objects -vH` before and after. Avoid touching a background-syncing GUI client in the gap, or push promptly enough to close it.
+
+## Related
+
+The `commit-msg` slot can also run the message-shape checks from [Part 24](24-config-driven-doc-linting.md). A public bug report or pull request description is the same exposure in a smaller space; `privacy-scan.sh msg FILE` works on a saved draft of one (see [Part 25](25-bug-reports-and-pr-descriptions.md)).

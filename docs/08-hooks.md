@@ -37,7 +37,8 @@ Exit code 1 does not block. A hook enforcing a policy must exit 2; anything else
 ```bash
 #!/bin/bash
 # Wrap the main logic - exit 0 on any internal error
-python3 -c "
+PY=$(command -v python || command -v python3)
+$PY -c "
 import sys, json
 try:
     d = json.load(sys.stdin)
@@ -103,7 +104,7 @@ Once fires are logged, each guard sorts into a case with its own action, not a s
 - **Correct but firing on an exempt case** - the guard does what it was built to do, but the rule carries a semantic exemption a lexical guard cannot see (a ban on exact counts in documentation, firing where the count is itself the cited evidence). The cost is not the block but the writer rephrasing real evidence into vaguer prose to get past it. Neither weaken nor retire the guard; give it an explicit escape marker the writer applies on purpose, leaving a trace for reviewers.
 - **Reporting unhealthy against a system that is fine** - mirrors Silent, and is commoner for status and health checks than for write-blocking guards. A check that flags healthy things as stale (testing an image's build date when the question is whether the update job ran) is internally consistent and wrong, and each false alarm trains its reader to expect noise, the same trust-destroying end as a guard that never fires. Before shipping a health check, write down what it should report against a known-healthy system, run it against one, and confirm.
 
-The Dominant case is easy to misread, so here is a worked example. In one measured month a single top-of-ladder guard accounted for over two thirds of all blocks. It refused outright with a good message naming the correct alternative, and still fired over a hundred times against the same person, who complied every time. That is not under-promotion: the guard's enforcement point sits downstream of the decision, so the refusal arrives after the command is composed, too late to touch the habit that composed it, and a hundred blocks do not make the hundred-and-first less likely. The diagnosis is not "the rule isn't clear enough", and the fire count is the only route to it, since the transcript of any single blocked attempt looks like success.
+The Dominant case is easy to misread, so here is a worked example. Suppose a single top-of-ladder guard accounts for most of all blocks. It refuses outright with a good message naming the correct alternative, and still fires again and again against the same person, who complies every time. That is not under-promotion: the guard's enforcement point sits downstream of the decision, so the refusal arrives after the command is composed, too late to touch the habit that composed it, and many blocks do not make the next one less likely. The diagnosis is not "the rule isn't clear enough", and the fire count is the only route to it, since the transcript of any single blocked attempt looks like success.
 
 As a protocol: log every fire with its verdict. Review the fire distribution on a cadence, since a dominant guard reads as the system working and nobody thinks to look. Triage each guard into the cases above. Trigger every silent guard once before deciding anything; one that cannot be triggered is already retired in practice. For a dominant guard change what's upstream, never the guard, because weakening a guard for firing too often is backwards. And record the retirement decision somewhere revisitable, since a close call left as a completed action is never reconsidered.
 
@@ -147,7 +148,8 @@ except Exception:
 **Prevention:** syntax-check every hook's Python block before committing:
 
 ```bash
-python3 -c "
+PY=$(command -v python || command -v python3)
+$PY -c "
 import ast
 code = open('my-hook.sh').read()
 # Extract the Python block and parse it
@@ -189,7 +191,7 @@ Not hypothetical: a stale-content check was added to a write guard, its blocked-
 ```bash
 #!/bin/bash
 # guard.sh - thin caller, no Python embedded here at all
-PY=$(command -v python3 || command -v python) || exit 0
+PY=$(command -v python || command -v python3) || exit 0
 SCRIPT="$(dirname "$0")/guard.py"
 
 # If guard.py itself is broken: fail OPEN with a loud warning so tools keep
@@ -260,7 +262,7 @@ Several hooks in `docs/09-hooks-recipes.md` write to log files; the pattern appl
 
 One line appended per event; no truncation, no rotation (or slow rotation after 30 days to an archive file). Each git commit's diff then shows exactly what happened in that session - green lines only, easy to audit.
 
-**Why commit them to git instead of ignoring them:** `git diff HEAD~1..HEAD -- skill-usage.log` shows every skill Claude used this session, and after a few months you know which skills you actually use vs which merely sounded useful. The data is free if you don't gitignore it.
+**Why commit them to git instead of ignoring them:** `git diff HEAD~1..HEAD -- skill-usage.log` shows every skill Claude used this session, and over time the log separates skills that earn their place from ones that merely sounded useful. The data is free if you don't gitignore it.
 
 **Auto-committing leftover dirty logs:** a `SessionStart` hook running `git add logs/ && git commit -m "log: session update"` catches logs left dirty when the previous session crashed before `/end-session`. Otherwise they accumulate uncommitted indefinitely.
 

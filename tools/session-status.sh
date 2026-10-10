@@ -17,7 +17,8 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 WORKSPACE_NAME=$(basename "$REPO_ROOT")
 
 # Model from statusline JSON (written by statusline.py on each CC update)
-MODEL=$(python3 << 'PYEOF'
+PY=$(command -v python || command -v python3)
+MODEL=$($PY << 'PYEOF'
 import json, os, tempfile
 try:
     f = os.path.join(tempfile.gettempdir(), 'claude-statusline-data.json')
@@ -40,7 +41,7 @@ CURRENT_TIME=$(date +"%I:%M%p")
 CURRENT_DATE=$(date +"%a %d/%m/%Y")
 
 # Claude version
-CLAUDE_VERSION=$(python3 << 'PYEOF'
+CLAUDE_VERSION=$($PY << 'PYEOF'
 import json, os, tempfile, re
 try:
     f = os.path.join(tempfile.gettempdir(), 'claude-statusline-data.json')

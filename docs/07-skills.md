@@ -189,11 +189,11 @@ A numbered list of next actions and nothing else, each tagged as something Claud
 ### [/handoff](../skills/handoff/SKILL.md)
 Writes the prompt that starts a fresh session on unfinished work. A script reads mechanical state off disk (branch, dirty files, scratch files), and the model adds only the judgment: the outcome, what is out of scope, and a live-verified date on every outward-facing instruction. Decides first whether a handoff is warranted at all.
 
-### /plan-day
-More detailed than `/today`. Categorises all pending items into: can do now, needs you, needs team, quick wins. Recommends parallel sessions when there are 2+ independent tasks that would each take 30+ minutes.
+### /plan-day (not shipped, build your own)
+A more detailed `/today`: categorise all pending items into can do now, needs you, needs team and quick wins, and recommend parallel sessions when there are 2+ independent tasks that would each take 30+ minutes.
 
-### /self-audit
-Workspace compliance check. Read-only - reports findings, never auto-fixes. Checks MEMORY.md health, pending actions for stale items, .gitignore gaps, skill integrity, hooks configuration.
+### /self-audit (not shipped as a skill, build your own)
+A read-only workspace compliance check that reports findings and never auto-fixes: memory index health, stale pending items, .gitignore gaps, skill integrity, hooks configuration. For reviewing your setup against this playbook, a ready-made procedure ships at [tools/self-audit/README.md](../tools/self-audit/README.md).
 
 ### [/undo-commits](https://github.com/DavoDC/claude-playbook/blob/main/skills/undo-commits/SKILL.md)
 Undo the last N commits via `git reset --soft`, show what's staged, help recommit cleanly. Safe - never rebases, never force-pushes.

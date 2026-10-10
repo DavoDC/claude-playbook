@@ -4,7 +4,7 @@
 
 ## Enforced Rules - The Distilled Layer
 
-Beyond CLAUDE.md, there is a second focused file: `enforced-rules.md` in `.claude/rules/`. This is auto-loaded and applies everywhere.
+Beyond CLAUDE.md, there is a second focused file: `enforced-rules.md` in `.claude/rules/`. It loads every session and applies everywhere (load behaviour: [Part 1](01-claude-md.md)).
 
 The distinction:
 - **CLAUDE.md** - comprehensive guidance, philosophy, context, all the why

@@ -4,7 +4,7 @@
 
 A skill is a modular, reusable set of instructions stored in a file that teaches Claude how to perform a specific, structured task.
 
-When you type `/survey-repo`, Claude reads the `survey-repo/SKILL.md` file and follows the instructions inside. That's it. No plugins, no API calls, no special setup - just a markdown file that Claude reads and executes.
+When you type `/deep-dive`, Claude reads the `deep-dive/SKILL.md` file and follows the instructions inside. That's it. No plugins, no API calls, no special setup - just a markdown file that Claude reads and executes.
 
 **Analogy:** Installing an app on your phone to give it a new capability. Before the app exists, the phone can't do the thing. After you install it, it can.
 
@@ -14,7 +14,7 @@ When you type `/survey-repo`, Claude reads the `survey-repo/SKILL.md` file and f
 
 A bash script can automate a fixed sequence of steps. A skill can do something a script never could: **exercise judgment**.
 
-Consider `/survey-repo`. A script version would run `ls`, `git log`, maybe `wc -l` - and dump raw output. The skill version reads the structure, identifies what matters, explains *why* the recent commits are significant, flags the missing test coverage, and tells you in plain English what the project does and where to start.
+Consider `/deep-dive`. A script version would run `ls`, `git log`, maybe `wc -l` - and dump raw output. The skill version reads the structure, identifies what matters, explains *why* the recent commits are significant, flags the missing test coverage, and tells you in plain English what the project does and where to start.
 
 The difference isn't speed or syntax - it's that Claude can:
 - Infer intent from incomplete or ambiguous inputs
@@ -35,7 +35,7 @@ People often mix these up. Here's the distinction:
 | | **Skills** | **Memories** |
 |---|---|---|
 | **What they are** | Instructions for HOW to do a task | Facts about WHO you are and HOW you work |
-| **Example** | "When I type /survey-repo, scan the codebase and produce a structured summary" | "This user prefers Python. No em dashes. TDD always." |
+| **Example** | "When I type /deep-dive, investigate the codebase and produce a structured report" | "This user prefers Python. No em dashes. TDD always." |
 | **Stored as** | `SKILL.md` files in `.claude/skills/` | `feedback_*.md` files + CLAUDE.md |
 | **Scope** | Task-oriented, reusable across projects | User-centric, applies to every session |
 | **Shared?** | Yes - copy the folder to any workspace | No - personal to your setup |
@@ -59,7 +59,7 @@ your-workspace/
         SKILL.md
       think/
         SKILL.md
-      survey-repo/
+      deep-dive/
         SKILL.md
 ```
 
@@ -78,17 +78,14 @@ Claude Code makes it available as `/<name>` in any session run from that workspa
 | [prioritise](prioritise/SKILL.md) | Rank any list by leverage - Aristotle's "who benefits, are they a bottleneck?" lens |
 | [brainstorm](brainstorm/SKILL.md) | Generate options for a genuinely open-ended problem - Six Hats, SCAMPER, total negation, reverse brainstorming. Generates; does not rank |
 | [refine-ideas](refine-ideas/SKILL.md) | Clarify IDEAS.md priorities - one question per item ("why necessary?"), groups by answer |
-| [survey-repo](survey-repo/SKILL.md) | Quick codebase summary - language, purpose, key files, tests, entry points, open TODOs |
 | [deep-dive](deep-dive/SKILL.md) | Deep investigation of a topic, file, or repo - security analysis, code review, architecture |
 | [cross-synth](cross-synth/SKILL.md) | Cross-synthesise any N subjects - find similarities, differences, gaps, learning transfers |
 | [commit-chunks](commit-chunks/SKILL.md) | Commit changed files in logical chunks - one commit per feature/fix/topic |
 | [commit-all](commit-all/SKILL.md) | One-shot commit of everything in git status - no planning, no splitting |
 | [step-commits](step-commits/SKILL.md) | Plan changes as atomic commits upfront, implement one at a time |
 | [undo-commits](undo-commits/SKILL.md) | Undo last N commits via git reset --soft, recommit cleanly. Safe - never rebases |
-| [checkpoint](checkpoint/SKILL.md) | Named session checkpoints - create/list/verify restore points during long runs |
 | [human-voice](human-voice/SKILL.md) | Audit and rewrite text to remove AI patterns - for emails, READMEs, anything to a person |
 | [process-feedback](process-feedback/SKILL.md) | Process a feedback file - product tasks AND Claude learnings (dual pass, both mandatory) |
-| [check-compact](check-compact/SKILL.md) | Check if context is large enough to warrant compaction, skip if not |
 | [reflection](reflection/SKILL.md) | Read recent session history, extract patterns, update workspace config and memory |
 | [repo-status](repo-status/SKILL.md) | Multi-repo status - branch, dirty count, unpushed commits per repo. Read-only, never fetches |
 | [whats-next](whats-next/SKILL.md) | Lean numbered list of next actions, each tagged Claude or you |
@@ -114,9 +111,7 @@ There is no special syntax. Clear markdown instructions are enough. Claude reads
 
 These are described in [docs/08-skills.md](../docs/08-skills.md) and are worth implementing as custom skills for your own setup:
 
-- **`/dev-session`** - the structured session workflow from [docs/04-dev-session.md](../docs/04-dev-session.md)
 - **`/loop`** - repeat a command on a schedule (overnight automation)
-- **`/health`** - workspace health check (hook counts, file bloat, etc.)
 
 ---
 

@@ -54,6 +54,6 @@ done
 
 ## When to run
 
-- Before destroying the development environment (pre-rebuild checklist)
+- Before destroying or rebuilding the development environment
 - At session end, before closing the terminal
 - When you think you might be on the wrong branch in any repo

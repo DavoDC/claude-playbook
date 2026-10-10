@@ -1,7 +1,7 @@
 ---
 description: End-of-session routine. Writes a session fragment, reconciles the task list, appends a log row, routes learnings, and commits. Concurrent-safe and fast.
 disable-model-invocation: true
-when_to_use: "ONLY the user invokes this by typing /end-session directly; Claude must never auto-invoke it. Run at the end of every work session. For long or risky sessions use /checkpoint for mid-session saves before risky refactors."
+when_to_use: "ONLY the user invokes this by typing /end-session directly; Claude must never auto-invoke it. Run at the end of every work session."
 ---
 
 # End-of-Session Routine

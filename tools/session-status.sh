@@ -1,6 +1,6 @@
 #!/bin/bash
 # session-status.sh - Output budget status in a compact 2-line format.
-# Called by /dev-session and /loop at session start to make budget-aware decisions.
+# Called by work loops and session routines at session start to make budget-aware decisions.
 #
 # Output format:
 #   WorkspaceName | Model (200k) | 5h: 43% (r 1h14m) | 7d: 23% (r 6d8h) | ctx: 43%

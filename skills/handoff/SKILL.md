@@ -33,7 +33,7 @@ Take `$ARGUMENTS`. If it names an area rather than a result ("the PR", "the migr
 
 ### 2. Stamp every outward-facing instruction, NOW, before writing it
 
-For each instruction telling the next session to DO something visible to anyone else (post a comment, reply on a thread, publish a page, deploy, message a person): **verify its current state live in this step and write the finding into the prompt with today's date.** Not "post the comment on ISSUE-893" but "as at 15:15 today ISSUE-893 carries no such comment, so post it".
+For each instruction telling the next session to DO something visible to anyone else (post a comment, reply on a thread, publish a page, deploy, message a person): **verify its current state live in this step and write the finding into the prompt with today's date.** Not "post the comment on ISSUE-123" but "as at 15:15 today ISSUE-123 carries no such comment, so post it".
 
 - Issue TITLES are not identifiers and drift. Use keys, and read the issue's own description and comments, never a title match.
 - Same for any pointer-to-a-document instruction: say when that document was last checked for internal consistency. "Everything is in that doc" plus a doc that contradicts itself is an instruction that cannot be followed.

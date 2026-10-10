@@ -111,7 +111,7 @@ Every surviving option lands on a real list in the same pass. Anything held only
 
 ## Related
 
-- `docs/11-audit-lenses.md` "EXTREME lenses" - total negation made systematic, applied to an existing backlog rather than to a blank page.
+- `docs/12-audit-lenses.md` "EXTREME lenses" - total negation made systematic, applied to an existing backlog rather than to a blank page.
 - `/prioritise` - ranks what this produces.
 - `/think` - builds the winner.
 - `/premortem` - attacks the winner before you commit to it.

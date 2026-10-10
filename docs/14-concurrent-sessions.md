@@ -1,4 +1,4 @@
-# Part 13: Concurrent Sessions on One Working Tree
+# Part 14: Concurrent Sessions on One Working Tree
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
@@ -49,4 +49,6 @@ Log every broken stale lock. A lock silently cleared on every stale-looking read
 
 ## Git Rules For Shared Trees
 
-Three rules follow from several sessions sharing one working tree. Never amend: by the time you amend, HEAD may be a sibling session's commit, so the amend rewrites its message and leaves yours untouched. Fix a wrong message or trailer with a new commit. Always scope a commit with a pathspec. After a `git mv`, the pathspec must name the old paths as well as the new ones, because the move stages a deletion at each old path and a pathspec listing only the new paths commits the additions and leaves the deletions staged; confirm with `git status --short` afterwards, since the commit looks right either way.
+Four rules follow from several sessions sharing one working tree, the last about renames. Never amend: by the time you amend, HEAD may be a sibling session's commit, so the amend rewrites its message and leaves yours untouched. Fix a wrong message or trailer with a new commit. Always scope a commit with a pathspec. After a `git mv`, the pathspec must name the old paths as well as the new ones, because the move stages a deletion at each old path and a pathspec listing only the new paths commits the additions and leaves the deletions staged; confirm with `git status --short` afterwards, since the commit looks right either way.
+
+Before renaming any tracked file, grep for its bare name as a string, not only as a path. A privacy blocklist, lint rule, commit-message scanner or hook matcher can key on the name itself; rename the file, update every path, and nothing breaks visibly because nothing pointed at the path, so the guard is gone and its absence produces no error. If the name appears inside a matcher, do not rename it: split the file by concern and leave the original name attached to whatever the matcher protects. Renaming to a clearer, more generic name is the worst move, because a generic name cannot be blocklisted without false positives.

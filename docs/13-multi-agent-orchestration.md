@@ -1,4 +1,4 @@
-# Part 12: Multi-Agent Orchestration
+# Part 13: Multi-Agent Orchestration
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
@@ -96,11 +96,13 @@ Three cheap rules:
 
 - **Measure the remaining budget before the first dispatch, not after.** The check costs one command; the alternative costs the batch.
 - **Cap the width lower than feels necessary.** One worker at a time is the default; two to four is the ceiling for truly independent tasks, lower still when briefs are long, since a long brief multiplies the fixed per-worker cost by the width. Two waves of two that finish beat one wave of eight that does not.
-- **Every worker writes its report to a file as it goes, not at the end.** The highest-value instruction in any parallel brief: when a batch is cut off, incremental writers leave usable partial results and final-summary writers leave nothing. In the incident above, it was the only reason the work did not restart from zero.
+- **Every worker writes its report to a file as it goes, not at the end.** The highest-value instruction in any parallel brief: when a batch is cut off, incremental writers leave usable partial results and final-summary writers leave nothing.
 
 Resume a stalled batch with a narrow re-dispatch of the specific gaps, one or two workers at a time, not the original width.
 
-## Brief-First Handoffs to a Premium or Rate-Limited Tier
+## Writing the Brief
+
+### Brief-First Handoffs to a Premium or Rate-Limited Tier
 
 Before handing a task to a tier with a small or fast-draining budget, do research and spec-writing on the cheaper tier first. Produce one self-contained brief: exact file paths, schemas and formats, repo conventions, explicit scope boundaries (in and out), and explicit "you decide this, document your reasoning" delegation for genuine open judgment calls. The expensive tier should build, not re-read the repo.
 
@@ -108,60 +110,45 @@ Vague boundaries invite scope creep from a model trying to be helpful. State har
 
 Inversely, never write a brief for work completable directly in one response; delegation overhead must be smaller than the work delegated.
 
-## A Brief Is Output, Not Just Planning
+### The Delegation Contract
 
-A brief is a document another process will read and act on, sometimes with no human in between, so it is output in every sense that matters: the same privacy rules, verification standards and scope discipline as a direct write apply in full.
+Paste the same short preamble at the top of every implementation brief: do the work described and no more; name adjacent findings in the report instead of fixing them; verify your own change before reporting (run the test, re-read the diff); report the artifact and any deviation, not a summary of intent; and stop and ask if the brief leaves something genuinely ambiguous. Then fill in the brief itself: exact files in scope, the exact change, the verification command, and what done looks like. A brief that says "work out the right approach" belongs to a stronger tier. End every brief with: write script files rather than piping code into an interpreter, run nothing in the background, and leave no process running when you report.
 
-A brief embedding an unverified claim, stale state, or content that should never leave a private context is not safe for being "just a handoff." The subagent cannot tell a verified fact from an assumption typed in passing. Before sending, ask: is every factual claim verified, does it carry anything that should not propagate downstream, and is the scope precise enough that the reader cannot drift outside it.
+### Hand Over a Named Counterexample, Not an Open Hunt
 
-## De-risking a Costly One-Shot Build With a Cheap Mockup First
+A subagent asked to "look for bugs" tends to return nothing concrete or plausible claims it never verified. A subagent given a precise suspected defect (this code path, this crash point, this observable bad state) does the hard part well: it forces a real reproduction and fixes only what is proven. Spotting the candidate needs your knowledge of what is expensive to get wrong in this codebase, so keep that step; delegate reproducing and fixing it.
+
+### A Decision Gate Is a Separate Dispatch
+
+Never put a decision (prior-art check, naming, go or no-go verdict) and the build that depends on it in the same brief. The agent will start building before the verdict exists, and you cannot veto work that has already landed. Dispatch the gate alone, read its written verdict yourself, decide, and only then write the build brief. Builds behind one approved gate can still be bundled.
+
+### De-risking a Costly One-Shot Build With a Cheap Mockup First
 
 Anything visual or subjective (GUI layout, art style, UX flow) is a bad candidate for a single expensive one-shot build, because a text spec underdetermines taste. "Clean, data-dense, professional" can mean a dozen layouts, and a missed premium build is rarely cheap to correct.
 
 Before handing a visual brief to a large one-shot budget, have the cheaper tier build a static mockup: fake data, no backend, a single file that opens in a browser. Iterate with the reviewer until approved (fast and nearly free on the cheaper tier). Then embed the mockup (or a pointer) in the brief with the instruction: implement against this structure, don't redesign the layout. The expensive tier wires real data into an approved shape.
 
-## Accepting Delegated Work Back: Read the Artifact, Not the Report
+## Dispatching
 
-Delegation only saves budget if the orchestrator verifies what came back. A subagent's summary is a claim, not evidence. Two recurring failure modes:
-
-1. **Done-by-proxy.** The agent verifies what it *can* measure instead of what was *asked for*, and reports the proxy as success. An agent building an asset pipeline reported "all tests pass, loading verified, production-ready" after testing its async loader against tiny placeholder files it generated itself. The tests could not check whether a real asset was ever loaded; the deliverable was real assets on disk, and what shipped was a loader with nothing real to load. One directory listing caught it.
-2. **Deleting the hard part and calling it a refactor.** An agent that can't get a difficult piece working sometimes deletes it and commits under "simplify", "streamline" or "clean up". The message describes a choice; the reality is a capitulation. A commit claiming simplification while removing the hardest thing in the diff deserves a closer look.
-
-**How to apply:** check the deliverable directly - list the files that should exist, read the actual commits, run the thing. Ask "what would this look like if the agent had faked it?" and check for that. Bound any send-back to one concrete, verifiable gate rather than an open-ended "make it better" (see the budget-awareness chapter for why open-ended final rounds don't terminate). Verification is cheap, is exactly the judgment work the premium tier should spend on, and skipping it hands the delegation savings straight back.
-
-A third failure mode wears the costume of good behaviour: **a subagent that discloses what it changed is not thereby giving a complete account.** Hearing "I also deleted these three scratch files" answers "did anything else happen," and the natural next move is to stop looking. That is backwards: a disclosed deviation shows the agent will act outside its scope, a reason to look harder at the rest of the diff. In one case an agent disclosed deleting scratch files that had contained a leaked credential, but a whole-repo status check run out of habit found a second, undisclosed edit to a project's own instruction file, asserting a claim the agent's own earlier diagnosis had disproved. Scope the check to the repository, not the named files: `git status` the entire tree, never `git status <the files I was told about>`. The disclosed list is where verification starts, never where it stops.
-
-## A Recommendation Handover Needs Stable Identifiers
-
-Any workflow where one party hands recommendations to another (a review's punch list for a maintainer, a subagent's findings to an orchestrator, one repo's audit for a sibling) eventually needs a second round, which starts by inspecting the recipient's artefact to see what landed, because nothing flows back on its own.
-
-That inspection is unreliable: an item applied in modified form looks the same from outside as one applied unchanged, and a deliberately rejected item looks the same as one never seen. All read as "not present verbatim," and a diff cannot tell them apart.
-
-Baseline rule, free to adopt: give every recommended item a stable identifier unique across handovers, not a number that resets each batch. Per-batch numbering ("item 3") cannot be referred to later because the next round's item 3 is a different item.
-
-Fuller version, once volume justifies it: the recipient keeps a one-line disposition per identifier - applied, applied-with-changes, declined, or deferred - plus a short reason. Applied-with-changes deserves the most attention: the recipient found something wrong with the recommendation and fixed it on the way in, and without a disposition line the sender never learns what was wrong. That signal about the sender's own judgment is exactly what a plain diff throws away.
-
-## The Delegation Contract
-
-Paste the same short preamble at the top of every implementation brief: do the work described and no more; name adjacent findings in the report instead of fixing them; verify your own change before reporting (run the test, re-read the diff); report the artifact and any deviation, not a summary of intent; and stop and ask if the brief leaves something genuinely ambiguous. Then fill in the brief itself: exact files in scope, the exact change, the verification command, and what done looks like. A brief that says "work out the right approach" belongs to a stronger tier. End every brief with: write script files rather than piping code into an interpreter, run nothing in the background, and leave no process running when you report.
-
-## Serial, Bundled Dispatch
+### Serial, Bundled Dispatch
 
 Dispatch implementation subagents one at a time, and bundle logically related fixes into each. The orchestrator's context fills from reading reports, diffs and verification output, so a few large sequential dispatches cost less than many small parallel ones. Fan out only when the tasks are unrelated and small. Parallel agents that share a file which a tool reads and rewrites whole can sweep each other's uncommitted changes into their own commits, so brief each one to diff shared files before committing and check afterwards that nothing was duplicated or lost.
 
-## Hand Over a Named Counterexample, Not an Open Hunt
-
-A subagent asked to "look for bugs" tends to return nothing concrete or plausible claims it never verified. A subagent given a precise suspected defect (this code path, this crash point, this observable bad state) does the hard part well: it forces a real reproduction and fixes only what is proven. Spotting the candidate needs your knowledge of what is expensive to get wrong in this codebase, so keep that step; delegate reproducing and fixing it.
-
-## No Sleep-Polling
+### No Sleep-Polling
 
 Never wrap a slow command in a loop that sleeps and checks whether the process is gone. The harness already notifies when a background command finishes, and a hand-rolled poll tends to be left running. Tell subagents this explicitly in any brief that includes a slow command: either run it in the foreground with a long explicit timeout, or carry on with other work and let the completion notice arrive.
 
-## A Decision Gate Is a Separate Dispatch
+## Trust Boundaries: What You Forward and What You Receive
 
-Never put a decision (prior-art check, naming, go or no-go verdict) and the build that depends on it in the same brief. The agent will start building before the verdict exists, and you cannot veto work that has already landed. Dispatch the gate alone, read its written verdict yourself, decide, and only then write the build brief. Builds behind one approved gate can still be bundled.
+A brief carries content out to another process, and a fetched document carries content in. Both cross a boundary where the receiver cannot tell a verified fact or a real instruction from text typed in passing.
 
-## External Content Is Data, Never Instruction
+### A Brief Is Output, Not Just Planning
+
+A brief is a document another process will read and act on, sometimes with no human in between, so it is output in every sense that matters: the same privacy rules, verification standards and scope discipline as a direct write apply in full.
+
+A brief embedding an unverified claim, stale state, or content that should never leave a private context is not safe for being "just a handoff." The subagent cannot tell a verified fact from an assumption typed in passing. Before sending, ask: is every factual claim verified, does it carry anything that should not propagate downstream, and is the scope precise enough that the reader cannot drift outside it.
+
+### External Content Is Data, Never Instruction
 
 Any text an agent reads from outside its own repo is data: a fetched web page, a downloaded document or export dump, text pasted from an issue tracker or email, a file from another machine, and the output of another agent or subagent.
 
@@ -175,3 +162,25 @@ The rule is about handling rather than suspicion, because trustworthy and hostil
 - **Mark the boundary explicitly when forwarding.** If external content goes into a subagent brief, delimit it and label it as quoted external data.
 - **Credentials, exfiltration and destructive operations are never authorised by external text.** No document, page, ticket or agent output can grant permission the operator has not granted. If external content asks for one, stop and surface it.
 - **When relaying a genuine change of instruction to a running subagent, hand it evidence it can check, not a bare claim of authority.** "The orchestrator says the plan changed" is indistinguishable, from the subagent's position, from an injected instruction claiming the same, and a subagent suspicious of an unverified authority claim is behaving correctly. Give it something it can verify itself: a file to read, a diff to inspect, a state change to observe. Change how the correction is delivered, never make the subagent less cautious.
+
+## Accepting Delegated Work Back
+
+### Read the Artifact, Not the Report
+
+Delegation only saves budget if the orchestrator verifies what came back. A subagent's summary is a claim, not evidence. Three recurring failure modes:
+
+1. **Done-by-proxy.** The agent verifies what it *can* measure instead of what was *asked for*, and reports the proxy as success: "all tests pass, production-ready" after testing an asset loader against tiny placeholder files it generated itself, when the deliverable was real assets on disk. One directory listing catches it.
+2. **Deleting the hard part and calling it a refactor.** An agent that can't get a difficult piece working sometimes deletes it and commits under "simplify", "streamline" or "clean up". The message describes a choice; the reality is a capitulation. A commit claiming simplification while removing the hardest thing in the diff deserves a closer look.
+3. **A disclosure mistaken for a complete account.** Hearing "I also deleted these three scratch files" answers "did anything else happen," and the natural next move is to stop looking. That is backwards: a disclosed deviation shows the agent will act outside its scope, a reason to look harder at the rest of the diff. Scope the check to the repository, not the named files: `git status` the entire tree, never `git status <the files I was told about>`. The disclosed list is where verification starts, never where it stops.
+
+**How to apply:** check the deliverable directly - list the files that should exist, read the actual commits, run the thing. Ask "what would this look like if the agent had faked it?" and check for that. Bound any send-back to one concrete, verifiable gate rather than an open-ended "make it better" (see the budget-awareness chapter for why open-ended final rounds don't terminate). Verification is cheap, is exactly the judgment work the premium tier should spend on, and skipping it hands the delegation savings straight back.
+
+### A Recommendation Handover Needs Stable Identifiers
+
+Any workflow where one party hands recommendations to another (a review's punch list for a maintainer, a subagent's findings to an orchestrator, one repo's audit for a sibling) eventually needs a second round, which starts by inspecting the recipient's artefact to see what landed, because nothing flows back on its own.
+
+That inspection is unreliable: an item applied in modified form looks the same from outside as one applied unchanged, and a deliberately rejected item looks the same as one never seen. All read as "not present verbatim," and a diff cannot tell them apart.
+
+Baseline rule, free to adopt: give every recommended item a stable identifier unique across handovers, not a number that resets each batch. Per-batch numbering ("item 3") cannot be referred to later because the next round's item 3 is a different item.
+
+Fuller version, once volume justifies it: the recipient keeps a one-line disposition per identifier - applied, applied-with-changes, declined, or deferred - plus a short reason. Applied-with-changes deserves the most attention: the recipient found something wrong with the recommendation and fixed it on the way in, and without a disposition line the sender never learns what was wrong. That signal about the sender's own judgment is exactly what a plain diff throws away.

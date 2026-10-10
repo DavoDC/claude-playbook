@@ -448,4 +448,4 @@ For hook plumbing the opposite holds: an unparseable hook payload should fail op
 
 ### Timeouts and a Health Check
 
-Every hook needs an explicit numeric timeout, because a stuck hook freezes the session. On some platforms bare `python3` resolves to a stub that hangs and ignores timeouts, so call the interpreter you know works. Run `hooks/examples/check_hook_health.py` after any settings edit: it fails if a hook lacks a timeout, uses bare `python3`, names a script that does not exist, or if `disableAllHooks` was left on.
+Every hook needs an explicit numeric timeout, because a stuck hook freezes the session. Call an interpreter you know works rather than bare `python3`, which can be a hanging stub (the platform caveat is in [Part 4](04-budget-awareness.md)). Run `hooks/examples/check_hook_health.py` after any settings edit: it fails if a hook lacks a timeout, uses bare `python3`, names a script that does not exist, or if `disableAllHooks` was left on.

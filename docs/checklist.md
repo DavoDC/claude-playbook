@@ -15,7 +15,7 @@ Use this to track which pieces of the system you've set up. Start with the top-l
 - [ ] Create `memory/feedback/` folder for future feedback files
 - [ ] Make your first commit - the workspace is live
 
-See `docs/10-workspace-repo.md` for the full explanation of why this matters.
+See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 
 ---
 
@@ -26,7 +26,7 @@ See `docs/10-workspace-repo.md` for the full explanation of why this matters.
   ```
   git clone https://github.com/ericbuess/claude-code-docs
   ```
-  That is a preference, not the only option: several community mirrors exist, none official, and any maintained one works. This playbook uses it because it refreshes on a schedule measured in hours, keeps one plain markdown file per documentation page so the set is greppable, is scoped to the Claude Code docs rather than blog posts and cookbooks, and ships a manifest recording each file's source URL, content hash and fetch time, which lets you tell a stale copy from a current one. `thevibeworks/claude-code-docs` is the reasonable alternative if you want the wider Anthropic material in the same clone. Check the criteria in `docs/10-workspace-repo.md` before adopting either, and judge whether a mirror is alive by its last commit date, not the displayed update time. Put the clone beside the workspace repo, not nested under it. When writing a pointer for someone else, cite `https://code.claude.com/docs/en/`, not your local path. Then ask Claude to read the docs and suggest features that match your workflow; this works especially well for initial setup.
+  That is a preference, not the only option: several community mirrors exist, none official, and any maintained one works. This playbook uses it because it refreshes on a schedule measured in hours, keeps one plain markdown file per documentation page so the set is greppable, is scoped to the Claude Code docs rather than blog posts and cookbooks, and ships a manifest recording each file's source URL, content hash and fetch time, which lets you tell a stale copy from a current one. `thevibeworks/claude-code-docs` is the reasonable alternative if you want the wider Anthropic material in the same clone. Check the criteria in `docs/11-workspace-repo.md` before adopting either, and judge whether a mirror is alive by its last commit date, not the displayed update time. Put the clone beside the workspace repo, not nested under it. When writing a pointer for someone else, cite `https://code.claude.com/docs/en/`, not your local path. Then ask Claude to read the docs and suggest features that match your workflow; this works especially well for initial setup.
 - [ ] **Read the Claude Code docs yourself** - hooks, MCP servers, statusline config, remote control - most users discover these months late.
 
 ---
@@ -114,7 +114,7 @@ See `docs/10-workspace-repo.md` for the full explanation of why this matters.
 
 ## Audit Habits
 
-- [ ] **Generate lenses before scanning, and record which ones you did not apply.** A skipped lens with a reason is a decision. An unlisted lens is a blind spot. See `docs/11-audit-lenses.md`.
+- [ ] **Generate lenses before scanning, and record which ones you did not apply.** A skipped lens with a reason is a decision. An unlisted lens is a blind spot. See `docs/12-audit-lenses.md`.
 
 ## Habits Worth Having
 
@@ -125,6 +125,7 @@ See `docs/10-workspace-repo.md` for the full explanation of why this matters.
 - [ ] **Never bind a human to type a visually-ambiguous character** (O vs 0, l vs 1 vs I) in a keybind, filename, or code - the misread costs a real round trip.
 - [ ] **When a "keep or revert external changes" dialog fires, name which specific deliberate change it's describing before answering it** - never answer purely from the dialog's wording.
 - [ ] **Before diagnosing a missing list/menu item as broken, check whether inclusion in that list is opt-in.**
+- [ ] **Publishing is hygiene, not distribution.** A licence, README, public flip or release changes who may find the work, not whether anyone does; before adding a publishing task, schedule the distribution act (a post, an announcement, an ask) it is a precondition for.
 
 ---
 

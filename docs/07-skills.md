@@ -143,9 +143,9 @@ Commit changed files in logical chunks - one commit per feature/fix/topic. Analy
 
 Deep investigation of a topic, file, directory or repo. Two mechanisms make it different from asking Claude to look at something carefully.
 
-It uses a commit-anchored delta (see [Part 15](15-commit-anchored-delta.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
+It uses a commit-anchored delta (see [Part 16](16-commit-anchored-delta.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
 
-And it generates its lenses before it scans, using the framework in [Part 11](11-audit-lenses.md), then states which cells it walked and which it deliberately skipped. That stops the fifth pass over a repo confirming what the fourth said: the delta says which files to re-read, only the lens framework says what to ask of them.
+And it generates its lenses before it scans, using the framework in [Part 12](12-audit-lenses.md), then states which cells it walked and which it deliberately skipped. That stops the fifth pass over a repo confirming what the fourth said: the delta says which files to re-read, only the lens framework says what to ask of them.
 
 ### [/cross-synth](https://github.com/DavoDC/claude-playbook/blob/main/skills/cross-synth/SKILL.md)
 Cross-synthesise any N subjects (repos, files, docs, configs, tests, features) side-by-side: find what's shared, what's missing, what's inconsistent, and what one subject can teach the others. Horizontal analysis - where `/deep-dive` goes deep on one thing, `/cross-synth` goes wide across many.

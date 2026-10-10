@@ -93,21 +93,17 @@ Passive hooks (logging, warnings, context injection) always exit 0. Blocking hoo
 
 Rules get promoted upward until they reach a hook and nothing comes back down. Enforcement mechanisms only accumulate, each costing something on every matching call whether or not it fires, and the promotion diagram has an on-ramp but no retirement path.
 
-Prerequisite: log every guard fire, with its verdict, as one appended line written by the guard itself when it fires. That log is the only source for the questions below.
+Prerequisite: log every guard fire, with its verdict, as one appended line written by the guard itself, in the same code path as the block and before it exits. A block's reason is visible in that session's transcript but leaves no trail afterwards unless something writes it down, and without the log "repeatedly" is unmeasurable. That log is the only source for the questions below.
 
 Once fires are logged, each guard sorts into a case with its own action, not a shared default of "leave it running."
 
 - **Dominant** - a large share of all fires over meaningful volume. Do not touch the guard itself; ask what sits upstream. Either the correct form is harder to produce than the wrong one (make it the default or easier path); the guard sits after the decision rather than at it (move the check earlier); or the rule is genuinely wrong for a class of case that has become most of the traffic. People never consider the last first, which is why it is worth naming: look at what is being blocked, not only how often.
 - **Thin tail** - fires occasionally, blocking a real mistake each time. Healthy, no action. Most guards should live here, and nobody notices them, which is what makes it correct.
 - **Silent** - registered, never fired across the whole window. Two explanations give an identical zero: the class of mistake is genuinely solved, or the guard has quietly stopped working, and the count cannot tell them apart. Before retiring anything silent, deliberately trigger it once and watch it block. A guard silent because it's broken is the worst object in the system: it costs something on every matching call, protects nothing, and its presence is read as proof protection exists.
+- **Correct but firing on an exempt case** - the guard does what it was built to do, but the rule carries a semantic exemption a lexical guard cannot see (a ban on exact counts in documentation, firing where the count is itself the cited evidence). The cost is not the block but the writer rephrasing real evidence into vaguer prose to get past it. Neither weaken nor retire the guard; give it an explicit escape marker the writer applies on purpose, leaving a trace for reviewers.
+- **Reporting unhealthy against a system that is fine** - mirrors Silent, and is commoner for status and health checks than for write-blocking guards. A check that flags healthy things as stale (testing an image's build date when the question is whether the update job ran) is internally consistent and wrong, and each false alarm trains its reader to expect noise, the same trust-destroying end as a guard that never fires. Before shipping a health check, write down what it should report against a known-healthy system, run it against one, and confirm.
 
-A worked example. In one measured month of a live guard log, a single guard accounted for over two thirds of all blocks. The instinct is to read that as heavy lifting; it is closer to the opposite. The guard sat at the top of the enforcement ladder, refused the action outright, and its message was good, naming the correct alternative and where the rule was written, delivered at the moment of the mistake. It still fired over a hundred times against the same person, who read it and complied every time.
-
-A top-of-ladder guard firing constantly is not under-promoted; its enforcement point sits downstream of the decision. The refusal arrives after the command is composed, too late to touch the habit that composed it. Each firing converts one attempt, and a hundred blocks do nothing to make the hundred-and-first less likely. The diagnosis is not "the rule isn't clear enough" - clarity was never the problem - and the fire count is the only route to it, since the transcript of any single blocked attempt looks like success.
-
-A fourth case: **correct but firing on an exempt case**. A guard can do exactly what it was built to do and still be wrong in an instance, when the rule carries a semantic exemption the lexical guard cannot see. The measured instance: a guard forbidding exact counts in documentation, whose rule already exempts a count that is itself the evidence for a claim, fired on a mutation-testing result where the number of failing cases was the cited proof. The cost is not the block but that the writer rephrases real evidence into vaguer prose to get past it, degrading the artefact the guard protects. Neither weaken nor retire the guard; give it an explicit escape marker the writer applies on purpose, leaving a trace in the text for reviewers. A lexical guard enforcing a semantic rule always has some exempt-case rate, and without a sanctioned way to declare the exemption the pressure degrades the content.
-
-A fifth case mirrors Silent, and is the more common failure for status and health checks than for write-blocking guards: **reporting unhealthy against a system that is actually fine.** Before shipping a health or status check, write down what it should report against a known-healthy system, run it against one, and confirm. A container-update health check flagged every one of several healthy containers as stale because it checked the image's `Created` date, which answers "when was this image built," not "did the last update job run." It was internally consistent and wrong, and every false alarm trained its reader to expect noise, the same trust-destroying end state as a guard that never fires, from the opposite direction.
+The Dominant case is easy to misread, so here is a worked example. In one measured month a single top-of-ladder guard accounted for over two thirds of all blocks. It refused outright with a good message naming the correct alternative, and still fired over a hundred times against the same person, who complied every time. That is not under-promotion: the guard's enforcement point sits downstream of the decision, so the refusal arrives after the command is composed, too late to touch the habit that composed it, and a hundred blocks do not make the hundred-and-first less likely. The diagnosis is not "the rule isn't clear enough", and the fire count is the only route to it, since the transcript of any single blocked attempt looks like success.
 
 As a protocol: log every fire with its verdict. Review the fire distribution on a cadence, since a dominant guard reads as the system working and nobody thinks to look. Triage each guard into the cases above. Trigger every silent guard once before deciding anything; one that cannot be triggered is already retired in practice. For a dominant guard change what's upstream, never the guard, because weakening a guard for firing too often is backwards. And record the retirement decision somewhere revisitable, since a close call left as a completed action is never reconsidered.
 
@@ -252,12 +248,6 @@ Evidence: a docs update and an allowlist entry written in the same commit descri
 
 ---
 
-## Hooks Worth Having
-
-The recipes - write guard, budget monitor, file size guard, lesson detector, compact counter, session auto-title, PreCompact and SessionStart hooks, feedback folder enforcer, hook registration parity check - moved to `docs/09-hooks-recipes.md` to keep this file about the mechanics rather than a library of scripts.
-
----
-
 ## The Append-Only Log Pattern
 
 Several hooks in `docs/09-hooks-recipes.md` write to log files; the pattern applies to anything you want to audit over time.
@@ -276,9 +266,10 @@ One line appended per event; no truncation, no rotation (or slow rotation after 
 
 **Analysis tools:** simple Python scripts can generate monthly summaries, burn-rate graphs and skill usage rankings for the Question/Delete pass. Optional, but the data is worthless if you never look.
 
-**A blind spot:** blocking hooks (exit 2 + stderr message) are the one type this pattern tends to miss. A block's reason is visible in that session's transcript, but if nothing writes the event to a log it leaves no trail afterwards. That matters because a hook firing repeatedly on the same pattern is a signal, not a mechanism: the underlying default behavior is wrong and should be fixed at the source (the instruction, skill or process doc steering Claude wrong). Without a log "repeatedly" is unmeasurable. Have a blocking guard append one line to a violations log before it exits, in the same code path as the block, to close the loop between "the hook caught something" and "was this the third time this month."
+Blocking guards belong in this pattern too; the prerequisite is stated under [Retiring a Guard, and Reading a Fire Rate](#retiring-a-guard-and-reading-a-fire-rate).
 
 ---
+
 
 ## Two Ways a Guard Gets Walked Around Without Anybody Noticing
 
@@ -369,42 +360,8 @@ Git hooks differ. They work under WSL, but a Windows git client that shells out 
 
 On Windows: write git hooks (`.git/hooks/`) as `.ps1` or `.bat` scripts. Claude Code hooks (`.claude/settings.json`) can stay bash.
 
-Note: `hooks/pre-commit` and `hooks/commit-msg` in this repo (below) are POSIX `sh`, the exception warned about above: they only run for commits through Git Bash, never a GUI client's own commit flow. If you commit through a Windows GUI client, port them to `.ps1`/`.bat` first.
+Note: `hooks/pre-commit` and `hooks/commit-msg` in this repo (see [Part 10](10-privacy-hooks-public-repo.md)) are POSIX `sh`, the exception warned about above: they only run for commits through Git Bash, never a GUI client's own commit flow. If you commit through a Windows GUI client, port them to `.ps1`/`.bat` first.
 
-## Privacy Guard Git Hooks (`hooks/`)
+## Privacy Guard Git Hooks
 
-This repo ships two tracked git hooks - `hooks/pre-commit` and `hooks/commit-msg` - that block a commit whose staged content or message references a private sibling repo. `.git/hooks/` is never tracked by git, so a fresh clone has neither installed until you run:
-
-```
-sh hooks/install.sh
-```
-
-Neither hook hardcodes any repo name or path, which keeps it safe in a public repo. Each derives its blocklist at runtime by globbing the parent of this repo for `.private-root` marker files: a sibling repo opts in by dropping a `.private-root` file at its root, optionally with a repo-relative subfolder name (e.g. a feedback or notes folder) as its first non-comment line. The token list is the private repo's directory name plus that subfolder's first path component, generated fresh on every commit from whatever markers exist on the machine. See `guard.py`'s `.private-root` handling for the same convention at Claude Code write-time.
-
-**A privacy guard must report WHERE, never WHAT.** Easy to get wrong and hard to notice, because the wrong version looks more helpful. A hook that finds a private token and echoes the matching line has printed it into the terminal, any CI log that captured the run, and the transcript of any assistant committing on your behalf, a wider audience than the commit it blocked. So the pre-commit hook prints file names and the commit-msg hook prints line numbers; neither prints the match. A location is enough to act on and costs nothing if it leaks.
-
-The general form applies to any check over sensitive data: **a rule that names the thing it protects instantiates the leak it exists to prevent.** The public copy of a privacy rule says "no private repo names"; the private copy is where the names live. The same split applies to the guard's own output.
-
-This survived a review. The two hooks were written in one sitting from one template, the pre-commit one carrying a comment explaining why it withholds the match, and the commit-msg one printing `grep -n` output directly beneath. A rationale in a comment does not propagate to the sibling file, and a reviewer who just read the good version is least likely to notice the bad one. **When one of a pair implements a safety rule, check the other for that rule specifically, by name, rather than reading it for general correctness.**
-
-### The generic layer: `hooks/privacy-scan.sh`
-
-The marker mechanism protects only against names of sibling repos and does nothing on a machine with no marker. A second layer, `hooks/privacy-scan.sh`, runs first in both hooks and fails closed on shapes that identify a machine or person: absolute user paths, email addresses, IPv4 addresses and internal hostnames (placeholder forms such as a user called `name`, `noreply@` addresses and documentation IP ranges are allowed). It also reads `private-terms.txt` inside your own `.git/` directory, one case-insensitive term per line, for names, employer, products and internal systems; that file is never tracked, so the terms are never published. Like the marker layer it reports file and line, never the match. `sh hooks/privacy-scan.sh tree` scans every non-ignored file, tracked or not, which covers the gap that a hook sees only staged content. `tools/selftest_privacy.sh` holds positive and negative controls and checks that installed hooks equal the tracked ones; `tools/selftest.sh` runs both. History, `--no-verify` and non-git writes are not covered, so the periodic whole-tree scan remains required.
-
-### This section is also a live installation
-
-Both hooks are installed and active in this repo, not merely documented. Worth copying: a repo that publishes advice is the cheapest test bed for it, and the only one where drift between advice and practice is visible for free. The commit-msg leak above was found because the hook was a live thing to inspect, not a snippet in a code fence; a snippet nobody runs is never wrong, which is the problem with it.
-
-The discipline is small. When you document a practice here, ask whether this repo could adopt it, and if so adopt it in the same change. When it cannot (it needs a private workspace, a paid service, or a codebase this one lacks), say so in the text, so a reader can tell advice under test from advice merely written down. An unmarked claim reads as tested.
-
----
-
-## Before Renaming Any Tracked File
-
-A rename that updates every path reference can still silently delete an enforcement mechanism.
-
-A privacy blocklist, lint rule, commit-message scanner or hook matcher can key on the **bare name as a string**. Rename the file, update every path, and nothing breaks visibly because nothing pointed at the path. The guard is gone, and stays gone because its absence produces no error.
-
-**Before renaming anything tracked, grep for the bare name as a string, not only as a path.** If it appears inside a matcher, do not rename it; split the file by concern, leaving the original name attached to whatever the matcher protects.
-
-Renaming to a clearer, more generic name is the worst move: it usually makes the guard unrecoverable, since a generic name cannot be blocklisted without false positives.
+This repo ships tracked `pre-commit` and `commit-msg` git hooks, plus a generic scanner, that block a commit carrying private names, paths or personal identifiers; they report where, never what. They are git hooks, not Claude Code hooks, and are covered in [Part 10](10-privacy-hooks-public-repo.md).

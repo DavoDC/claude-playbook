@@ -56,7 +56,7 @@ When a task is done: remove it from pending-actions.md, add a dated entry to com
 
 ### Close Every Backlog Pass by Re-Ranking It
 
-Adding items to a backlog is easy and everybody does it. Re-ranking is rare, and it is where the value is - a ranking made under no constraint is mostly an artefact of the order things were found in. The re-ranking discipline (apply one extreme lens to the LIST, write down what moved) is specified in `templates/BACKLOG-SPEC.md`; the lens comes from [Part 11](11-audit-lenses.md).
+Adding items to a backlog is easy and everybody does it. Re-ranking is rare, and it is where the value is. The re-ranking discipline (apply one extreme lens to the LIST, write down what moved) is specified in `templates/BACKLOG-SPEC.md`; the lens comes from [Part 12](12-audit-lenses.md).
 
 That periodic pass catches gradual drift. A sharper trigger needs its own check: **when a new capability lands - a tool, a permission, an integration, anything that removes a constraint that used to be true - re-check which plan steps were ordered that way only because of the constraint that just disappeared.** An ordering written under an old constraint keeps being followed after it stops being true, because nothing forces a re-read of the reasoning behind a step already scoped correctly at the time. One plan ordered "search after OCR" because the records weren't machine-readable yet; an unrelated tool made many of them machine-readable as a side effect, and the ordering was obeyed anyway until someone re-checked it. Treat a landed capability as a prompt to re-open every item whose ordering depended on its absence, not just a green light for whatever it directly unblocks.
 

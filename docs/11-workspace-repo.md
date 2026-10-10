@@ -1,4 +1,4 @@
-# Part 10: The Workspace Repo
+# Part 11: The Workspace Repo
 
 > **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
@@ -91,21 +91,11 @@ Over time, the workspace becomes a detailed model of how you work. Not because o
 ## What NOT to Put Here
 
 - **Project-specific code or context** - that goes in the project repo
-- **Secrets, API keys, passwords** - use a secrets manager; keep them out of git
+- **Secrets, API keys, passwords** - use a secrets manager; keep them out of git (if one gets in anyway, see [Part 10](10-privacy-hooks-public-repo.md))
 - **Private names, personal data** - if you ever make the workspace public, this is a liability
 - **Temporary scratch files** - use a `TEMP/` folder with delete-after markers, not the main memory structure
 
 Scratch belongs in exactly one of two tiers, with nothing in between: a stable location for anything durable, and a clearly temporary one for work in progress - never a temporary folder used to "graduate" files out of once they prove useful. A durable artifact should be born where it belongs, not written into scratch and moved later; the middle tier is where files outlive their real lifetime, because nothing forces the graduation to happen. And a scratch file's delete-after condition must be phrased as a test still to be run, never a claim already settled: "the rotation has been completed" is indistinguishable, to whoever next scans the scratch list, from an assertion that it was, and that phrasing alone once nearly got a file deleted whose work was still open. Write it as a check against a named source of truth - "delete after `<progress file>` shows stage N closed" - so the condition is something to go answer.
-
----
-
-## Secrets That Get Into Git Anyway
-
-Keeping secrets out of git (above) is the design-time rule. Two things go wrong even when you follow it.
-
-**An exact-path gitignore rule protects the file, not the secret.** `config/config.json` in `.gitignore` stops that one file from being staged, but not a copy - and a copy is exactly what a credential rotation or migration produces, as a `.bak`, a suffixed backup, or an editor copy. The copy usually holds the fresher secret and sails past the rule. Write ignore rules for anything holding a live credential as a glob (`config.json*`, not `config.json`), and verify coverage with `git check-ignore -v <path>` rather than assuming; a rule that looks right and one that matches diverge most during rotations and migrations, when the copied file is most valuable.
-
-**A history rewrite that verifies clean is not necessarily finished.** `git filter-repo` (or `filter-branch`) plus a force push removes the offending commits from the remote, but not the local objects - anything named by a reflog entry stays reachable, and the default expiry holds entries for months. Worse, a GUI git client syncing in the background can fetch in the gap between the rewrite and the push, pull the un-rewritten history back from the not-yet-updated remote, and silently restore the removed objects - `git fsck --unreachable` will not catch this, because it respects reflogs. Treat the rewrite as finished only after: push, then `git reflog expire --expire=now --expire-unreachable=now --all`, then `git gc --prune=now`. Check with `du -sh .git` or `git count-objects -vH` before and after. Avoid touching a background-syncing GUI client in the gap, or push promptly enough to close it.
 
 ---
 
@@ -140,13 +130,3 @@ This is the unsexy reason the workspace-repo pattern is non-negotiable: without 
 Push the workspace repo to GitHub, but **set it to private**. The content that accumulates here is not suited for a public repo - session history mentions what you worked on, feedback files document your specific failure modes, memory files contain personal context and preferences. Even things that seem innocuous (project names, internal tooling, working patterns) add up over time into a detailed picture you probably don't want public.
 
 Private GitHub gives you all the sync benefits without the exposure risk. If you want to share your skills or config templates with others, the pattern for that is a separate public repo - exactly what this playbook is.
-
----
-
-## Publishing Is Not Distribution
-
-Making a repo public, adding a donation badge, writing a licence, or cutting a release changes who is *allowed* to find your work, not whether anyone *does*. Publishing is uniquely seductive to track as progress: it is legible, within your control, and tickable in one sitting. A distribution act - a post, an announcement, actually asking someone to look - is uncomfortable in exactly the ways publishing is not: it involves a stranger, it can be ignored, and it produces a number you might not like. So a plan quietly refills with the comfortable half indefinitely.
-
-This survives any amount of diligence on the publishing side. A checklist can be fully complete - licence added, README written, hardcoded paths removed, repo flipped public - and still not have told a single human the thing exists. Every task changes the artifact; none reaches a person. A completed publishing checklist reads like progress toward an audience while being, by construction, orthogonal to one.
-
-Before adding a publishing task to a plan, ask what distribution act it is a precondition for, and schedule that act in the same breath. A licence with no announcement behind it is not a step toward reach. If a reach goal has been open a long stretch with nothing to show, do not conclude more supply is needed - check first whether any distribution act has ever been performed. Publishing tasks are portfolio hygiene: worth doing, never worth counting as progress toward an audience.

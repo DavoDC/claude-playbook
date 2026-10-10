@@ -98,7 +98,7 @@ The approach: a `memory/` folder inside a git-tracked repo. Markdown files, comm
 
 **Feedback** - corrections and confirmations of approach. These are the improvement loop in persistent form. Lead with the rule, then a Why line (the reason, often a past incident), then a How to apply line (when this fires). The Why line is what lets you judge edge cases - "don't mock the database in tests" + "we got burned when mocked tests passed but prod migration failed" gives you the context to decide whether mocking is OK in a new situation.
 
-**Project** - who is doing what, why, by when. Convert relative dates to absolute dates when saving ("Thursday" -> "2026-05-29") so they remain interpretable later. Lead with the fact, then Why (motivation) and How to apply (how it shapes suggestions).
+**Project** - who is doing what, why, by when. Convert relative dates to absolute dates when saving ("next Thursday" becomes the calendar date) so they remain interpretable later. Lead with the fact, then Why (motivation) and How to apply (how it shapes suggestions).
 
 **Reference** - where to find things: ticket tracker project names, dashboards, credential locations.
 
@@ -141,17 +141,6 @@ When Claude reads a file, the content goes into its context window. If you then 
 
 The fix: **Tell Claude when you've manually edited a file.** "I just edited `main.py` manually - please re-read it before making any changes." That forces a fresh Read from disk instead of the stale context copy. If Claude undoes your edits, it used its context memory; tell it to re-read.
 
-### Python Is a Good Language Choice for Claude
-
-When you're building a new tool and have language flexibility, Python is the best choice for Claude-assisted development:
-
-- No compilation step - Claude runs, tests, and iterates in seconds
-- Readable output that Claude can parse and reason about
-- Vast standard library coverage means fewer dependencies to manage
-- Error messages are explicit and Claude handles them well
-
-For scripts, utilities, and automation tools, default to Python. Compiled languages (C++, Java, C#) work, but Claude waits for compilation between every change and build errors are harder to diagnose than runtime errors.
-
 ### Claude Isn't Aware of Its Own Features
 
 Claude Code has many features - hooks, MCP servers, custom slash commands, statusline config, remote control, thinking modes - but Claude doesn't know what it can configure unless you tell it.
@@ -162,4 +151,4 @@ A practical fix: clone the docs locally so the whole corpus is greppable in one 
 git clone https://github.com/ericbuess/claude-code-docs
 ```
 
-See `docs/10-workspace-repo.md` for where this clone should live and why. Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.
+See `docs/11-workspace-repo.md` for where this clone should live and why. Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.

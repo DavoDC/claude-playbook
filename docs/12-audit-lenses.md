@@ -1,4 +1,4 @@
-# Part 11: Audit Lenses
+# Part 12: Audit Lenses
 
 > **Field note.** Written from practice rather than machine-checked. Last reviewed 2026-08-02.
 
@@ -77,6 +77,54 @@ A winner decided is not a decision recorded. When the sweep concludes one design
 
 **Before a shared-risk operation with many consumers, build the consumer list from live state rather than from documentation, and gate the change one consumer at a time.** Documentation of dependents drifts the moment a new one is wired up, so a plan built from it routes around the consumers nobody wrote down. Enumerate from the running configuration, baseline a verification check against current state, then act on one consumer, confirm the gate held, and move to the next. In one credential rotation, enumerating from live configuration surfaced several undocumented consumers and at least two integrations already broken independent of the rotation, both invisible to a documentation-based plan.
 
+## EXTREME lenses: forcing functions that re-rank
+
+**These do not find new defects. They REORDER the ones you already have, and that is a different and often larger win.**
+
+The generators above answer "is there a defect here". These answer "given everything I know, what actually matters", by imposing a constraint severe enough that the honest answer changes. A backlog is a ranking, and **a ranking made under no constraint is mostly an artefact of the order things were found in.**
+
+### Why this class is worth having
+
+A backlog already tiered by value across many audit rounds can still be wrong. Asking one extreme question, *what would you fix if you could never touch this repo again*, can promote a bottom-tier item to first place: an item whose failure mode is silent, irreversible loss of a person's own work, with no trace and no confirmation. Under the question "how valuable is this" it reads as polish; under "what is unrecoverable" it is the most important item in the repo. **Nothing is learned about the code. The ranking was simply wrong, and one sentence fixes it.**
+
+### How to use them
+
+Pick one. Apply it to the **whole backlog** rather than to the source. Write down what moved.
+
+If nothing moves, the ranking was already sound and that is a real result worth recording, not a failed pass.
+
+**Do not run more than two per pass.** Their value is in forcing a hard choice, and a pass that runs eight of them is back to unconstrained listing.
+
+**One caution before you use these in company.** Several of these framings sharpen your own judgement and read badly in a shared artefact. "Imagine we can never change this again" or "what would we regret shipping" in a pull request comment reads as catastrophising rather than as analysis. Use them to arrive at the finding, then state the finding neutrally.
+
+### The lenses
+
+| Lens | The constraint | Why it re-ranks | Status |
+|---|---|---|---|
+| **Irreversibility** | *If we could never change this file again, what MUST be fixed now?* | Ranks by consequence rather than by count or by ease. The default for anything heading to wide release, an upstream merge or an ownership transfer. | Validated repeatedly |
+| **Code frozen, docs open** | *The code is frozen. The documentation is not. What must the docs now SAY?* | The sharpest of the class, because it partitions the backlog cleanly. Anything a user can route around once TOLD becomes a documentation task, and only what destroys something before they can be told stays a code task. It also converts an undocumented destructive flag from a polish item into the last line of defence. | Validated |
+| **Blast radius already spent** | *This defect has been live for a year. How many records are ALREADY wrong?* | Converts a code question into a corpus measurement, and the number usually decides the priority by itself. **A defect with a blast radius of zero can wait however ugly the code is; one with hundreds of affected records cannot, and reading the code tells you neither.** | Validated |
+| **Assume every green is a false green** | *Every passing test and every clean measurement is lying. Prove one isn't.* | Inverts the burden of proof onto the instrument. Typical finds: a test asserting via the very helper it was testing, a probe truthiness-testing a tuple, a probe bypassing the test package's dependency stand-ins, and a claim built on console output mistaken for a log file. | Validated |
+| **The environment you cannot test** | *This code only ever runs somewhere you have no access to. What does your suite actually prove?* | Any dependency faked locally makes local tests evidence about the fake. A destructive decision behind a faked parser is validated nowhere. Forces guards to be expressed in terms the local environment CAN exercise. | Validated |
+| **Hostile input, informed attacker** | *Assume every externally-supplied string was chosen by someone who has read your source.* | Narrower and more productive than a generic security pass, because it starts from the real list of externally-controlled values rather than from a threat catalogue. Attachment filenames chosen by an outside party turn a byte-versus-character length cap from a curiosity into a real data-loss defect. | Validated |
+| **One commit only** | *You get exactly ONE commit, then the repo closes. Which?* | Forces a single choice where a tier list lets you defer. What you pick reveals what you actually believe, and the gap between it and your current top item is the size of the ranking error. | Untried |
+| **Delete it, do not fix it** | *This subsystem must be REMOVED, not repaired. What breaks, and who complains?* | The engineering algorithm's Delete step as an audit lens. Answers whether a feature earns its keep, and exposes coupling no correctness pass surfaces. Cheapest possible outcome, because a deleted subsystem needs no further audit ever. | Untried |
+| **Total context loss** | *You vanish tonight. Someone inherits this with no history, no backlog and no access to you.* | Distinct from "the team inheriting it" on the people axis, which assumes a handover. This assumes none, so it targets what is UNDISCOVERABLE rather than what is undocumented: reasoning that exists only in a commit message, a constant whose basis was measured and never written down, a workaround whose deletion looks like a cleanup. | Untried |
+| **The source is gone** | *The upstream this mirrors no longer exists. The local copy is all there is.* | For any tool that syncs, caches or mirrors, this flips which side is authoritative and re-ranks every "we can just re-fetch" dismissal. Several deletions judged safe BECAUSE the data is regenerable stop being safe the moment the source is deleted upstream, which for a mirror is a normal event rather than a catastrophe. | Untried |
+| **The rushed expert** | *Not a first-time user. A competent one, in a hurry, on the worst day, who reaches for the override flag.* | The people axis tends to imagine the careful newcomer, who reads warnings. The person who actually loses data is the one who knows enough to pass the force flag and not enough to know what it skips. Ranks destructive-flag ergonomics above first-run ergonomics. | Untried |
+
+### The pattern that generates more of these
+
+Take any comfortable assumption the backlog rests on and **negate it absolutely, not partially.**
+
+- "We can fix it later" becomes never.
+- "We can re-fetch it" becomes the source is gone.
+- "The tests pass" becomes every green is false.
+- "A user will read the warning" becomes they are in a hurry and already typed the flag.
+- "Someone will explain this" becomes there is nobody left to ask.
+
+**A partial negation ("what if the source were slow") changes nothing. A total one ("what if the source were gone") changes the order.** That is the whole trick, and it is why these are worth writing down separately from the finding lenses.
+
 ## Operate the tool, do not read it
 
 **If the thing runs, run it before you read it.** This is the first lens to reach for on anything with an executable form, and it is not the same activity as imagining a user.
@@ -100,7 +148,7 @@ The two invalid instruments above are both about the thing being measured: the w
 
 The instrument that needs checking first is usually the one you wrote thirty seconds ago. A composed shell probe reports on its LAST component, not on the thing you meant to measure: pipe, wrap, background or substitute a command and the status you read belongs to the wrapper. The number is real, plausible and about the wrong subject, which is the profile of a finding that survives review. Nobody validates a one-liner.
 
-In one case, a check of whether a tool exits non-zero on bad input was written as the command piped into a truncating reader followed by an exit-code read. The status was the reader's, always success, so the tool was recorded as exiting clean on an input it had correctly rejected. The wrong conclusion was nearly published.
+A check of whether a tool exits non-zero on bad input, written as the command piped into a truncating reader followed by an exit-code read, reports the reader's status (always success) and records the tool as exiting clean on an input it correctly rejected.
 
 Two cheap rules. **One property per invocation**, nothing composed around it: run once with output discarded to read a status, again to read output. And **show the probe can return both answers before believing either**: point it at a case that must pass and one that must fail. A probe that has only ever produced one value has not been shown to measure anything, just as a test that has never failed has not been shown to assert anything.
 
@@ -156,7 +204,11 @@ Two acceptable shapes. Derive each worker's exclusion list independently and acc
 
 The same applies to asking a second worker to check a first worker's output under the same brief. Independence is a property of the inputs, not of the process count.
 
-## Four input states that masquerade as results
+## When a Measurement Looks Like a Result and Is Not
+
+A tool or signal can emit something shaped exactly like a measurement while having measured nothing. Four families, in the order they are usually met: the log a tool reads can be in a state that yields a plausible number, a success signal can mean only that a request was accepted, a tool's exit code can collapse "unhealthy" into "could not measure", and the layer that renders a measurement can discard a correct diagnosis.
+
+### Four input states that masquerade as results
 
 Any tool that measures by reading logs has an unchecked contract with them. It is tested against inputs its author constructed, which the author's assumptions held for. The failure is not a crash (a good outcome); each wrong-input state produces output that looks like a result, sometimes an interesting one, which is worse than looking clean because someone acts on it.
 
@@ -182,7 +234,7 @@ Two more states. **TRUNCATED**: the log rotated or was capped, so the window hol
 
 **A list of things a human chose to block is not a list of things that are malicious.** Before turning a "blocked senders", "denied hosts" or similar human-curated rejection list into training data or a classifier rule, split it into structural-spam entries and real preference entries. "Blocked" records a convenience decision, not a malice verdict. One exported block list mixed many disposable-subdomain spam entries with real retail and brand domains the owner blocked purely because they did not want that mail; a classifier trained on it would have flagged legitimate senders as threats.
 
-## A success signal proves acceptance, never effect
+### A success signal proves acceptance, never effect
 
 A 2xx response, a zero exit code, a green interface state or an enabled toggle all answer only "was the request accepted?", not whether the effect happened. This is distinct from the input states above and shows up well outside tooling.
 
@@ -195,9 +247,8 @@ Four shapes:
 
 The common fix: find the independent artifact the effect should have produced - the row that should exist, the file that should be newer, the log line the vendor's own process writes - and check that instead of, or in addition to, the surface signal.
 
-**A staged-rollout gate has its own version: writing it as elapsed time rather than as the observation being waited for.** "Wait 24 hours" is a proxy for "enough time for the real signal to arrive" and fails silently both ways, idling after the evidence arrived or moving on before it has. Write the gate as the thing itself - the log line, the metric crossing, the report landing. A duration is satisfied by the calendar, not produced by the system being watched. In one case the confirming evidence arrived within an hour; a 24-hour gate would have idled the other twenty-three for a reason unrelated to risk.
-
-## Three outcomes need three exit states
+**A staged-rollout gate has its own version: writing it as elapsed time rather than as the observation being waited for.** "Wait 24 hours" is a proxy for "enough time for the real signal to arrive" and fails silently both ways, idling after the evidence arrived or moving on before it has. Write the gate as the thing itself - the log line, the metric crossing, the report landing. A duration is satisfied by the calendar, not produced by the system being watched.
+### Three outcomes need three exit states
 
 A measurement tool (the duplication check, a coverage scan, any input-state guard above) has three outcomes needing different responses: measured and healthy (no action); measured and unhealthy (a real defect in the system under test); could not measure (absent log, saturated result, near-zero yield - investigate the instrument, not the system). Two exit codes collapse the last two into one non-zero exit, distinguishable only by reading the message.
 
@@ -207,11 +258,11 @@ Use a third exit state: 0 measured-and-clean, 1 measured-with-findings, 2 could-
 
 Counter-argument: exit 2 conventionally means "usage error" in some CLI traditions, a different meaning from "ran correctly but could not get a trustworthy read." Pick the mapping that suits the surrounding tooling, on purpose, and document it.
 
-### The layer above can throw away a correct diagnosis
+#### The layer above can throw away a correct diagnosis
 
 The harder version is when the tool gets it right and the layer consuming it destroys the distinction.
 
-A status reporter built its line by running a budget checker and extracting percentages from its output with pattern matches. The checker behaved perfectly: unable to read its data source, it said so in plain words with a specific reason. Those words contained no percentages, so every match returned empty, and the reporter interpolated empty strings into its template and exited zero: a well-formed status line with blank fields and a success code. A blank looks like an answer. Sessions carried on entirely unmeasured, and the fault was noticed only when a person said they had never got a reading.
+Take a status reporter that builds its line by running a budget checker and extracting percentages from the output with pattern matches. Unable to read its data source, the checker says so in plain words with a specific reason. Those words contain no percentages, so every match returns empty, and the reporter interpolates empty strings into its template and exits zero: a well-formed status line with blank fields and a success code. A blank looks like an answer, and sessions carry on entirely unmeasured.
 
 Three things generalise:
 
@@ -227,13 +278,13 @@ No round ever points anything at this, and it is high-yield ground.
 
 Run a log of the last week's commits with file statistics and treat the changed-file list as the audit scope rather than the whole repo. For each changed file, list its callers and its state dependents, then ask which of those were re-tested. The answer is usually none.
 
-**Hardening commits first.** Which recent commits were framed as fixes, guards, caps or safety, and what did each one break? A change framed as protective is the one whose author and reviewers are least likely to ask what it breaks, which makes hardening commits the highest-risk input to this subject rather than the safest. The worst defect in the case that produced this subject arrived inside a path-length hardening commit.
+**Hardening commits first.** Which recent commits were framed as fixes, guards, caps or safety, and what did each one break? A change framed as protective is the one whose author and reviewers are least likely to ask what it breaks, which makes hardening commits the highest-risk input to this subject rather than the safest.
 
-**Key-derivation changes are MIGRATIONS.** Did any recent change alter how a filename, slug, path or cache key is derived? If so, every record keyed by that value has forked, and the old records are still on disk under the old key. Grep the diff for changes to any sanitising, truncating or slugifying function, then ask what is keyed by its output. This one shape produced three separate defects in a single day across two tools.
+**Key-derivation changes are MIGRATIONS.** Did any recent change alter how a filename, slug, path or cache key is derived? If so, every record keyed by that value has forked, and the old records are still on disk under the old key. Grep the diff for changes to any sanitising, truncating or slugifying function, then ask what is keyed by its output.
 
 **A cache, allowlist or trust decision keyed more broadly than the evidence that earned it silently admits everything else under that key.** When evidence justifies trusting one address, file or exact string and the decision is stored under a broader key (a whole domain, a whole path prefix), ask what else that key now covers before shipping. The broadening is rarely deliberate, just the more convenient data structure. One endorsed-senders list keyed by domain rather than address accidentally endorsed several major public mail providers. Ask "does this key admit anything I did not mean to admit" when the key is chosen, not after the list is too large to audit.
 
-**Sweep merged pull requests for what they introduced.** Not a re-review of the author's judgement, a search for what got through. Read each pull request's own diff, never its description. For each behaviour added, ask what input class it now handles differently and whether that class previously worked. Across six merged pull requests this found one live regression no backlog held, and two more already fixed **after each had caused a real incident**. A fast-merged, clean-reviewed pull request can still ship data loss that only a real user finds.
+**Sweep merged pull requests for what they introduced.** Not a re-review of the author's judgement, a search for what got through. Read each pull request's own diff, never its description. For each behaviour added, ask what input class it now handles differently and whether that class previously worked. A fast-merged, clean-reviewed pull request can still ship data loss that only a real user finds.
 
 **Distinguish a new feature under-delivering from a regression before ranking either.** A new check that is imperfect leaves every non-matching case no worse off. A changed behaviour can make a working case fail. Ask whether the previous code handled the failing input correctly; if there was no check at all before, it is not a regression however ugly it looks.
 
@@ -242,6 +293,20 @@ Run a log of the last week's commits with file statistics and treat the changed-
 A file-by-file audit and a consequence-first audit find different defects, and the second finds the dangerous ones. Reading every function surfaces what is wrong with code that is present. It does not reliably surface what is wrong with code that is missing, because an absent guard has no line to land on. The worst defects in a workflow tool live in the composition: a protection applied on only one path, a value rebuilt between two steps, an argument omitted under a condition.
 
 Before an audit, write the two or three concrete bad outcomes in the user's terms (a wrong file moved, a wrong number believed, the job left half done) and file findings under those headings. Trace each outcome backwards through every branch that can reach it, including the branch where a protection is skipped because a condition was not met. Rank by consequence, not by how much code a finding touches, and run this pass separately from the file-by-file one. If the honest answer is that very little is at risk, say so plainly.
+
+## Composition Defects: Correct Parts, Wrong Whole
+
+A change assembled from independently written pieces can be made of entirely correct pieces and still be wrong, because the defect lives in the composition and every review looked at a part.
+
+Typical shape: a set of recommendations argues one point in its main framework section and again, independently, in a list of smaller standalone edits. The recipient applies both, correctly, since each reads as a distinct reasonable instruction, and the result is one chapter making the same argument twice, a few lines apart, in different words.
+
+No existing check catches it: a sentence-level duplication check sees two different sentences; a per-file review sees two coherent files; the recipient sees two reasonable instructions. The duplication exists only in the merged result, which nobody read as a whole.
+
+Two habits, one per side of the handover:
+- When handing over more than about three edits to one target, include a claim index: one line per distinct claim, naming which file argues it. It takes minutes and is the only artefact in which the merged result is legible before the merge.
+- After applying a multi-part change, read the result once as a reader, not as a diff. The diff shows two correct additions; the document shows the same paragraph twice.
+
+This reaches past documentation: whenever parts are reviewed independently and merged automatically, the merged artefact is unreviewed by construction - a pull request built from several branches, a configuration merged from layered files, a rule set assembled from several sources.
 
 ## How to walk a cell
 
@@ -262,7 +327,7 @@ Then **verify before acting**. Every report is a claim. Reproduce the consequent
 2. **Rank the candidates by expected yield, then say plainly which you are NOT applying and why.** A skipped lens with a reason is a decision. An unlisted lens is a blind spot.
 3. **One read-only agent per lens, in parallel.** A cheaper model does the reading; you keep the judgement, verify, fix and commit.
 4. **Give every agent the irreversibility framing.** "If we could never change this file again, what MUST be fixed now?" Ranks by consequence rather than by count.
-4b. **Close the pass by running ONE extreme lens over the resulting BACKLOG, not over the code.** See the next section. Cheapest step in the process and the only one that improves items you are not touching.
+4b. **Close the pass by running ONE extreme lens over the resulting BACKLOG, not over the code.** See "EXTREME lenses" above. Cheapest step in the process and the only one that improves items you are not touching.
 5. **Require agents to say plainly when a dimension is clean**, to cite file and line, and to prefer a cheap reproduction over a read-only inference.
 6. **Verify every finding before acting on it.**
 
@@ -273,15 +338,13 @@ Then **verify before acting**. Every report is a claim. Reproduce the consequent
 3. **Expect a verification failure rate and budget for it.** In one round, two of seven agent reports contained at least one claim that did not reproduce: a dead import that had two real uses, and a timing figure roughly double the measured value. Both were confidently stated with plausible evidence. **A report's own confidence carries no information about which of its claims will hold**, so the triage pass is part of the work rather than a formality.
 4. **Audit your own CAPTURE, as a separate step after the fixing.** One round's capture check found six findings that had been missed entirely, a better return than any single cell. Fixing is absorbing: items you act on get remembered and items you defer quietly evaporate into an agent report nobody reopens. Grep the backlog for a distinctive phrase from each finding rather than trusting recall.
 5. **Update the coverage grid before closing the pass**, from verified results rather than from intent.
-6. **Record a refuted hypothesis, not only a confirmed finding, before closing the pass.** A finding is written down because it gets fixed; an investigation that concluded "not true" usually leaves no trace, so the next pass forms the same hypothesis and pays the same cost to re-derive the same "no." A finding stops mattering once fixed, but a refutation stays true and keeps saving the investigation every round. Record one line per refutation: the hypothesis, how it was tested, what the test showed, and the date. The date matters because a refutation can expire when the code underneath changes; a dated one invites a re-test when it may have gone stale, an undated one is trusted past expiry or ignored. This complements the rule for untested capability limits - see [Part 14](14-verification-habits.md#re-test-inherited-constraints-before-planning-around-them) - which stops an untested guess hardening into fact; this stops a tested refutation evaporating unwritten.
+6. **Record a refuted hypothesis, not only a confirmed finding, before closing the pass.** A finding is written down because it gets fixed; an investigation that concluded "not true" usually leaves no trace, so the next pass forms the same hypothesis and pays the same cost to re-derive the same "no." A finding stops mattering once fixed, but a refutation stays true and keeps saving the investigation every round. Record one line per refutation: the hypothesis, how it was tested, what the test showed, and the date. The date matters because a refutation can expire when the code underneath changes; a dated one invites a re-test when it may have gone stale, an undated one is trusted past expiry or ignored. This complements the rule for untested capability limits - see [Part 15](15-verification-habits.md#re-test-inherited-constraints-before-planning-around-them) - which stops an untested guess hardening into fact; this stops a tested refutation evaporating unwritten.
 
 ## The prerequisite trap
 
-The reason this framework nearly never got built. A staged improvement step was handed to two consecutive sessions, each told in the opening instruction that it was non-negotiable and first. Both went straight to the fix list. It sat undone for three days while roughly twenty defects were fixed around it.
+A prerequisite that produces nothing the main work consumes will be skipped, however emphatically it is ordered first. The structural fix, and the self-contradiction to check for in your own instructions, are in [Part 2](02-improvement-loop.md#why-the-step-you-ordered-first-keeps-getting-skipped).
 
-**A prerequisite that produces nothing the main work consumes will be skipped, however emphatically it is ordered first.**
-
-The cause and fix are structural, not a firmer instruction: **make the main pass itself the experiment that validates the prerequisite**, so the artefact becomes the pass's closing step rather than its entry fee. Half the failure was a self-contradictory instruction: it asked for the coverage grid before the pass, when the process requires building it afterwards from verified results. The sessions that skipped it were half right.
+For an audit the prerequisite is the coverage grid: make the pass itself the experiment that validates it, so the grid becomes the pass's closing step, built from verified results, rather than its entry fee.
 
 ## Sharpening prompts, once you are inside a cell
 
@@ -304,55 +367,3 @@ Ask it of any pass that reports a large finding count. In one twenty-six-finding
 Reading and operating are not the same activity. This framework makes reading much better. It does not make reading sufficient.
 
 **Require every audit output to split its findings into those with a user-visible failure mode and those without.** It takes one line, it costs nothing, and it is the only thing standing between a finding count and an honest assessment of what the pass was worth.
-
-## EXTREME lenses: forcing functions that re-rank
-
-**These do not find new defects. They REORDER the ones you already have, and that is a different and often larger win.**
-
-Every lens above answers "is there a defect here". These answer "given everything I know, what actually matters", by imposing a constraint severe enough that the honest answer changes. A backlog is a ranking, and **a ranking made under no constraint is mostly an artefact of the order things were found in.**
-
-### The evidence this class is worth having
-
-Two tool backlogs held 180 open items between them, already tiered by value across nine prior audit rounds. Asking one extreme question, *what would you fix if you could never touch this repo again*, promoted a bottom-tier item to first place: an item whose failure mode was silent, irreversible loss of a person's own work, with no trace and no confirmation.
-
-It had been read past by nine rounds and correctly tiered as polish under the question "how valuable is this". Under the question "what is unrecoverable" it is the single most important item in either repo.
-
-**Nothing was learned about the code. The ranking was simply wrong, and one sentence fixed it.**
-
-### How to use them
-
-Pick one. Apply it to the **whole backlog** rather than to the source. Write down what moved.
-
-If nothing moves, the ranking was already sound and that is a real result worth recording, not a failed pass.
-
-**Do not run more than two per pass.** Their value is in forcing a hard choice, and a pass that runs eight of them is back to unconstrained listing.
-
-**One caution before you use these in company.** Several of these framings sharpen your own judgement and read badly in a shared artefact. "Imagine we can never change this again" or "what would we regret shipping" in a pull request comment reads as catastrophising rather than as analysis. Use them to arrive at the finding, then state the finding neutrally.
-
-### The lenses
-
-| Lens | The constraint | Why it re-ranks | Status |
-|---|---|---|---|
-| **Irreversibility** | *If we could never change this file again, what MUST be fixed now?* | Ranks by consequence rather than by count or by ease. The default for anything heading to wide release, an upstream merge or an ownership transfer. | Validated repeatedly |
-| **Code frozen, docs open** | *The code is frozen. The documentation is not. What must the docs now SAY?* | The sharpest of the class, because it partitions the backlog cleanly. Anything a user can route around once TOLD becomes a documentation task, and only what destroys something before they can be told stays a code task. It also converts an undocumented destructive flag from a polish item into the last line of defence. | Validated, produced the promotion described above |
-| **Blast radius already spent** | *This defect has been live for a year. How many records are ALREADY wrong?* | Converts a code question into a corpus measurement, and the number usually decides the priority by itself. Measured instances: 300 files carrying an unmarked section, 43 forked records, 57 drifted filenames, 520 stranded entries. **A defect with a blast radius of zero can wait however ugly the code is; one with 300 cannot, and reading the code tells you neither.** | Validated |
-| **Assume every green is a false green** | *Every passing test and every clean measurement is lying. Prove one isn't.* | Inverts the burden of proof onto the instrument. One session produced four instances: a test asserting via the very helper it was testing, a probe truthiness-testing a tuple, a probe bypassing the test package's dependency stand-ins, and a claim built on console output mistaken for a log file. | Validated |
-| **The environment you cannot test** | *This code only ever runs somewhere you have no access to. What does your suite actually prove?* | Any dependency faked locally makes local tests evidence about the fake. A destructive decision behind a faked parser is validated nowhere. Forces guards to be expressed in terms the local environment CAN exercise. | Validated, changed a guard's implementation |
-| **Hostile input, informed attacker** | *Assume every externally-supplied string was chosen by someone who has read your source.* | Narrower and more productive than a generic security pass, because it starts from the real list of externally-controlled values rather than from a threat catalogue. Attachment filenames chosen by an outside party is not hypothetical, and it is what turned a byte-versus-character length cap from a curiosity into a real data-loss defect. | Validated |
-| **One commit only** | *You get exactly ONE commit, then the repo closes. Which?* | Forces a single choice where a tier list lets you defer. What you pick reveals what you actually believe, and the gap between it and your current top item is the size of the ranking error. | Untried |
-| **Delete it, do not fix it** | *This subsystem must be REMOVED, not repaired. What breaks, and who complains?* | The engineering algorithm's Delete step as an audit lens. Answers whether a feature earns its keep, and exposes coupling no correctness pass surfaces. Cheapest possible outcome, because a deleted subsystem needs no further audit ever. | Untried |
-| **Total context loss** | *You vanish tonight. Someone inherits this with no history, no backlog and no access to you.* | Distinct from "the team inheriting it" on the people axis, which assumes a handover. This assumes none, so it targets what is UNDISCOVERABLE rather than what is undocumented: reasoning that exists only in a commit message, a constant whose basis was measured and never written down, a workaround whose deletion looks like a cleanup. | Untried |
-| **The source is gone** | *The upstream this mirrors no longer exists. The local copy is all there is.* | For any tool that syncs, caches or mirrors, this flips which side is authoritative and re-ranks every "we can just re-fetch" dismissal. Several deletions judged safe BECAUSE the data is regenerable stop being safe the moment the source is deleted upstream, which for a mirror is a normal event rather than a catastrophe. | Untried |
-| **The rushed expert** | *Not a first-time user. A competent one, in a hurry, on the worst day, who reaches for the override flag.* | The people axis tends to imagine the careful newcomer, who reads warnings. The person who actually loses data is the one who knows enough to pass the force flag and not enough to know what it skips. Ranks destructive-flag ergonomics above first-run ergonomics. | Untried |
-
-### The pattern that generates more of these
-
-Take any comfortable assumption the backlog rests on and **negate it absolutely, not partially.**
-
-- "We can fix it later" becomes never.
-- "We can re-fetch it" becomes the source is gone.
-- "The tests pass" becomes every green is false.
-- "A user will read the warning" becomes they are in a hurry and already typed the flag.
-- "Someone will explain this" becomes there is nobody left to ask.
-
-**A partial negation ("what if the source were slow") changes nothing. A total one ("what if the source were gone") changes the order.** That is the whole trick, and it is why these are worth writing down separately from the finding lenses.

@@ -82,7 +82,7 @@ This keeps `/end-session` feeling instant while doing real work in the backgroun
 
 ### Why Committing Matters
 
-Every end-session produces several commits. This isn't bureaucracy - it's what makes the memory system work across machines and across weeks. If sessions aren't committed, the next session cold-starts with no context. Committed sessions mean Claude can read back months of what happened.
+Every end-session produces several commits. This isn't bureaucracy - it's what makes memory work across machines and weeks. Uncommitted sessions mean the next one cold-starts; committed ones let Claude read back months of history.
 
 ---
 
@@ -117,15 +117,15 @@ A memory that names a specific function, file, or flag is a claim that it existe
 
 ### Session History
 
-Every session gets a fragment written by `/end-session`. These are consolidated into `session-history.md` by the finalize script. This gives Claude a running history of what was done, what was learned, and what's pending. Claude reads this at session start to get context without you having to re-explain.
+Every session gets a fragment written by `/end-session`, consolidated into `session-history.md` by the finalize script. This gives Claude a running history of what was done, learned, and pending, read at session start so you don't re-explain.
 
 ### File Findings by Subject, Not by Run
 
-A test run, an experiment, or a debugging session tempts you to write a new dated file named after itself - `round-3-crash.md`, `test-round-4.md`. This does not scale, and it buries the durable lesson inside a narrative about one afternoon: by the tenth round you have ten files, and the rule that governs every future decision is sitting in whichever one happened to contain it.
+A test run, experiment, or debugging session tempts you to write a dated file named after itself - `round-3-crash.md`, `test-round-4.md`. This does not scale and buries the durable lesson in a narrative about one afternoon: by round ten you have ten files, and the rule governing every future decision sits in whichever one happened to contain it.
 
-The fix is three distinct kinds of document, not one file per event. A subject document answers "what do we know about X" - durable, named for the subject, and edited in place as understanding improves, not appended to chronologically. A single evidence log answers "what actually happened on each run" - one file, newest first, one section per run, preserving the concrete details verbatim. And the narrative - what happened this session and why it mattered - is session history itself, already covered above.
+Use three kinds of document instead. A subject document answers "what do we know about X" - durable, named for the subject, edited in place as understanding improves. A single evidence log answers "what happened on each run" - one file, newest first, one section per run, concrete details verbatim. The narrative of what happened this session is session history itself, covered above.
 
-The reason this split matters is that evidence and analysis want opposite treatment. Evidence is immutable and accumulates - never rewrite what a run actually returned. Analysis is mutable and consolidates - a rule refined on round four should overwrite round three's version of it, not sit beside it as a second opinion. Filing everything by run number forces both into the same append-only shape, which is right for the evidence and wrong for the rule. This mirrors the reasoning behind one-file-per-rule feedback files above: the unit of storage should be the thing that persists, not the event that produced it. Before creating a file named for a round, a date, or an attempt number, ask which existing subject document should absorb the finding instead - create a new file only when a genuinely new subject appears, not a new instance of an old one.
+Evidence and analysis want opposite treatment. Evidence is immutable and accumulates - never rewrite what a run returned. Analysis is mutable and consolidates - a rule refined on round four should overwrite round three's version, not sit beside it. Filing by run number forces both into one append-only shape, right for evidence and wrong for the rule. This mirrors one-file-per-rule feedback files: the unit of storage should be the thing that persists, not the event that produced it. Before creating a file named for a round, date, or attempt number, ask which existing subject document should absorb the finding; create a new file only for a genuinely new subject.
 
 ---
 
@@ -137,11 +137,9 @@ Reading a long task list and a long session history at the start of every sessio
 
 ### Manual Edits Getting Overwritten
 
-When Claude reads a file, the content goes into its context window. If you manually edit that file later and then ask Claude to modify it, Claude writes edits on top of what it remembers - not what's currently on disk. Your manual changes get overwritten.
+When Claude reads a file, the content goes into its context window. If you then edit that file manually and ask Claude to modify it, it writes on top of what it remembers, not what's on disk, and your changes get overwritten.
 
-The fix: **Tell Claude when you've manually edited a file.** "I just edited `main.py` manually - please re-read it before making any changes." That forces a fresh Read tool call from disk instead of using the stale context copy.
-
-If you notice Claude undoing your manual edits: it used its context memory. Tell it to re-read the file and it will see what you changed.
+The fix: **Tell Claude when you've manually edited a file.** "I just edited `main.py` manually - please re-read it before making any changes." That forces a fresh Read from disk instead of the stale context copy. If Claude undoes your edits, it used its context memory; tell it to re-read.
 
 ### Python Is a Good Language Choice for Claude
 
@@ -152,11 +150,11 @@ When you're building a new tool and have language flexibility, Python is the bes
 - Vast standard library coverage means fewer dependencies to manage
 - Error messages are explicit and Claude handles them well
 
-For scripts, utilities, and automation tools, default to Python. Compiled languages (C++, Java, C#) work but the build friction slows iteration significantly - Claude has to wait for compilation between every change, and build errors are harder to diagnose than runtime errors.
+For scripts, utilities, and automation tools, default to Python. Compiled languages (C++, Java, C#) work, but Claude waits for compilation between every change and build errors are harder to diagnose than runtime errors.
 
 ### Claude Isn't Aware of Its Own Features
 
-Claude Code has many features - hooks, MCP servers, custom slash commands, statusline config, remote control, thinking modes - but Claude has no awareness of them by default. Claude doesn't know what it can configure unless you tell it.
+Claude Code has many features - hooks, MCP servers, custom slash commands, statusline config, remote control, thinking modes - but Claude doesn't know what it can configure unless you tell it.
 
 A practical fix: clone the docs locally so the whole corpus is greppable in one command, rather than pointing Claude at individual pages:
 

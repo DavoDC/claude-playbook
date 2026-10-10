@@ -12,7 +12,7 @@ Runs before Claude edits or writes a file. Checks for:
 - Private paths that should never appear in public repos
 - Files that should never be edited (compiled binaries, lock files)
 
-This prevents a whole class of mistakes that CLAUDE.md instructions alone can't prevent. Claude might follow the instruction 99 times and slip on the 100th. A hook is unconditional.
+This prevents mistakes CLAUDE.md instructions alone can't: Claude might follow an instruction 99 times and slip on the 100th. A hook is unconditional.
 
 ```bash
 #!/bin/bash
@@ -37,7 +37,7 @@ exit 0
 
 ### Context Budget Monitor (PostToolUse)
 
-Checks token usage after tool calls. Warns when approaching 75% context. This prevents the worst case: Claude compacts mid-`/end-session` and loses the session record.
+Checks token usage after tool calls and warns approaching 75% context, preventing the worst case: compaction mid-`/end-session` losing the session record.
 
 ```bash
 #!/bin/bash
@@ -63,11 +63,11 @@ exit 0
 
 ### File Size Guard (PreToolUse on Edit/Write)
 
-Enforces line-count limits on configuration files before every edit. This is what makes the "keep CLAUDE.md under 150 lines" advice in Part 1 actually stick - without a hook, Claude will gradually bloat the file and forget it ever happened.
+Enforces line-count limits on configuration files before every edit, which makes the "keep CLAUDE.md under 150 lines" advice in Part 1 stick; without a hook Claude gradually bloats the file.
 
-Warn-only and block-only are both wrong on their own. A warn-only guard is easy to ignore repeatedly - the file quietly drifts past its target for weeks because nothing ever actually stops a write. A block-at-any-size guard is too rigid - it can reject the very edit that would legitimately grow the file, at the exact moment there's no room left to finish the thought before trimming. The fix is two thresholds per file: a soft cap that warns and a hard cap that blocks outright. Blocking only works if the hook runs on an event that fires before the write lands - a hard cap wired to an after-the-fact event silently degrades into a second warning while still reading like a block.
+Warn-only and block-only are both wrong alone. A warn-only guard is easy to ignore and the file drifts past target for weeks. A block-at-any-size guard is too rigid: it can reject the very edit that legitimately grows the file when there's no room to finish the thought before trimming. Use two thresholds per file: a soft cap that warns and a hard cap that blocks. Blocking only works on an event that fires before the write lands; a hard cap on an after-the-fact event degrades into a second warning that reads like a block.
 
-That's why this runs as `PreToolUse`, not `PostToolUse`. `PostToolUse` fires after the tool has already executed, so by the time it runs the write has already happened - exit code 2 there only surfaces stderr to Claude, it can't undo the write. `PreToolUse` fires before the write lands, which means the file on disk still holds the OLD content - re-reading it from disk would measure the wrong size. The hook has to compute the PROSPECTIVE size from the tool input instead: for `Write` that's the incoming `content`; for `Edit` it's the current on-disk content with `old_string` replaced by `new_string` (respecting `replace_all`). When the prospective size can't be determined - the file doesn't exist yet, `old_string` doesn't match, the payload is missing a field - the hook warns and allows rather than blocking, because a guard that blocks on its own confusion can lock a session out of the very edit that would fix the file.
+So this runs as `PreToolUse`, not `PostToolUse`, which fires after the write has happened (exit code 2 there only surfaces stderr to Claude, it can't undo the write). At `PreToolUse` the file on disk still holds the OLD content, so re-reading it measures the wrong size. The hook must compute the PROSPECTIVE size from the tool input: for `Write` the incoming `content`; for `Edit` the current on-disk content with `old_string` replaced by `new_string` (respecting `replace_all`). When the prospective size can't be determined (file doesn't exist yet, `old_string` doesn't match, a payload field is missing), warn and allow, because a guard that blocks on its own confusion can lock a session out of the very edit that would fix the file.
 
 ```python
 #!/usr/bin/env python3
@@ -186,11 +186,11 @@ Wire it up in `.claude/settings.json`:
 ]
 ```
 
-The soft cap gives Claude a chance to trim proactively while there's still room to do it in the same edit. The hard cap is the backstop a warning alone can't provide - because it runs on `PreToolUse`, `exit 2` actually stops the write before it lands, instead of just leaving a note after the fact. A warning that fires every time and never actually stops anything eventually gets ignored like any other repeated notice that has no teeth.
+The soft cap lets Claude trim proactively while there's room to do it in the same edit. The hard cap is the backstop a warning can't provide: on `PreToolUse`, `exit 2` stops the write before it lands. A warning that fires every time and stops nothing gets ignored like any repeated notice without teeth.
 
 #### The Missing Escape Hatch: a Reasoned Override
 
-The hard cap above has one real gap: no way through it. A hard block with no override turns every legitimate exception - a rule that genuinely needs one more sentence to stop being cryptic, a one-time restructuring commit that has to touch two files at once - into a fight with the tooling instead of a judgment call. The usual outcome of that fight is not a considered exception, it's the content degraded until it slips back under the cap: a rule trimmed to the point of ambiguity, a safety note shortened until it stops actually preventing the mistake it was written for. The guard "wins" and the content it exists to protect loses.
+The hard cap has one gap: no way through. With no override, every legitimate exception - a rule needing one more sentence to stop being cryptic, a one-time restructuring commit touching two files - becomes a fight with the tooling. The usual outcome is content degraded until it slips under the cap: a rule trimmed to ambiguity, a safety note shortened until it stops preventing its mistake. The guard "wins" and the content it protects loses.
 
 The fix is an override token the author can put in the file itself, naming a REASON:
 
@@ -201,13 +201,13 @@ The fix is an override token the author can put in the file itself, naming a REA
 # mistake causing tonight's incident.
 ```
 
-Have the size guard check for that token before it blocks: present and non-empty, allow the write through but still print a warning so the override doesn't vanish silently from the audit trail; absent, block exactly as before. The point of requiring a REASON is not the string match itself - it's that an override which must be justified in writing, on the record inside the file, is self-limiting in a way a silent bypass is not. Writing the sentence "I am overriding this because" is a small enough tax that nobody pays it for a lazy edit, and a large enough one that a genuine exception pays it without complaint.
+Have the size guard check for that token before blocking: present and non-empty, allow the write but still print a warning so the override stays in the audit trail; absent, block as before. The point of the REASON is not the string match but that an override justified in writing, on the record inside the file, is self-limiting where a silent bypass is not. "I am overriding this because" is too small a tax for a lazy edit to pay and small enough for a genuine exception.
 
 ### Lesson Detector (UserPromptSubmit)
 
-Scans each user message for correction, lesson, and confirmation patterns. When a match fires, injects a reminder into Claude's context: "This looks like a correction - should it be saved to memory?"
+Scans each user message for correction, lesson and confirmation patterns and, on a match, injects a reminder into Claude's context: "This looks like a correction - should it be saved to memory?"
 
-This is the mechanical implementation of the "#1 Rule" in every CLAUDE.md: every user prompt is a potential lesson. Without this hook, the lesson is only captured if Claude happens to notice the pattern. With the hook, it's never missed.
+This is the mechanical form of the "#1 Rule" in every CLAUDE.md: every user prompt is a potential lesson. Without the hook a lesson is captured only if Claude notices the pattern.
 
 ```bash
 #!/bin/bash
@@ -247,7 +247,7 @@ The confirmation branch matters as much as the correction branch. "Yes exactly, 
 
 ### Compact Counter (PostToolUse)
 
-Counts tool calls this session and suggests `/compact` at a threshold. Solves the slow-boil problem: Claude doesn't know a session has run 80 tool calls; it just notices responses getting slower.
+Counts tool calls this session and suggests `/compact` at a threshold. Solves the slow-boil problem: Claude doesn't know a session has run 80 tool calls, only that responses get slower.
 
 ```bash
 #!/bin/bash
@@ -272,7 +272,7 @@ Counter resets each session (uses `$$` - current process PID - in the temp file 
 
 ### Session Auto-Title (UserPromptSubmit)
 
-Names each session automatically from the first prompt. Without this, every session in the session list is titled "New Session" and you can't navigate your history.
+Names each session from the first prompt. Otherwise every session is titled "New Session" and history is unnavigable.
 
 ```python
 #!/usr/bin/env python3
@@ -281,8 +281,8 @@ import json, sys
 
 SKILL_NAMES = {
     'end-session': 'EOD', 'reflection': 'Reflection',
-    'deep-dive': 'Deep Dive', 'dev-session': 'Dev Session',
-    'loop': 'Loop', 'checkpoint': 'Checkpoint',
+    'deep-dive': 'Deep Dive',
+    'loop': 'Loop',
 }
 
 try:
@@ -311,9 +311,7 @@ Register under `UserPromptSubmit`. Claude Code uses the `sessionTitle` value on 
 
 ### PreCompact Hook - Save State Before Context Loss
 
-Fires just before context compaction begins. Without this, any state Claude has accumulated (learnings, notes, memory files) that hasn't been committed to disk yet is at risk.
-
-Two things worth doing in the PreCompact hook:
+Fires just before context compaction. Without it, accumulated state (learnings, notes, memory files) not yet committed to disk is at risk. Two things worth doing:
 
 1. **Commit dirty tracked files** - log files and daily notes that are append-only are often dirty when compaction hits
 2. **Drain internal Claude memory** - Claude Code stores auto-saved memory in `~/.claude/projects/<hash>/memory/`. If your workspace runs in a container or ephemeral environment, these files need rescuing before the context resets.
@@ -339,7 +337,7 @@ Pair with a `PostCompact` hook that logs the compaction event (timestamp + why i
 
 ### SessionStart Hook - Inject Live Context
 
-Fires once when a session begins. Output goes directly to Claude's context window before the first prompt. Use it to inject live workspace state so Claude never starts cold.
+Fires once at session start; output goes directly into Claude's context before the first prompt. Use it to inject live workspace state so Claude never starts cold.
 
 ```bash
 #!/bin/bash
@@ -369,17 +367,17 @@ fi
 echo "=== End Context ==="
 ```
 
-The minimal useful set: today's date (stops date-guessing errors), current git branch (stops wrong-branch commits), dirty file count (surfaces uncommitted state). Add/remove based on what's genuinely useful for your workflow.
+The minimal useful set: today's date (stops date-guessing), current git branch (stops wrong-branch commits), dirty file count (surfaces uncommitted state). Add or remove to suit your workflow.
 
 ### Feedback Folder Enforcer
 
-Blocks `feedback_*.md` files from being written outside the correct folder. Feedback files accumulate fast and if they spread across the repo they become unfindable.
+Blocks `feedback_*.md` files written outside the correct folder; they accumulate fast and become unfindable if spread across the repo.
 
 ### Hook Registration Parity Check (SessionStart)
 
-A hook file existing on disk proves nothing about whether it runs. It's entirely possible for a guard hook to be written, tested, actively reviewed in most commits that touch it - and never wired into `settings.json`. It sits there looking correct, doing nothing, for a long time, until someone eventually notices that the exact pattern it was supposed to catch has been happening the whole time and the hook never fired once.
+A hook file on disk proves nothing about whether it runs. A guard can be written, tested, reviewed in most commits touching it, and never wired into `settings.json`, looking correct and doing nothing until someone notices the pattern it should catch has been happening the whole time.
 
-The fix is a parity check, not vigilance: at session start, scan every hook file that declares a Claude Code event type in its header comment, and warn if its filename never shows up anywhere in `settings.json`. It's cheap - a directory listing and a grep - and it catches drift the moment a new session begins, rather than the moment someone happens to go looking.
+The fix is a parity check, not vigilance: at session start, scan every hook file that declares a Claude Code event type in its header comment and warn if its filename appears nowhere in `settings.json`. A directory listing and a grep catch drift when a session begins.
 
 ```bash
 # in a SessionStart hook, after loading live context
@@ -394,11 +392,11 @@ for hookfile in "$WORKSPACE_ROOT"/hooks/*.sh; do
 done
 ```
 
-This depends on one small convention: every hook file self-declares its event type in a header comment (`# PreToolUse hook`, near the top of the file). Without that, the check has nothing to scan for - a small discipline that pays for the whole thing. Worth running the same check inside your hook test suite too, not only interactively at session start, so registration drift shows up in a non-interactive run as well.
+This depends on one convention: every hook file self-declares its event type in a header comment near the top (`# PreToolUse hook`); without it the check has nothing to scan. Run the same check in your hook test suite too, so drift shows up in non-interactive runs.
 
 ### Destructive Script Takes a Target Parameter
 
-The recipes above are hooks, but the same discipline applies to any script one of them might call, or that you write to fix something a hook flagged: a script that renames, deletes, or otherwise mutates real state should accept a target-path parameter, defaulting to the real target, so the dangerous code path can be validated against a decoy before it ever touches production data. Writing the destructive logic carefully is not the same as testing it - an untested path is untested regardless of how carefully it was written, and the check that would actually catch a bug in it before the mutation happens is a dry run against a copy, not a read-through of the code.
+The same discipline applies to any script a hook might call, or that you write to fix something a hook flagged: a script that renames, deletes or otherwise mutates real state should accept a target-path parameter, defaulting to the real target, so the dangerous path can be validated against a decoy before touching production data. Careful writing is not testing; the check that catches a bug before the mutation is a dry run against a copy, not a read-through.
 
 ```bash
 #!/bin/bash
@@ -438,14 +436,14 @@ Rules that apply to one kind of file are easy to forget until the file is open. 
 
 ### Hooks Deny or Observe, Never Approve
 
-A hook (or any plugin that intercepts tool calls) that answers "allow" can override a stricter check elsewhere, and a handler that answers without passing control on can stop later hooks from running at all. Keep your own interceptors to two jobs: deny, or observe and add context. The convention-reminder above returns "allow" only because it is advisory and sits beside the real guards, never in place of them. If you write interceptors as code, lint them for this rule and make the lint part of your test run.
+A hook (or any plugin intercepting tool calls) answering "allow" can override a stricter check elsewhere, and a handler that answers without passing control on can stop later hooks running. Keep your interceptors to two jobs: deny, or observe and add context. The convention-reminder above returns "allow" only because it is advisory and sits beside the real guards. If you write interceptors as code, lint them for this rule as part of your test run.
 
 ### Absent Is Not Malformed
 
-When a safety check resolves a setting with a default, treat a missing key and a present-but-unexpected value as different cases. Test membership to apply the default; coerce anything present by truthiness, or send it to an explicit "violation" result. The tempting shape, `value if isinstance(value, bool) else DEFAULT`, silently maps a present `1` or `"1"` to the safe default and reports safe while the dangerous flag is set. When you find one resolver with this shape, grep the rest of the module for the same shape, because it repeats.
+When a safety check resolves a setting with a default, treat a missing key and a present-but-unexpected value as different cases. Test membership to apply the default; coerce anything present by truthiness, or send it to an explicit "violation" result. The tempting `value if isinstance(value, bool) else DEFAULT` maps a present `1` or `"1"` to the safe default and reports safe while the dangerous flag is set. When you find one such resolver, grep the module for the shape; it repeats.
 
-The distinction matters in the opposite direction for hook plumbing: an unparseable hook payload should fail open (exit 0), since a broken guard that blocks everything is worse than none. Fail open on your own errors, fail closed on a present, parsed violation.
+For hook plumbing the opposite holds: an unparseable hook payload should fail open (exit 0), since a broken guard that blocks everything is worse than none. Fail open on your own errors, fail closed on a present, parsed violation.
 
 ### Timeouts and a Health Check
 
-Every hook needs an explicit numeric timeout, because a stuck hook freezes the session. On some platforms the bare name `python3` resolves to a stub that hangs and ignores timeouts, so call the interpreter you know works there. Run `hooks/examples/check_hook_health.py` after any settings edit: it fails if a hook lacks a timeout, uses bare `python3`, names a script that does not exist, or if `disableAllHooks` was left on.
+Every hook needs an explicit numeric timeout, because a stuck hook freezes the session. On some platforms bare `python3` resolves to a stub that hangs and ignores timeouts, so call the interpreter you know works. Run `hooks/examples/check_hook_health.py` after any settings edit: it fails if a hook lacks a timeout, uses bare `python3`, names a script that does not exist, or if `disableAllHooks` was left on.

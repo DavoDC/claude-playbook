@@ -4,17 +4,17 @@
 
 This is one of the most powerful things you can do with Claude Code that most people don't know about.
 
-The `/loop` skill runs a command on a repeating interval - indefinitely, waking up automatically via a scheduling tool. Combined with `/dev-session`, you can set a work loop before you go to sleep and wake up to finished features, committed and documented.
+The `/loop` skill runs a command on a repeating interval - indefinitely, waking up automatically via a scheduling tool. Combined with a prompt that works through IDEAS.md, you can set a work loop before you go to sleep and wake up to finished features, committed and documented.
 
 ```
-/loop 30m /dev-session myproject
+/loop 30m take the top actionable item in myproject's IDEAS.md, finish it, commit
 ```
 
-This runs `/dev-session myproject` every 30 minutes. Each iteration: reads IDEAS.md, picks the next item, implements it, runs tests, moves it to HISTORY.md, commits. Then sleeps 30 minutes and does it again.
+This runs that prompt every 30 minutes. Each iteration: reads IDEAS.md, picks the next item, implements it, runs tests, moves it to HISTORY.md, commits. Then sleeps 30 minutes and does it again.
 
 ## Why It Works
 
-The key is that `/dev-session` is self-contained. Each iteration:
+The key is that each iteration is self-contained. Each iteration:
 1. Checks budget first - if rate limits are too high, it schedules a wakeup after the reset rather than hammering the API
 2. Picks from IDEAS.md based on current priority - you don't need to pre-queue work
 3. Handles its own commit and close-out
@@ -22,22 +22,14 @@ The key is that `/dev-session` is self-contained. Each iteration:
 
 Without the budget gate (see [Part 5](05-budget-awareness.md)), the loop would hammer rate limits and fail. The budget awareness tooling is what makes overnight automation safe.
 
-## /checkpoint - Restore Points During Loops
+## Restore Points During Loops
 
-Use `/checkpoint` during overnight runs to create named restore points:
-
-```
-/checkpoint create pre-auth-refactor
-```
-
-This commits current state and logs the checkpoint with SHA and context percentage. If something goes wrong you can diff back to any named checkpoint and see exactly what changed.
-
-Use checkpoints: before risky refactors, after each major task in an overnight loop, whenever touching 5+ files in a single iteration.
+Claude Code has built-in checkpointing and `/rewind` for rolling code and conversation back (full reference: https://code.claude.com/docs/en/checkpointing). It only tracks edits made through Claude's file tools, so for an unattended loop also commit after each finished item: a git commit is a restore point you can diff against in the morning.
 
 ## Self-Paced Mode
 
 ```
-/loop /dev-session myproject
+/loop take the top actionable item in myproject's IDEAS.md, finish it, commit
 ```
 
 No interval specified - the model decides how long to sleep based on what it just did. If the last iteration was a quick fix, it might sleep 15 minutes. If it was a large refactor, it might schedule a longer gap to avoid burning context on a session that needs to start fresh.

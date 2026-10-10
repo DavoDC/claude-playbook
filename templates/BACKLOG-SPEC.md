@@ -15,16 +15,16 @@ Give the workspace itself a folder here. It is a repo, it accumulates work, and 
 
 ## Routing: what unblocks it, not what it is about
 
-Picking the wrong list is the most common backlog defect, and the usual test ("is it about this repo?") gets it wrong regularly. The better test is what unblocks the item, not what it is about.
+Picking the wrong list is the most common backlog defect, and the usual test ("is it about this repo?") often gets it wrong. Ask what unblocks the item, not what it is about.
 
 | The item | Goes to | Why |
 |---|---|---|
-| Code, docs, tests or tooling scoped to ONE repo | that repo's `IDEAS.md` | `/dev-session` picks from here |
+| Code, docs, tests or tooling scoped to ONE repo | that repo's `IDEAS.md` | a work session picks from here |
 | Work on the workspace itself: a hook, a skill, a rule, a workspace tool | the workspace's own `IDEAS.md` | The workspace is a repo and deserves the same treatment as any other. Most people never create this one, and it is why workspace improvements live in scattered notes |
 | The unattended run's work QUEUE, research, cross-repo sweeps | a separate queue file | A queue answers "what should tonight's run do", which spans every repo and includes work belonging to none. That is a different question from "what should be built in this repo next" |
 | Blocked on a named person, with a deadline and a real consequence | `pending-actions.md`, capped and dated | High bar. An unbounded blocked list is a wish list |
 
-The distinction between the second and third rows is the one people collapse, and collapsing it is why a queue file grows to hundreds of items: repo-scoped engineering work has nowhere else to go, so it accumulates in the queue and the queue stops functioning as a queue.
+People collapse the second and third rows, which is why a queue file grows to hundreds of items: repo-scoped work has nowhere else to go, so it accumulates in the queue and the queue stops functioning as one.
 
 ## Format
 
@@ -68,11 +68,11 @@ That last group is the point. A list where every item has an answer is well-orde
 
 ## Close every pass by re-ranking
 
-Adding items to a backlog is easy and everybody does it. Re-ranking one is rare, and it is where the value is: a ranking made under no constraint is mostly an artefact of the order things were found in.
+Adding items is easy; re-ranking is rare and is where the value is: a ranking made under no constraint is mostly an artefact of the order things were found in.
 
 Apply ONE extreme lens to the LIST, not the code. Write down what moved. "Nothing moved" is a real result. Do not run more than two per pass.
 
-This is the cheapest step in the whole process and the only one that improves items you are not touching. One measured instance: asking "what would you fix if you could never touch this repo again" of a 180-item backlog promoted a bottom-tier item to first place, because an item whose failure mode was silent, irreversible loss of a person's own work had been correctly tiered as polish under "how valuable is this" and was the most important item in the repo under "what is unrecoverable". Nothing was learned about the code.
+This is the cheapest step in the process and the only one that improves items you are not touching. One measured instance: asking "what would you fix if you could never touch this repo again" of a 180-item backlog promoted a bottom-tier item to first place, because an item whose failure mode was silent, irreversible loss of a person's own work was correctly polish under "how valuable is this" yet the most important in the repo under "what is unrecoverable". Nothing was learned about the code.
 
 ## Two mechanical habits
 

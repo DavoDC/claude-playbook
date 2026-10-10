@@ -2,48 +2,15 @@
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G31WKOCN) [![selftest](https://github.com/DavoDC/claude-playbook/actions/workflows/selftest.yml/badge.svg)](https://github.com/DavoDC/claude-playbook/actions/workflows/selftest.yml)
 
-Budget-aware, self-improving Claude Code. Built from hundreds of sessions of daily use across multiple projects. Not theory - distilled from what actually worked and what didn't.
+For people who use Claude Code daily and are tired of re-correcting the same mistakes and hitting rate limits mid-task: a budget-aware, self-improving setup, distilled from hundreds of sessions of real use across multiple projects. Not theory - what actually worked and what didn't.
 
 ---
 
-## The Three Gaps This Fills
+## What You Get
 
-By default, Claude Code has three significant gaps that most users don't notice until they're badly bitten by them:
-
-**1. No budget awareness**
-
-Claude has no idea whether it's at 5% or 95% of its rate limits. It will happily start a 3-hour overnight loop at 82% of its 5-hour quota and wonder why it gets throttled. The `tools/` in this repo surface that data and make decisions based on it - before any work starts.
-
-**2. No improvement memory**
-
-Every correction you make in a session evaporates at the end. You end up correcting the same behaviours repeatedly across months. The feedback_*.md system creates a library of rules calibrated to your actual failure modes - not generic advice, but the specific mistakes that happen in your work.
-
-**3. No structured work selection**
-
-Without a priority queue, Claude works on whatever is in front of it - often the wrong thing. The /dev-session + IDEAS.md pattern gives it a scope contract and a priority-ordered list before any code is written. It picks the top actionable item; you don't have to direct it.
-
----
-
-## The Workspace Repo
-
-Everything in this playbook assumes you run Claude from one dedicated git repo - a "workspace repo." Not a project repo. A meta-repo that holds your config, memory, and skills.
-
-```
-workspace/          <- you always run Claude from here
-  CLAUDE.md         <- your rules, loaded every session automatically
-  .claude/
-    rules/
-      enforced-rules.md
-    skills/         <- your custom slash commands
-  memory/
-    feedback/       <- accumulated corrections, one rule per file
-    session-history.md
-    MEMORY.md
-```
-
-**Why not just use a project repo?** If your preferences live in a project repo, they disappear when you start a new project. With a workspace repo, every session starts with your rules loaded, your skills available, and context from past sessions. Every correction you make to Claude compounds across all future sessions and all projects.
-
-The whole system depends on this one structural choice. See `docs/11-workspace-repo.md` for the full setup guide.
+- **Budget awareness.** Claude knows whether it is at 5% or 95% of its rate limits before it starts a long job, so an overnight loop never begins at 82% of the 5-hour quota and gets throttled. The `tools/` in this repo surface that data and gate decisions on it.
+- **Corrections that stick.** Every correction you make is saved as a rule, so you stop repeating yourself across months. The `feedback_*.md` system builds a library calibrated to your actual failure modes, not generic advice.
+- **Work picked for you.** A priority-ordered `IDEAS.md` gives Claude a scope contract before any code is written. It takes the top actionable item, so you do not have to direct it.
 
 ---
 
@@ -78,6 +45,33 @@ Claude Code passes its current status JSON to this script on every update. The s
 
 The next time Claude does something you correct: write `memory/feedback/feedback_<topic>.md`. Rule + why + how to apply. Commit it. That's the improvement loop started.
 
+**Step 5 - Install the privacy hooks (1 min)**
+
+Run `sh hooks/install.sh` once after cloning. `.git/hooks/` is never tracked, so a fresh clone has no protection until you do. Add your own private terms, one per line, to `.git/private-terms.txt`; that file stays on your machine.
+
+---
+
+## The Workspace Repo
+
+Everything in this playbook assumes you run Claude from one dedicated git repo - a "workspace repo." Not a project repo. A meta-repo that holds your config, memory, and skills.
+
+```
+workspace/          <- you always run Claude from here
+  CLAUDE.md         <- your rules, loaded every session automatically
+  .claude/
+    rules/
+      enforced-rules.md
+    skills/         <- your custom slash commands
+  memory/
+    feedback/       <- accumulated corrections, one rule per file
+    session-history.md
+    MEMORY.md
+```
+
+**Why not just use a project repo?** If your preferences live in a project repo, they disappear when you start a new project. With a workspace repo, every session starts with your rules loaded, your skills available, and context from past sessions. Every correction you make to Claude compounds across all future sessions and all projects.
+
+The whole system depends on this one structural choice. See `docs/11-workspace-repo.md` for the full setup guide.
+
 ---
 
 ## What's Guaranteed vs What's Field Notes
@@ -96,6 +90,7 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | `templates/` | Ready-to-use CLAUDE.md, enforced-rules and backlog (IDEAS/HISTORY) starters |
 | `tools/` | statusline, budget and session-status scripts, loop-health measurement, plus a launcher |
 | `skills/` | skill files - thinking, git, review, and workflow tools |
+| `hooks/` | git hooks that keep private details out of commits, plus an installer |
 
 ---
 
@@ -106,14 +101,12 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [01 - The CLAUDE.md Layer](docs/01-claude-md.md) | Core | Workspace and project CLAUDE.md - what goes where and why |
 | [02 - The Improvement Loop](docs/02-improvement-loop.md) | Core | Enforced rules, feedback files, the rule promotion hierarchy |
 | [03 - IDEAS.md and Roadmap](docs/03-ideas-and-roadmap.md) | Core | Priority queue, HISTORY.md archive, the roadmap layer |
-| [04 - The /dev-session Skill](docs/04-dev-session.md) | Core | Phase walkthrough, TDD gate, scope definition, rule capture |
 | [05 - Budget Awareness](docs/05-budget-awareness.md) | Core | The three budget axes, what session-status.sh does, how to build it |
 | [06 - Sessions and Memory](docs/06-sessions-and-memory.md) | Field note | /end-session, session fragments, the file-based memory system |
-| [07 - The Overnight Loop](docs/07-overnight-loop.md) | Field note | /loop + /dev-session, /checkpoint restore points |
-| [08 - Skills Reference](docs/08-skills.md) | Field note | All skills sorted by actual usage count |
+| [07 - The Overnight Loop](docs/07-overnight-loop.md) | Field note | /loop over IDEAS.md, restore points |
+| [08 - Skills Reference](docs/08-skills.md) | Field note | Every shipped skill, ordered by impact |
 | [09 - Hooks](docs/09-hooks.md) | Field note | Events, exit codes, blast radius triage, the fail-open trap, the `if:` field |
 | [09b - Hook Recipes](docs/09-hooks-recipes.md) | Field note | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
-| [10 - Advanced Patterns](docs/10-advanced.md) | Field note | Commit-anchored delta, worked examples |
 | [11 - The Workspace Repo](docs/11-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
 | [12 - Audit Lenses](docs/12-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, and the re-ranking lenses |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
@@ -130,9 +123,13 @@ The templates don't compound. The habit does.
 
 ---
 
+## Status and Licence
+
+Maintained and updated from daily use; the self-test runs on every push and weekly. Released under the [MIT License](LICENSE).
+
 ## Skill Files
 
-The `skills/` folder contains skills covering first-principles thinking (`/aristotle`, `/think`), git workflow (`/commit-chunks`, `/step-commits`, `/undo-commits`), code review (`/deep-dive`, `/survey-repo`, `/cross-synth`), writing (`/human-voice`), and more.
+The `skills/` folder contains skills covering first-principles thinking (`/aristotle`, `/think`), git workflow (`/commit-chunks`, `/step-commits`, `/undo-commits`), code review (`/deep-dive`, `/cross-synth`), writing (`/human-voice`), and more.
 
 To install: copy a skill folder to `.claude/skills/<name>/` in your workspace. Claude Code makes it available as `/<name>`.
 

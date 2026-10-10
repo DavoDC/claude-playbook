@@ -4,29 +4,27 @@
 
 ## The Problem
 
-Claude has no fuel gauge. It will confidently start a 3-hour refactor with 25 minutes of budget remaining, get cut off mid-implementation, and leave your codebase in a state that's worse than when it started - broken tests, half-written functions, uncommitted changes that need untangling. Context compaction is just as bad: at 80% context, Claude summarises its own working memory mid-task, losing the detailed understanding it built up. The files it touches after compaction are edited with a different mental model than the ones before.
+Claude has no fuel gauge. It will confidently start a 3-hour refactor with 25 minutes of budget left, get cut off mid-implementation, and leave the codebase worse than it started - broken tests, half-written functions, uncommitted changes to untangle. Compaction is just as bad: at 80% context Claude summarises its own working memory mid-task, losing the detailed understanding it built, so files touched afterwards are edited with a different mental model. The damage isn't just lost time; it's a working tree you must diagnose and fix.
 
-The damage from hitting limits mid-task isn't just lost time. It's a working tree you have to diagnose and fix.
-
-**This is not built in.** Claude Code does not expose its rate-limit state to Claude. The `tools/` scripts in this repo are custom-built to surface that data and make it actionable. With a fuel gauge, Claude makes active decisions before the limit hits: picks a smaller task, commits what it has, runs `/end-session` to preserve context, schedules a wakeup after the reset. Without one, it drives until it runs out - in the middle of your code.
+**This is not built in.** Claude Code does not expose its rate-limit state to Claude; the `tools/` scripts here surface it. With a fuel gauge Claude decides before the limit hits: picks a smaller task, commits what it has, runs `/end-session`, schedules a wakeup after the reset. Without one, it drives until it runs out - in the middle of your code.
 
 ---
 
-Claude Code has two kinds of resource limits: context window size and API rate limits (5-hour and 7-day usage caps). Both can silently degrade a session if you're not watching them.
+Claude Code has two kinds of resource limits, context window size and API rate limits (5-hour and 7-day caps), and both can silently degrade a session.
 
 ## The Three Budget Axes
 
 **1. Context window (ctx%)**
 
-Percentage of the context used this session. At ~80% Claude starts compacting (summarising older context to free space). Compaction mid-session means Claude loses memory of earlier work. Compaction mid-`/end-session` can lose the session record entirely.
+Percentage of context used this session. At ~80% Claude starts compacting (summarising older context), losing memory of earlier work; compaction mid-`/end-session` can lose the session record entirely.
 
 **2. 5-hour rate limit**
 
-Percentage of the short-window API quota used. If this hits 83%+ the system will throttle requests within the hour. The reset time is a Unix timestamp in the status data - countdown timers tell you exactly when it resets.
+Percentage of the short-window API quota used. At 83%+ the system will throttle requests within the hour. The reset time is a Unix timestamp in the status data, so countdown timers show exactly when it resets.
 
 **3. 7-day rate limit**
 
-Percentage of the weekly API quota. If this is high you may hit rate limits even if the session itself is small. Less urgent than the 5-hour limit but worth watching in heavy-use weeks.
+Percentage of the weekly API quota. When high you may hit limits even in a small session. Less urgent than the 5-hour limit but worth watching in heavy weeks.
 
 ---
 
@@ -39,7 +37,7 @@ MyWorkspace | <model name> (<context window>) | 5h: 43% (r 1h14m) | 7d: 23% (r 6
 Claude v<version> | 10:35AM | Sun 24/05/2026
 ```
 
-The `/dev-session` skill calls this at session start and before continuation decisions to make budget-aware choices automatically.
+Any work skill or loop can call this at session start and before continuation decisions to make budget-aware choices automatically.
 
 ---
 
@@ -52,45 +50,43 @@ The `/dev-session` skill calls this at session start and before continuation dec
 | 7d >= 70% OR ctx >= 60% | Proceed with caution. Smallest clear item. No batching. |
 | Otherwise | Normal session. Batching allowed. |
 
-This prevents the worst outcome: starting a large piece of work at 75% context, running out mid-implementation, and ending with half-finished code.
+This prevents the worst outcome: starting a large piece of work at 75% context and ending with half-finished code.
 
-**One timing trap to know:** the ctx% counter updates between response turns, not between individual tool calls within the same turn. If a session reads several files and then checks budget status in that same turn, the check sees a stale, artificially-low number - none of those reads have been counted yet. Run the budget check after a natural turn boundary (a confirmation gate, the start of the next response) to get an accurate figure. Calling the check twice in the same turn does not help; both calls see the same stale counter.
+**A timing trap:** the ctx% counter updates between response turns, not between tool calls within a turn. A budget check after reading several files in the same turn sees a stale, artificially-low number. Check after a natural turn boundary (a confirmation gate, the start of the next response); calling twice in the same turn doesn't help, both see the same stale counter.
 
-**When budget runs low, bound the next task, not just the model.** An open-ended "make it better" has no stop condition - as budget approaches exhaustion the prompt needs to get *more* bounded, not less. Give one concrete, verifiable task with explicit in-scope and out-of-scope boundaries, and say explicitly "stop the moment this is verified, do not pick up anything else" - otherwise the model will keep going and burn the reserve you were trying to protect. Prefer an objectively-checkable fix over a subjectively-better one for the last task in a session; if the only remaining work is subjective and ungated (a "does this feel right" call), the correct move is often to spend nothing and hand it to a human review instead of gambling the last of the budget on it.
+**When budget runs low, bound the next task, not just the model.** An open-ended "make it better" has no stop condition; as budget runs out the prompt must get *more* bounded. Give one concrete, verifiable task with explicit in-scope and out-of-scope boundaries and say "stop the moment this is verified, do not pick up anything else", or the model keeps going and burns the reserve. For the last task of a session prefer an objectively-checkable fix over a subjectively-better one; if the only remaining work is subjective and ungated ("does this feel right"), often spend nothing and hand it to human review.
 
 ---
 
 ## Model Choice
 
-Claude Code lets you choose which model powers your sessions. The practical rule:
-
 **Use Sonnet for most work. Opus burns budget too fast for daily use.**
 
-Sonnet handles 95%+ of real engineering work well: writing code, debugging, reading files, making commits, running the improvement loop. The quality difference for typical tasks is small. The budget difference is large - Opus uses significantly more of your quota per session.
+Sonnet handles 95%+ of real engineering work well: writing code, debugging, reading files, commits, the improvement loop. The quality difference for typical tasks is small; the budget difference is large, since Opus uses significantly more quota per session.
 
-Keep Opus for the genuinely hard problems: architecture decisions, complex debugging you've already tried to solve, anything where you need the extra reasoning depth. Don't burn it on routine feature work.
+Keep Opus for genuinely hard problems: architecture decisions, complex debugging you've already tried, anything needing the extra reasoning depth. Not routine feature work.
 
-If you're on a plan with rate limits, the session statusline (from `tools/`) shows which model is active and exactly how much of your 5-hour and 7-day budget you've used. Before starting a heavy Opus session, check the 7-day figure.
+On a rate-limited plan the session statusline (from `tools/`) shows the active model and your 5-hour and 7-day usage. Before a heavy Opus session, check the 7-day figure.
 
 ---
 
 ## Effort Level
 
-Effort controls adaptive reasoning - how much the model thinks before responding. It is a second budget lever independent of model choice.
+Effort controls adaptive reasoning - how much the model thinks before responding - a second budget lever independent of model choice.
 
-**The key insight:** Claude Code's own UI describes `high` as "burns fastest - medium handles most tasks." Sessions contain a mix of complex reasoning and routine work (file reads, git ops, edits). Paying high-effort cost across every routine step wastes budget.
+**The key insight:** Claude Code's own UI describes `high` as "burns fastest - medium handles most tasks." Sessions mix complex reasoning with routine work (file reads, git ops, edits); paying high-effort cost on every routine step wastes budget.
 
-**Default: `medium`.** Two mechanisms can set this, and they are not interchangeable - they have different persistence semantics, and picking the wrong one defeats the point.
+**Default: `medium`.** Two mechanisms can set it, with different persistence semantics; the wrong one defeats the point.
 
-An environment variable (for example a shell or launcher-set `CLAUDE_CODE_EFFORT_LEVEL`) looks like the obvious way to pin a default, but it leaks into the whole session and outranks everything else, including `/effort` calls you make mid-session. Set the variable once and every later attempt to raise effort for a hard problem silently gets overridden back down - `/effort high` appears to work, then the model reasons at the env var's level anyway, with no error and no indication anything is overriding it. That defeats the usual intent of "reset the default at the start of the session, then let the session control itself."
+An environment variable (for example a shell or launcher-set `CLAUDE_CODE_EFFORT_LEVEL`) looks like the obvious way to pin a default, but it leaks into the whole session and outranks everything, including mid-session `/effort` calls. Every later attempt to raise effort silently gets overridden: `/effort high` appears to work, then the model reasons at the env var's level, with no error. That defeats "reset the default at session start, then let the session control itself."
 
-The fix is to patch the default directly instead of exporting an environment variable - either the `effortLevel` key in `settings.json` at launch, or the `--effort` CLI flag shown below, which behaves the same way: it sets the level for that session without writing a persistent override, so it resets cleanly each launch and does not block later `/effort` changes.
+Patch the default directly instead: the `effortLevel` key in `settings.json` at launch, or the `--effort` CLI flag below, which sets the level for that session without a persistent override, so it resets cleanly each launch and doesn't block later `/effort` changes.
 
 ```bat
 cmd /k claude --effort medium
 ```
 
-A settings-file or flag default resets cleanly at the start of each session but does not shadow later in-session changes, so `/effort high` continues to work as expected afterward. Skill-level `effort: high` frontmatter also overrides the session level - but not the environment variable, so a stray `CLAUDE_CODE_EFFORT_LEVEL` still wins even when a skill declares its own effort. Prefer the flag or a settings-file patch; avoid an environment variable for this unless you specifically want it to override every in-session change too.
+A settings-file or flag default resets each session and doesn't shadow later in-session changes, so `/effort high` still works. Skill-level `effort: high` frontmatter also overrides the session level - but not the environment variable, so a stray `CLAUDE_CODE_EFFORT_LEVEL` still wins over a skill's declared effort. Prefer the flag or settings patch; avoid an environment variable unless you want it to override every in-session change.
 
 **For complex reasoning on demand:**
 - Say `ultrathink` in your prompt - applies deep reasoning for that turn only, session level unchanged
@@ -105,7 +101,7 @@ effort: high
 ---
 ```
 
-This means you don't manually switch effort before/after complex skills - it happens automatically. Route routine work through `medium`, and let the skills that need depth declare it.
+No manual switching around complex skills. Route routine work through `medium` and let skills that need depth declare it.
 
 (full reference: https://code.claude.com/docs/en/model-config#adjust-effort-level)
 
@@ -113,43 +109,43 @@ This means you don't manually switch effort before/after complex skills - it hap
 
 ## When a Setting Isn't Honoured: Check Env Vars First
 
-Environment variables are the highest-precedence configuration layer and the least visible one. For subagent model selection, resolution order is: environment variable, then the `model=` parameter passed to the call, then the subagent's own frontmatter, then the parent conversation's active model. An environment variable set once - often months earlier, for a reason nobody remembers - silently overrides every explicit `model=` argument from then on. Nothing errors. The work just comes back worse, using a cheaper model than intended, and it is easy to mistake that for a capability limit ("my plan tier doesn't support this") rather than a stale config value.
+Environment variables are the highest-precedence configuration layer and the least visible. For subagent model selection the resolution order is: environment variable, then the `model=` parameter on the call, then the subagent's frontmatter, then the parent conversation's model. An environment variable set once, often months earlier for a forgotten reason, silently overrides every explicit `model=` argument from then on. Nothing errors; the work comes back worse on a cheaper model than intended, easily mistaken for a capability limit ("my plan tier doesn't support this") rather than a stale config value.
 
-The same silent-override behavior applies to effort level: a Windows/shell environment variable can lock effort at a fixed level and make `/effort` appear broken, with no indication in the UI that anything is overriding it.
+Effort level behaves the same: a Windows/shell environment variable can lock effort and make `/effort` appear broken, with no UI indication.
 
-**The rule:** when any model, effort, or capability setting appears not to be honoured, check the environment block of your settings file and your shell's environment variables *first* - before any theory about plans, tiers, quotas, or entitlements. Config beats cosmology. It costs one command to check and can save weeks of planning around a constraint that does not actually exist. Once you find and clear the stray value, confirm the fix by observation (the tokens land where expected) rather than by the absence of an error, since the failure mode here is silence in both directions.
+**The rule:** when any model, effort or capability setting appears not honoured, check your settings file's environment block and your shell's environment variables *first*, before any theory about plans, tiers, quotas or entitlements. Config beats cosmology: one command to check, and it can save weeks of planning around a constraint that doesn't exist. After clearing the stray value, confirm by observation (the tokens land where expected), not by absence of an error, since the failure is silent in both directions.
 
-This generalizes beyond env vars: any capability limit that gets written into a doc as a bare fact ("X is broken, use the workaround") should carry its evidence and who established it, not just the conclusion. A limit recorded as settled forecloses the five-minute re-test that would have found the one-line fix; a limit recorded as a hypothesis, with what was actually observed, invites someone to check it again next time it matters. Be especially suspicious of a constraint that conveniently explains a disappointment - "the plan won't allow it" is exactly the kind of story that closes an investigation instead of opening one.
+This generalizes: any capability limit written into a doc as a bare fact ("X is broken, use the workaround") should carry its evidence and who established it. A limit recorded as settled forecloses the five-minute re-test that would find the one-line fix; one recorded as a hypothesis, with what was observed, invites a re-check when it matters. Be suspicious of a constraint that conveniently explains a disappointment - "the plan won't allow it" closes an investigation instead of opening one.
 
 ---
 
 ## Session Strategy - Shorter is Better
 
-Every prompt sends the entire conversation history. As a session grows, each exchange costs more tokens than the one before - early messages are re-sent every time.
+Every prompt sends the entire conversation history, so each exchange costs more than the last; early messages are re-sent every time.
 
 The most token-efficient approach:
 
-1. **One session per main feature or topic.** A focused 30-minute session costs far less than a 3-hour session that keeps compacting. When you hit compaction (~80% context), Claude loses memory of early work and re-explaining costs tokens.
+1. **One session per main feature or topic.** A focused 30-minute session costs far less than a 3-hour one that keeps compacting, after which Claude loses early work and re-explaining costs tokens.
 
-2. **Write ideas down before starting, not during.** Keep a doc with everything you want done. Work through a few items per session, run `/end-session`, close, open fresh. This keeps sessions short and context cheap.
+2. **Write ideas down before starting, not during.** Keep a doc of everything you want done, work a few items per session, run `/end-session`, close, open fresh.
 
-3. **Front-load your prompt.** Tell Claude everything you want in one message - it will figure out the best order and approach. One detailed 8-line prompt beats eight back-and-forth exchanges covering the same ground. Longer prompts, fewer rounds.
+3. **Front-load your prompt.** Tell Claude everything in one message; it will find the order and approach. One detailed 8-line prompt beats eight back-and-forth exchanges.
 
-4. **Short + focused wins.** Rarely hitting max context is a sign of good session hygiene - it means you're closing before compaction, not fighting through it.
+4. **Short + focused wins.** Rarely hitting max context means you're closing before compaction, not fighting through it.
 
 ### Two Levers: Fixed Cost vs Message Growth
 
-`/context` splits usage into a fixed session-start cost (paid once, every session, before you type anything) and message growth (paid per turn, which determines how long the session lasts before compaction). They need different tuning.
+`/context` splits usage into a fixed session-start cost (paid every session before you type) and message growth (paid per turn, determining how long the session lasts before compaction). They need different tuning.
 
-**Fixed cost** is dominated by whatever project-level instructions load automatically every session - a CLAUDE.md, an enforced-rules file, anything auto-attached. Keep that content well under whatever hard limit you've set for it, and start trimming before you're close to the ceiling, not at it. Route workflow-specific detail out of the always-loaded file and into a demand-loaded doc (a process doc, a skill file) that only gets pulled in when the relevant task comes up. The floor here is harm-prevention content - never cut a safety rule to save tokens, that trades safety for runway, which is the wrong trade. The actual lever is redundancy and verbosity, not rule count: shorter bullets and pointers instead of inline detail, never fewer invariants.
+**Fixed cost** is dominated by project-level instructions loaded every session - a CLAUDE.md, an enforced-rules file, anything auto-attached. Keep it well under your hard limit and start trimming before the ceiling, not at it. Route workflow-specific detail into a demand-loaded doc (process doc, skill file). The floor is harm-prevention content: never cut a safety rule to save tokens, which trades safety for runway. The lever is redundancy and verbosity, not rule count: shorter bullets and pointers instead of inline detail, never fewer invariants.
 
-**Message growth** is the larger share of a typical session and the part under direct per-turn control:
+**Message growth** is the larger share of a typical session and under direct per-turn control:
 - Don't re-read a file already read this session - reference the earlier output instead.
 - Use offset/limit on large file reads when only a section is needed.
 - Delegate wide, exploratory searches to a subagent so the raw search output stays in the subagent's context and only the synthesized result returns to the main thread.
 - Prefer structured search tools over raw dumps of file contents.
-- Batch independent tool calls in parallel - this doesn't cut total tokens, but it cuts round-trips, which matters when compaction risk is time-based as well as token-based.
-- Compact at a natural breakpoint (right after finishing a subtask) rather than waiting for the forced threshold - a compaction forced mid-task loses more useful detail per token freed than one you choose.
+- Batch independent tool calls in parallel: no fewer total tokens, but fewer round-trips, which matters when compaction risk is time-based as well as token-based.
+- Compact at a natural breakpoint (right after finishing a subtask) rather than at the forced threshold; a forced mid-task compaction loses more useful detail per token freed.
 
 ---
 
@@ -165,15 +161,15 @@ The levers above are habits. These are mechanisms: each one removes a recurring 
 
 **Read and shell caps.** Deny a whole-file read of a large file and ask for a section, and deny known-flooding shell commands unless their output is already limited. Both are hooks, and working examples are in `hooks/examples/`.
 
-**Serial, bundled subagents.** Many small parallel subagents cost the orchestrator more context, because each report and diff must be read and checked, than a few larger sequential ones. Group queued fixes by shared code location, dispatch one bundle, verify the artifact, then dispatch the next. See Part 10.
+**Serial, bundled subagents.** Many small parallel subagents cost the orchestrator more context, because each report and diff must be read and checked, than a few larger sequential ones. Group queued fixes by shared code location, dispatch one bundle, verify the artifact, then dispatch the next. See [Part 13](13-multi-agent-orchestration.md#serial-bundled-dispatch).
 
 ## The Bottleneck Is Often a Human Action, Not Model Budget
 
-Everything above measures whether the model has enough budget left to keep working. It is just as important to check the opposite direction: whether finished work is sitting idle because it is waiting on a small human action - a click, a yes/no answer, plugging something in, approving a change - rather than on more model capacity at all. This is easy to miss precisely because the natural instinct when budget is healthy is to keep building, and building is the wrong response to a queue that was never blocked on building in the first place.
+Everything above measures whether the model has budget left. Also check the opposite: whether finished work sits idle waiting on a small human action - a click, a yes/no answer, plugging something in, approving a change - rather than on model capacity. Easy to miss, because when budget is healthy the instinct is to keep building, the wrong response to a queue never blocked on building.
 
-Keep an explicit ranked list of "waiting on a human action" items and work it down before starting new work, the same way you would check the budget axes above before starting new work. The list is worth keeping because the two constraints are measured by completely different instruments: a budget readout tells you how much capacity is left, and nothing at all tells you how much finished work is parked behind a click. When budget usage is comfortably under the ceiling and output still feels stalled, that asymmetry is the first place to look.
+Keep an explicit ranked list of "waiting on a human action" items and work it down before starting new work, as you would check the budget axes. The two constraints are measured by different instruments: a budget readout shows capacity left, and nothing shows how much finished work is parked behind a click. When usage is well under the ceiling and output still feels stalled, look there first.
 
-This is not an argument against delegating work to an agent when delegation is the right call - see the delegate-vs-do-directly guidance in [Part 10](10-advanced.md#when-to-delegate-vs-do-it-directly) for that decision. It is an argument for checking, before delegating or building more, whether the actual bottleneck is capacity to build at all, or a short list of things only a human can finish. Building more when the queue is full of unblocking actions just grows a backlog that was never short of finished work to begin with.
+This is not an argument against delegating when delegation is right - see [Part 13](13-multi-agent-orchestration.md#when-to-delegate-vs-do-it-directly). It is an argument for checking, before delegating or building more, whether the bottleneck is capacity to build or a short list only a human can finish. Building more just grows a backlog that was never short of finished work.
 
 ---
 
@@ -199,7 +195,7 @@ The key is camelCase and `"type": "command"` is mandatory. A wrong key is accept
 
 Claude Code invokes this command via stdin for every status update, passing a JSON object containing `model`, `context_window`, `rate_limits`, `version`, `cwd`, etc.
 
-Updates are event-driven, which means they can go quiet exactly when the number matters most: an unattended loop where the main session sits idle waiting on background subagents produces no status events, so the cache below ages while the loop keeps spending. Set the optional `refreshInterval` field (seconds) to re-run the command on a timer as well (full reference: https://code.claude.com/docs/en/statusline).
+Updates are event-driven, so they can go quiet exactly when the number matters: an unattended loop whose main session idles waiting on background subagents produces no status events, so the cache below ages while the loop keeps spending. Set the optional `refreshInterval` field (seconds) to also re-run the command on a timer (full reference: https://code.claude.com/docs/en/statusline).
 
 ### Step 2 - statusline.py does two things
 
@@ -242,7 +238,7 @@ Emits a warning line if `five_hour >= 83` including the seconds until reset:
 5h NEARLY EXHAUSTED: 86%, resets in 1h12m
 ```
 
-`ScheduleWakeup` clamps its delay to between 60 and 3600 seconds, so a reset that's further out than an hour away can't be skipped in a single call. The pattern is a bounded wakeup, not a single long sleep: call `ScheduleWakeup(min(seconds_until_reset, 3600))`, and on each wake re-run the budget check - if the reset still hasn't passed, schedule another capped wakeup and repeat. The loop naturally stops rescheduling once the 5-hour window has actually reset.
+`ScheduleWakeup` clamps its delay to 60-3600 seconds, so a reset more than an hour away can't be skipped in one call. Use bounded wakeups, not one long sleep: call `ScheduleWakeup(min(seconds_until_reset, 3600))`, re-run the budget check on each wake, and reschedule if the reset hasn't passed. The loop stops once the 5-hour window has reset.
 
 ### Step 4 - session-status.sh wraps it all
 

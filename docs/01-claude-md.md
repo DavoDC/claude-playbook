@@ -10,7 +10,7 @@ There are two kinds:
 
 ## Which Files Are "Claude Files" vs Your Own Files
 
-New users often get confused about which files are special Claude configuration and which are just personal files that happen to be in the same repo. Here's the map:
+Which files are special Claude configuration and which are just personal files in the same repo:
 
 ### Claude's Configuration Files (auto-loaded, special behavior)
 
@@ -31,16 +31,16 @@ New users often get confused about which files are special Claude configuration 
 | `memory/session-history.md` | Log of past sessions | Not special - written by `/end-session`, read for context |
 | `memory/feedback/feedback_*.md` | Your rules library | Demand-loaded when relevant - not auto-loaded |
 
-**The key distinction:** CLAUDE.md files load *automatically* and shape every response. Your memory files are just markdown - Claude reads them when you tell it to, or when skills like `/dev-session` read them as part of their workflow.
+**The key distinction:** CLAUDE.md files load *automatically* and shape every response. Your memory files are just markdown - Claude reads them when you tell it to, or when a skill reads them as part of its workflow.
 
-MEMORY.md and enforced-rules.md are closer to "extended CLAUDE.md" - they're not technically auto-loaded by Claude Code, but you add them to CLAUDE.md's session start checklist so they effectively are. That lets you offload detailed rules from CLAUDE.md (keeping it under 150 lines) into enforced-rules.md without losing coverage.
+MEMORY.md and enforced-rules.md are "extended CLAUDE.md": not auto-loaded by Claude Code, but listed in CLAUDE.md's session start checklist so they effectively are. That lets you offload detailed rules (keeping CLAUDE.md under 150 lines) without losing coverage.
 
 ---
 
 - **Workspace CLAUDE.md** - loaded globally for all sessions. Covers your working style, universal rules, how you want Claude to behave across everything.
 - **Project CLAUDE.md** - inside each individual repo. Covers what that specific project does, its architecture, constraints, and how to build/run it.
 
-One critical point: **do not use `/init` to generate these.** The `/init` command produces a generic starter file that doesn't reflect how you actually work. Build CLAUDE.md yourself by telling Claude what to add to it. Start with three or four rules, then grow it over time. Every time you correct Claude on something, add the correction to CLAUDE.md so it never happens again. That compounding is the entire game.
+**Do not use `/init` to generate these.** It produces a generic starter file that doesn't reflect how you work. Build CLAUDE.md by telling Claude what to add. Start with three or four rules and grow it; every time you correct Claude, add the correction so it never recurs. That compounding is the entire game.
 
 The `.claude/` folder also contains:
 - `settings.json` - hooks (shell scripts that run on events)
@@ -53,24 +53,24 @@ Keep hooks in `settings.json` and permissions in `settings.local.json`. Never mi
 
 ## Size Discipline
 
-CLAUDE.md is loaded on every single session. Every line costs tokens every time. Bloated CLAUDE.md = a constant tax on your budget.
+CLAUDE.md loads every session, so every line costs tokens every time; a bloated one is a constant tax.
 
 Target:
 - Workspace CLAUDE.md (your rules, preferences, workflow): **100-150 lines max**
 - Per-repo CLAUDE.md (project-specific notes): **50-80 lines** is plenty
 
-Treat the line target as a proxy for a byte ceiling, which is what actually costs tokens: set a hard byte limit for each always-loaded file, and apply a down-only ratchet so that every time a cleanup brings the file under its ceiling you lower the ceiling to match, never raise it. If it's growing past its ceiling, move content out. Detailed explanations go in `feedback_*.md` files that only load on demand, not every session.
+The line target is a proxy for a byte ceiling, which is what actually costs tokens: set a hard byte limit for each always-loaded file, with a down-only ratchet (each cleanup that brings the file under its ceiling lowers the ceiling to match, never raises it). If it grows past the ceiling, move content out; detailed explanations go in on-demand `feedback_*.md` files.
 
-**The key discipline:** CLAUDE.md holds principles and rules, not explanations. If you're writing paragraphs explaining WHY a rule exists, that belongs in a feedback file. CLAUDE.md says "do X" - the feedback file says "because Y happened." Keep them split.
+**The key discipline:** CLAUDE.md holds principles and rules, not explanations. CLAUDE.md says "do X"; the feedback file says "because Y happened."
 
-The `enforced-rules.md` pattern helps with this. Split the load:
+The `enforced-rules.md` pattern helps. Split the load:
 - `CLAUDE.md` - your core working style and principles (loaded every session)
 - `.claude/rules/enforced-rules.md` - hard rules distilled from past failures (also loaded every session, but separate file so you can audit each independently)
 - `feedback_*.md` - the WHY behind each rule (loaded only when relevant, on demand)
 
 Three files, three jobs. None of them should do another's job.
 
-One more thing worth building in from the start: when any of these files points to "where to find an example of X," prefer a grep search term over a hardcoded file path. A path like "look in project/data/logs/" is correct today and wrong once that repo gets renamed, restructured, or archived; a search term like `TimedRotating|getLogger` finds whatever the current best example is - including files that didn't exist when you wrote the doc - and just comes up empty if nothing matches yet, rather than pointing somewhere stale or wrong. The exception is a template file you maintain on purpose - those are stable by design and a path is fine there. Before adding a "look here" table to any process doc, ask: will this path still exist in a year? If you're not sure, use a grep term instead.
+When any of these files points to "where to find an example of X," prefer a grep search term over a hardcoded path. A path like "look in project/data/logs/" goes wrong once the repo is renamed, restructured or archived; a term like `TimedRotating|getLogger` finds the current best example, including files that didn't exist when you wrote the doc, and comes up empty rather than stale. The exception is a template file you maintain on purpose; a path is fine there. Before adding a "look here" table to a process doc, ask whether the path will still exist in a year; if unsure, use a grep term.
 
 ---
 
@@ -78,7 +78,7 @@ One more thing worth building in from the start: when any of these files points 
 
 ### 1. Senior Engineer Mindset
 
-By default Claude is very agreeable - it will execute whatever you ask without questioning it. You want it to act as the senior engineer instead: pushing back on bad plans, spotting bugs unprompted, suggesting better approaches before implementing. Put this explicitly:
+By default Claude is very agreeable and executes whatever you ask. You want the senior engineer instead: pushing back on bad plans, spotting bugs unprompted, suggesting better approaches before implementing. Say so explicitly:
 
 ```
 Act as the senior engineer, not just an executor. Evaluate requests before implementing.
@@ -87,13 +87,13 @@ If you see a problem in code you're working near, say so.
 If a better approach exists, say so first.
 ```
 
-This single instruction changes the quality of every response. Without it, Claude rubber-stamps everything.
+This single instruction changes the quality of every response; without it Claude rubber-stamps everything.
 
-One specific way pushing back goes wrong deserves calling out beside it. When a user names a specific mechanism - "plugin", "macro", "extension", the literal name of a feature they already know exists - that name is a constraint on the solution space, not a loose gesture at a category of fix. The instinct to propose a cleaner, more general architecture is usually good judgment; applied here it overrides information the user already gave you. Investigate the literal, named mechanism on the real system first, before reaching for an unnamed alternative. One project spent months pursuing a cloud-API integration route while the user kept saying "plugin" - the answer turned out to be an already-installed, already-configured native plugin dialog needing zero registration, which would have been found in minutes had the named word been read as a literal pointer rather than an imprecise description. If you do end up substituting a different approach after investigating, say so explicitly rather than drifting silently away from what was named.
+One way pushing back goes wrong: when a user names a specific mechanism - "plugin", "macro", "extension", the literal name of a feature they know exists - that name is a constraint on the solution space, not a gesture at a category of fix. Proposing a cleaner, more general architecture overrides information the user already gave you. Investigate the named mechanism on the real system first. One project spent months on a cloud-API integration route while the user kept saying "plugin"; the answer was an already-installed native plugin dialog needing zero registration, findable in minutes had the word been read literally. If you substitute a different approach after investigating, say so explicitly.
 
 ### 2. Fix AND Prevent
 
-When Claude fixes a bug, the default is to fix it and move on. You want it to also prevent recurrence:
+By default Claude fixes a bug and moves on. You want it to also prevent recurrence:
 
 ```
 When fixing a bug or correcting a mistake, always do BOTH:
@@ -101,11 +101,11 @@ When fixing a bug or correcting a mistake, always do BOTH:
 (2) add a guard so it can't recur - a test, a CLAUDE.md rule, or a validation check
 ```
 
-One way a guard fails quietly: when its selection criterion and its pass criterion are the same property. A checker that only examines inputs which already look valid can never find the ones that don't - the worst violations get skipped as "not my business" before they're ever checked, and the guard reports success while doing nothing. Keep the two separate: decide what to check based on something independent of correctness (file path, a marker, surrounding structure), never based on the property being validated. And treat an empty result as a failure to investigate, not a clean pass - a check that found nothing and a check that never ran look identical from the outside.
+A guard fails quietly when its selection criterion and pass criterion are the same property. A checker that only examines inputs which already look valid never finds the ones that don't: the worst violations are skipped before being checked, and the guard reports success while doing nothing. Decide what to check from something independent of correctness (file path, a marker, surrounding structure), never the property being validated. Treat an empty result as a failure to investigate, not a clean pass; a check that found nothing and one that never ran look identical.
 
-Fix and guard closes a single door. There's a third rung beyond it, and it's where the actual compounding happens: name the structural reason the setup allowed the bug in the first place, ask what else shares that same gap, and ask which existing review should have caught it and didn't - then fix that review too. Skipping this rung means the next bug with the same root cause gets fixed and guarded individually, again, forever.
+Fix and guard closes a single door. The third rung is where the compounding happens: name the structural reason the setup allowed the bug, ask what else shares that gap, and ask which existing review should have caught it - then fix that review too. Otherwise the next bug with the same root cause gets fixed and guarded individually, forever.
 
-The same discipline runs in the other direction. When something you tried turns out to be genuinely good - a prompt phrasing, a workflow shortcut, a way of splitting a task - decide immediately whether it should recur, not later. A high-value one-off left as a one-off wastes most of its value: the value was in doing it again, and by the time you remember it happened, the details of what made it work are gone.
+The discipline also runs the other way. When something you tried is genuinely good - a prompt phrasing, a workflow shortcut, a way of splitting a task - decide immediately whether it should recur. A high-value one-off left as a one-off wastes most of its value, and the details of what made it work fade.
 
 ### 3. Research Approach
 
@@ -119,9 +119,9 @@ Tell Claude the order to look for information:
 
 This stops Claude from hallucinating API docs or stating things that are only true in old versions.
 
-One failure mode is worse than getting something wrong: reporting that something doesn't exist when the search just didn't look hard enough. A grep for one spelling, one case, one file extension that finds nothing proves the search was bounded - not that the thing is absent. Before closing an investigation on a negative result, vary case, separators (hyphen, underscore, space, no separator), singular and plural, and check whether the file types and directories you actually searched were the right ones. Then do one of two things: widen the search and report a true negative, or say exactly what you searched. "No hits under this path in markdown files" is honest. "There is no such thing" is usually a claim you never tested.
+A worse failure than being wrong: reporting that something doesn't exist when the search didn't look hard enough. A grep for one spelling, case or file extension that finds nothing proves the search was bounded, not that the thing is absent. Before closing on a negative, vary case, separators (hyphen, underscore, space, none), singular and plural, and check the file types and directories searched were the right ones. Then either widen the search and report a true negative, or say exactly what you searched. "No hits under this path in markdown files" is honest; "There is no such thing" is usually untested.
 
-Before building any diff, match, or reconciliation, say out loud what the unit of comparison actually is - and check that it's the thing the question is really about. It's easy to build a technically correct comparison that answers nothing: a file-level diff can report most files unchanged while the record inside them moved, split, or merged across files entirely, and the comparison would be accurate and useless at the same time. Ask: if every instance of the container changed shape but the real unit was preserved, would this comparison still say so? If yes is possible, you're comparing the wrong thing - restate the unit before writing the comparison, not after the first result disappoints.
+Before building any diff, match or reconciliation, say what the unit of comparison is and check it is what the question is about. A file-level diff can report most files unchanged while the record inside them moved, split or merged across files: accurate and useless. Ask: if every container changed shape but the real unit was preserved, would this comparison still say so? If that is possible you're comparing the wrong thing; restate the unit before writing the comparison.
 
 ### 4. Before Acting on Files
 
@@ -172,25 +172,25 @@ Your core engineering standards belong here so they apply across all repos:
 - Always add timing to scripts - log start/end time and per-step timing.
 ```
 
-**On that second line.** "TDD always" is the most common rule in a workspace CLAUDE.md and the least self-enforcing, because coverage percentages and test counts both rise when weak tests are added. A suite can grow steadily while its ability to detect a defect stays flat. The question is never how many tests exist, but whether each one would fail if the feature were broken.
+**On that second line.** "TDD always" is the most common workspace rule and the least self-enforcing, because coverage and test counts both rise when weak tests are added. A suite can grow while its ability to detect a defect stays flat. The question is whether each test would fail if the feature were broken.
 
-Five smells, all of which pass a green run: a **structural string-scan** that asserts the source text contains a function name or config key (it verifies someone typed something, so renaming a variable breaks it but shipping a bug does not); an **assertion-free** test that calls the code and asserts nothing, passing as long as no exception escapes; a **dodger** that tests a helper, wrapper or re-implementation rather than the real entry point, so the tested path and the shipped path are different code; an **over-mocked** test that ends up exercising its own mocks, whose worst form is a mock whose signature has drifted from the real object so that every real call would raise and the test never notices; and **assertion roulette**, many unlabelled assertions in one test, so a failure says the test broke but not which behaviour regressed.
+Five smells, all passing a green run: a **structural string-scan** asserting the source text contains a function name or config key (renaming a variable breaks it, shipping a bug does not); an **assertion-free** test that calls the code and asserts nothing; a **dodger** that tests a helper, wrapper or re-implementation rather than the real entry point, so the tested and shipped paths differ; an **over-mocked** test that exercises its own mocks, worst when a mock's signature has drifted from the real object so every real call would raise unnoticed; and **assertion roulette**, many unlabelled assertions in one test, so a failure doesn't say which behaviour regressed.
 
-A sixth smell lives in production code rather than in the test: an **error handler with scope wider than the risk it guards**. Wrapping an entire loop or function body in try/except, rather than the one call that can actually fail, means any unrelated exception anywhere in that block silently triggers the same fallback as the real failure case - and a suite built around the intended failure case typically stays green, because it never exercises the unrelated path now sharing the handler. A console encoding error inside an unrelated `print()`, caught by the same broad try/except wrapping a classification routine, caused unambiguous input to be misclassified as "needs review"; the exception had nothing to do with classification, but the handler could not tell the difference. Scope every handler to the smallest block that can raise the error you are handling, never to the block that merely sits nearby.
+A sixth smell lives in production code: an **error handler with scope wider than the risk it guards**. Wrapping a whole loop or function body in try/except, rather than the one call that can fail, makes any unrelated exception trigger the same fallback as the real failure, and a suite built around the intended failure stays green. A console encoding error inside an unrelated `print()`, caught by the broad try/except around a classification routine, caused unambiguous input to be misclassified as "needs review". Scope every handler to the smallest block that can raise the error you handle.
 
-A seventh survives even a well-structured test: **a field that passes its schema and is still meaningless**. A raw heap address rendered as a string, a `tostring()` dump standing in for a real value, or an integer enum displayed as a bare number all satisfy "the field exists and has the right type" while conveying nothing. Checking that a value parses is not checking that it means anything - the same raw-address-as-string bug shipped across three separate rounds of one project, because each round's check confirmed only that the field existed and parsed. Read the actual value in the assertion, not its shape.
+A seventh survives even a well-structured test: **a field that passes its schema and is still meaningless**. A raw heap address rendered as a string, a `tostring()` dump standing in for a real value, or an integer enum shown as a bare number all satisfy "exists and has the right type" while conveying nothing. The same raw-address-as-string bug shipped across three rounds of one project because each check confirmed only that the field existed and parsed. Read the actual value in the assertion, not its shape.
 
-An eighth pattern belongs here too, and it lives in the code under test rather than in the test itself, the same location as the sixth: a resolve-with-default helper that cannot tell an absent value from a malformed one. The shape to avoid is `value if isinstance(value, T) else DEFAULT` inside any safety or privacy check where DEFAULT happens to be the safe outcome - it silently maps two different situations to the same result. Test membership first (`if key not in settings: return DEFAULT`) so a genuinely absent value takes the default correctly; when the key IS present, coerce it explicitly (`bool(value)`, `str(value).strip()`) or route it to an explicit violation sentinel, never let it fall through to the same safe default a missing key would have received. The danger is invisible exactly when the code looks most defensive: a boolean privacy flag left at its default is legitimately absent in a correctly configured source, so the absent path passes every test written against it, while a flag that is PRESENT but set to a truthy non-bool (`1`, `"1"`) fails the identical isinstance check and lands on the identical safe default - a real violation reported as SAFE. Once one resolver in a module has this shape, grep the rest of the module for the same pattern; it tends to repeat across every sibling field written by the same hand in the same sitting.
+An eighth, in the code under test like the sixth: a resolve-with-default helper that cannot tell an absent value from a malformed one. Avoid `value if isinstance(value, T) else DEFAULT` inside any safety or privacy check where DEFAULT is the safe outcome; it maps two situations to one result. Test membership first (`if key not in settings: return DEFAULT`); when the key IS present, coerce explicitly (`bool(value)`, `str(value).strip()`) or route to an explicit violation sentinel, never the safe default a missing key gets. The danger is invisible when the code looks most defensive: a boolean privacy flag legitimately absent passes every test, while one PRESENT but set to a truthy non-bool (`1`, `"1"`) fails the same isinstance check and lands on the same safe default - a real violation reported as SAFE. Once one resolver in a module has this shape, grep the module for the pattern; it repeats across sibling fields written in one sitting.
 
-And one level above the over-mocked smell, a property of the suite rather than of any test in it: **a suite built only against invented fixtures proves nothing about the real corpus, disk or store it is meant to protect**, however well-scoped each individual test is. A history rewrite was silently reversed by a background sync tool while every test stayed green, because not one of them had ever read the actual object store - each operated entirely on fixtures constructed to look like it. That gap is invisible from inside any single test, which is why it needs stating at suite level: every project needs at least one check, however coarse, that reads the real thing rather than a stand-in for it.
+One level above the over-mocked smell, a property of the suite: **a suite built only against invented fixtures proves nothing about the real corpus, disk or store it protects**, however well-scoped each test. A history rewrite was silently reversed by a background sync tool while every test stayed green, because none had read the actual object store. Every project needs at least one check, however coarse, that reads the real thing.
 
-The strong version, in order: drive the **real entry point** that production uses; mock **only true boundaries** (network, database, clock, auth, filesystem) and run everything inside the boundary for real; assert **observable outcomes** - returned value, written file, emitted record, resulting state - rather than call sequences, because asserting that a function was called with certain arguments tests the implementation you already wrote while asserting the outcome tests the behaviour you wanted; and **mutation-verify anything that matters** by reintroducing the bug, watching the test fail, then restoring the source. A test you have never seen fail is a test you have not verified, and it takes seconds to check.
+The strong version, in order: drive the **real entry point** production uses; mock **only true boundaries** (network, database, clock, auth, filesystem) and run everything inside for real; assert **observable outcomes** (returned value, written file, emitted record, resulting state) rather than call sequences, since asserting a call tests the implementation you wrote while asserting the outcome tests the behaviour you wanted; and **mutation-verify anything that matters** by reintroducing the bug, watching the test fail, then restoring the source. A test you have never seen fail is unverified, and checking takes seconds.
 
-One more signal worth watching for while testing: a suspiciously perfect result. A 100% match, a zero-diff, or "everything accounted for" on real data is exactly what a self-comparison bug, an overly loose match key, or a filter quietly dropping the hard cases would also produce. Before reporting a clean result as good news, spend one question ruling out the boring explanation for why it's clean. And when a verification pass does turn up a real defect, don't fix it in the same pass that found it - hand the fix to a fresh check. A fix validated by the same reasoning that just missed the bug once is not independently verified, just re-asserted.
+Watch for a suspiciously perfect result. A 100% match, zero-diff or "everything accounted for" on real data is what a self-comparison bug, a loose match key or a filter dropping the hard cases would also produce. Before reporting a clean result as good news, rule out the boring explanation. And when verification turns up a real defect, don't fix it in the same pass; hand the fix to a fresh check, since a fix validated by the reasoning that missed the bug is re-asserted, not verified.
 
-The pattern to watch for is a high test count concentrated on easy pure functions while the main orchestration path and the primary output writer sit at zero behavioural coverage. Look at what the suite covers, not how much of it there is.
+Also watch for a high test count concentrated on easy pure functions while the main orchestration path and primary output writer sit at zero behavioural coverage. Look at what the suite covers, not how much.
 
-**A test runner's own output needs the same design discipline as the code it tests.** The default behaviour of most test frameworks is to print every test's chatter as it runs, pass or fail alike, which means the log a human or an agent actually has to read is mostly noise generated by the tests that needed no attention at all. The fix is a runner that captures each test's console output internally, discards it silently on a pass, and only surfaces it - alongside the failure message - when a test actually fails. One custom test runner printed a multi-line trace for every passing check regardless of outcome; across a full run the passing traces made up the overwhelming majority of the log, so anyone or anything reading the file paid the full token or scroll cost for output that carried zero information. Wrapping each test's execution in a captured output stream, emitting only `[PASS] name` on success and the captured trace plus `[FAIL] name: reason` on failure, cut the log to a fraction of its original size while giving failures strictly more context than before, since the trace right up to the failure is preserved instead of interleaved with hundreds of irrelevant passing traces. The same discipline extends to where the verdict sits: put the pass/fail counts and overall result on the LAST lines of the log, never the first, so a human or a script can `tail` the file and get the answer without reading everything above it. A log designed this way turns "read the whole file to find out if it worked" into "read the last five lines."
+**A test runner's own output needs the same design discipline as the code it tests.** Most frameworks print every test's chatter pass or fail, so the log a human or agent must read is mostly noise from tests needing no attention. Use a runner that captures each test's console output, discards it on a pass, and surfaces it with the failure message only on failure. One custom runner printed a multi-line trace for every passing check, the overwhelming majority of the log. Capturing output per test, emitting only `[PASS] name` on success and the captured trace plus `[FAIL] name: reason` on failure, cut the log to a fraction while giving failures more context, since the trace up to the failure is no longer interleaved with passing traces. Put the pass/fail counts and overall result on the LAST lines, never the first, so a human or script can `tail` the file for the answer.
 
 ### 8. README-First
 
@@ -237,7 +237,7 @@ the exception if no general solution exists and the cost of the exception is cle
 restructuring.
 ```
 
-A concrete example: a session-composition skill once grew a special case for one project because that project's idea backlog lived in a different location than every other project's. The right fix wasn't a branch inside the skill - it was a one-line pointer file in that project pointing at the real location, so the skill kept reading normally with no branch at all. The pattern worth stealing: put the special knowledge in the data a skill reads, not in the skill's logic.
+Example: a session-composition skill grew a special case for one project whose idea backlog lived elsewhere. The fix was a one-line pointer file in that project pointing at the real location, so the skill read normally with no branch. Put the special knowledge in the data a skill reads, not in its logic.
 
 ---
 
@@ -249,7 +249,7 @@ See `templates/CLAUDE_project.md` for a ready-to-fill template.
 
 ### When It Grows Too Big: Split Off a DevContext.md
 
-CLAUDE.md is auto-loaded every session, whether or not the work at hand actually needs it. A project CLAUDE.md's scope is orientation and harm prevention only: what the repo does, build/test/run commands, key paths, and the safety rules that prevent data loss or broken invariants. How specific functions work internally, code patterns, and architecture notes are implementation detail - useful only when you're actively coding in that area, not worth paying for on every session including doc updates and config changes that never touch the code. Split those into a demand-loaded file, for example `docs/References/DevContext.md`, and read it only when a session is actually working on implementation. The trigger to split: CLAUDE.md exceeds roughly 150 lines, or more than half its content is implementation notes rather than orientation and safety rules. One project's CLAUDE.md grew past 300 lines because every dev session appended implementation learnings straight into it - the file paid its full token cost on every session, including ones that never touched that code. The fix was two files with two different load times, not one file trimmed by hand every few weeks.
+CLAUDE.md is auto-loaded every session whether or not the work needs it. A project CLAUDE.md's scope is orientation and harm prevention only: what the repo does, build/test/run commands, key paths, and safety rules preventing data loss or broken invariants. Internals, code patterns and architecture notes are implementation detail, not worth paying for on sessions that never touch the code. Split them into a demand-loaded file, for example `docs/References/DevContext.md`, read only when working on implementation. Split when CLAUDE.md exceeds roughly 150 lines, or more than half is implementation notes. One project's CLAUDE.md grew past 300 lines because every dev session appended learnings to it; the fix was two files with different load times, not one file hand-trimmed every few weeks.
 
 ### Section 1: One-Line Summary
 
@@ -261,7 +261,7 @@ Python CLI daemon that auto-manages OBS streaming when launching a known game.
 
 ### Section 2: The Problem It Solves (the WHY)
 
-The most underused section. Explain WHY the project exists - the real motivation, not just the mechanism. This shapes every design decision Claude makes.
+The most underused section. Explain WHY the project exists - the real motivation, not just the mechanism. It shapes every design decision.
 
 Example:
 
@@ -296,7 +296,7 @@ Claude runs via CLI: python src/main.py from the repo root. Use this during
 development to close the loop - don't wait for the user to test.
 ```
 
-This distinction is critical. Users want the friendly launcher; Claude needs the raw command to iterate quickly. Conflating them means either users get overwhelmed with flags or Claude waits passively for every test.
+The distinction is critical: users want the friendly launcher, Claude needs the raw command to iterate. Conflating them overwhelms users with flags or leaves Claude waiting passively for every test.
 
 ### Section 5: Config Format
 
@@ -348,9 +348,9 @@ The importer MUST ONLY operate on the staging folder. Never on the library root.
 Never refactor this to accept a folderPath parameter.
 ```
 
-Prohibitions are only half of it. A CLAUDE.md should name two lists explicitly: what the agent may do without asking, and what it must always hand back to you. An unstated boundary gets rediscovered by crossing it - the agent tries the risky operation, gets caught, gets corrected, and the correction only covers that one case. Naming both lists up front closes the whole class at once instead of one instance at a time.
+Prohibitions are half of it. Name two lists explicitly: what the agent may do without asking, and what it must always hand back to you. An unstated boundary gets rediscovered by crossing it, and the correction covers only that case. Naming both lists closes the whole class at once.
 
-The harder half to hold onto: when a task hits a step the agent genuinely cannot run - a push, a production deploy, an account credential, a physical action - the right response is to deliver the complete solution with that one step clearly handed over, never to quietly shrink the deliverable to only what could be executed. A narrowed deliverable reads as a finished one right up until the un-run step turns out to matter. State the handoff in the output every time it's hit, rather than letting the gap surface later as a surprise.
+The harder half: when a task hits a step the agent cannot run - a push, a production deploy, an account credential, a physical action - deliver the complete solution with that one step clearly handed over, never quietly shrink the deliverable to what could be executed. A narrowed deliverable reads as finished until the un-run step matters. State the handoff in the output every time.
 
 ### Section 9: Critical Platform Gotchas
 
@@ -371,11 +371,13 @@ Windows batch scripts don't work in Unix shells.
 ### Section 10: The IDEAS.md Contract
 
 ```
-See docs/IDEAS.md for all pending work, ordered by priority.
+See <backlog path> for all pending work, ordered by priority.
 When a feature is implemented: remove from IDEAS.md, add to HISTORY.md.
 Never mark done with checkmarks - remove the entry completely.
 ```
 
-One more habit worth codifying alongside it: when you dump a burst of raw ideas on Claude - dense, half-formed, "I had so many I couldn't get them all out" - tell it to save the raw text verbatim first, in its own section, before writing any refined version. A refined-only summary is Claude's interpretation baked in as the record; if the interpretation missed the point, the original is gone and there's nothing left to correct against. Structure it as a "Raw (verbatim)" section with the exact text - obvious typos fixed, substance untouched - followed by a "Processed" section below it with the expanded, connected, prioritised version. This only applies to genuine idea dumps, not routine back-and-forth; normal conversation doesn't need a verbatim transcript.
+The backlog need not live in the project repo. Keeping it outside (for example in your workspace repo, a folder per project) keeps unshipped plans out of a public repo and holds every project's queue in one place; put the path in this line so Claude finds it. Inside the repo (`docs/IDEAS.md`) is fine for a private project.
 
-One thing that habit does not protect on its own: capturing raw phrasing verbatim is safe going in, and not automatically safe coming back out. The underlying fact inside a raw sentence can be perfectly fine to publish or share while the sentence itself is not, because the way something was actually phrased carries identifying context the fact alone does not - who said it, what system or environment they were working in, what constraint or workaround they were describing around. Verbatim capture is a one-way valve: fine to write down exactly as heard, not fine to forward or publish exactly as heard. The generalising step - turning "here is the raw sentence" into "here is the reusable fact, stripped of who and where" - has to happen at the boundary where content leaves the private capture and enters anything shareable, not get deferred to whenever someone happens to revisit the note. A fact can be entirely public while the original sentence carrying it is not, and the two get confused precisely because the fidelity habit that makes verbatim capture valuable is the same habit that makes it risky to move verbatim.
+A habit to codify alongside it: when you dump a burst of raw, half-formed ideas on Claude, tell it to save the raw text verbatim first, in its own section, before any refined version. A refined-only summary bakes Claude's interpretation in as the record; if it missed the point, the original is gone. Use a "Raw (verbatim)" section with the exact text - obvious typos fixed, substance untouched - followed by a "Processed" section with the expanded, connected, prioritised version. Only for genuine idea dumps, not routine back-and-forth.
+
+That habit does not protect the way out: verbatim capture is safe going in, not automatically safe coming back out. The fact inside a raw sentence can be fine to publish while the sentence is not, because the phrasing carries identifying context the fact alone does not - who said it, what system they worked in, what workaround they described. Verbatim capture is a one-way valve: write down exactly as heard, never forward or publish exactly as heard. The generalising step - from "here is the raw sentence" to "here is the reusable fact, stripped of who and where" - must happen at the boundary where content leaves private capture for anything shareable, not whenever someone revisits the note. The two get confused because the fidelity that makes verbatim capture valuable also makes moving it verbatim risky.

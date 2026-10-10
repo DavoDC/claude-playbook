@@ -26,7 +26,7 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
   ```
   git clone https://github.com/ericbuess/claude-code-docs
   ```
-  That is a preference, not the only option: several community mirrors exist, none are official, and any maintained one works. This is the one this playbook uses because it refreshes on a schedule measured in hours, it keeps one plain markdown file per documentation page so the whole set is greppable, it is scoped to the Claude Code docs rather than sweeping in blog posts and cookbooks, and it ships a manifest recording each file's source URL, content hash and fetch time, which is what lets you tell a stale copy from a current one. `thevibeworks/claude-code-docs` is the reasonable alternative if you want the wider Anthropic material in the same clone. Check the criteria yourself in `docs/11-workspace-repo.md` before adopting either, and prefer the last commit date over the repository's displayed update time when judging whether a mirror is alive. Put the clone beside the workspace repo, not nested underneath it. When you write a pointer for someone else, cite `https://code.claude.com/docs/en/` rather than your local path. Then ask Claude to read the docs and suggest features that match your workflow. Works especially well for initial setup.
+  That is a preference, not the only option: several community mirrors exist, none official, and any maintained one works. This playbook uses it because it refreshes on a schedule measured in hours, keeps one plain markdown file per documentation page so the set is greppable, is scoped to the Claude Code docs rather than blog posts and cookbooks, and ships a manifest recording each file's source URL, content hash and fetch time, which lets you tell a stale copy from a current one. `thevibeworks/claude-code-docs` is the reasonable alternative if you want the wider Anthropic material in the same clone. Check the criteria in `docs/11-workspace-repo.md` before adopting either, and judge whether a mirror is alive by its last commit date, not the displayed update time. Put the clone beside the workspace repo, not nested under it. When writing a pointer for someone else, cite `https://code.claude.com/docs/en/`, not your local path. Then ask Claude to read the docs and suggest features that match your workflow; this works especially well for initial setup.
 - [ ] **Read the Claude Code docs yourself** - hooks, MCP servers, statusline config, remote control - most users discover these months late.
 
 ---
@@ -73,7 +73,7 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 - [ ] `tools/check-budget.sh` accessible
 - [ ] `tools/session-status.sh` calling check-budget.sh correctly
 - [ ] Tested: `bash tools/session-status.sh` outputs 2-line budget status
-- [ ] `/dev-session` (or equivalent) calls session-status.sh at start
+- [ ] Your work loop or session routine calls session-status.sh at start
 
 ## IDEAS.md System
 
@@ -85,7 +85,6 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 ## Skills Worth Building
 
 - [ ] `/end-session` - session drain and memory sync
-- [ ] `/dev-session` - structured project work with IDEAS.md
 - [ ] `/commit-chunks` - logical commit splitting
 - [ ] `/reflection` - periodic meta-improvement
 - [ ] `/aristotle` - first principles deconstruction (starter in `skills/`)
@@ -119,9 +118,9 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 
 ## Habits Worth Having
 
-- [ ] **A live process under `--watch` or auto-reload has no channel for "don't reload yet"** - it fires on its own timer regardless of an explicit instruction to hold off. Flag this the moment such an instruction is given, not after it's been silently ignored.
-- [ ] **Verify a backup target is a different physical disk, not just a different drive letter.** Two drive letters can be partitions of the same disk - walk the disk-to-partition-to-volume chain before trusting a target as real redundancy.
-- [ ] **When a live user's report of their screen conflicts with your own reading of a screenshot, defer to the user immediately.** A screenshot is one static frame stripped of hover and focus state; the human has the running system.
+- [ ] **A live process under `--watch` or auto-reload has no channel for "don't reload yet"** - it fires on its own timer regardless of an instruction to hold off. Flag this the moment such an instruction is given, not after it's silently ignored.
+- [ ] **Verify a backup target is a different physical disk, not just a different drive letter.** Two letters can be partitions of one disk - walk the disk-to-partition-to-volume chain before trusting a target as redundancy.
+- [ ] **When a live user's report of their screen conflicts with your reading of a screenshot, defer to the user immediately.** A screenshot is one static frame without hover and focus state; the human has the running system.
 - [ ] **Before hardcoding a host address, port, or handle, check the property that stability actually depends on** (e.g. a lease about to expire), not just the value observed right now.
 - [ ] **Never bind a human to type a visually-ambiguous character** (O vs 0, l vs 1 vs I) in a keybind, filename, or code - the misread costs a real round trip.
 - [ ] **When a "keep or revert external changes" dialog fires, name which specific deliberate change it's describing before answering it** - never answer purely from the dialog's wording.
@@ -137,7 +136,6 @@ See `docs/11-workspace-repo.md` for the full explanation of why this matters.
 4. Budget awareness tools (needed before overnight loops)
 5. `/end-session` skill
 6. IDEAS.md in your most active project
-7. `/dev-session` skill
-8. Memory system
-9. Hooks
-10. `/aristotle` and `/premortem` skills
+7. Memory system
+8. Hooks
+9. `/aristotle` and `/premortem` skills

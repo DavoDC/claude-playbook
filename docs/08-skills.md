@@ -2,19 +2,19 @@
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
-All skills live in `.claude/skills/<name>/SKILL.md`. Each is a markdown file defining what Claude should do when you type `/<name>`. Usage below is tracked via a session logger hook and shown qualitatively (heavily used / regularly used / occasional / rarely used) rather than as exact counts - a number written today is stale by next week, and the category is what actually matters for deciding what to keep installed. See the maintenance section at the end of this part for how that tracking feeds a retirement loop.
+All skills live in `.claude/skills/<name>/SKILL.md`. Each is a markdown file defining what Claude should do when you type `/<name>`. See the maintenance section at the end of this part for how to keep the installed set small.
 
-Skills are sorted below by how often they're actually used - not by how interesting they sound.
+Skills are sorted within each section by impact: how much a skill improves the work for most users, not by how interesting it sounds.
 
-The shipped set is a menu, not a recommended set. Install what fits your workflow and ignore the rest. The usage labels on each entry reflect one person's invocation counts - they're context for judging a skill, not advice about whether you should use it. Some skills in a set like this are deliberately kept despite being rarely reached for, because a skill that's dead weight in one workflow can be the most useful file in the repo for a different one.
+The shipped set is a menu, not a recommended set: install what fits your workflow. A skill that is dead weight in one workflow can be the most useful in another.
 
 ---
 
 ## The Thinking Skills (Pin These to the Top)
 
-These are listed first regardless of usage count - every invocation is high-value and they should be the first thing you reach for on hard problems.
+These are listed first because every invocation is high-value: they are the first thing to reach for on hard problems.
 
-### [/aristotle](https://github.com/DavoDC/claude-playbook/blob/main/skills/aristotle/SKILL.md) (occasional, but every use is high-value)
+### [/aristotle](https://github.com/DavoDC/claude-playbook/blob/main/skills/aristotle/SKILL.md)
 
 First principles deconstruction. Strips all assumptions from a problem, finds the irreducible truths, rebuilds from zero.
 
@@ -98,7 +98,7 @@ Output: table of verdicts per principle (not prose), then a one-paragraph summar
 
 Wire to a recurring task with your enforced-rules.md + CLAUDE.md as arguments. Pairs well with `/reflection` (which finds new rules to add) - `/socrates` is the trimmer.
 
-A calendar cadence ("quarterly") is the obvious first choice but doesn't generalise well if your session cadence is irregular - a quarter can pass in a handful of sessions or in hundreds, depending on how active the period was. If your usage is bursty rather than steady, prefer a cadence measured in sessions (for example, every 15-20 sessions) over one measured in calendar time.
+A calendar cadence ("quarterly") generalises poorly if your usage is irregular, since a quarter can pass in a handful of sessions or hundreds. If usage is bursty, prefer a cadence measured in sessions (for example every 15-20) over calendar time.
 
 [Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/socrates/SKILL.md)
 
@@ -128,51 +128,44 @@ Generate options for a genuinely open-ended problem using a named method rather 
 
 ## Daily Workflow Skills
 
-### /end-session (heavily used)
+### /end-session
 Close out a session: write session record, reconcile tasks, drain memory, commit everything. The crux of the improvement loop. Run at the end of every session. See [Part 6](06-sessions-and-memory.md) for full detail.
 
-A template [SKILL.md](../skills/end-session/SKILL.md) is included, with placeholders for your memory folder, fragment folder and task list. It names the scripts that own the mechanical edits (prep, finalize, commit) but does not ship them, because they depend on your layout. Build it incrementally: start with "write session summary + commit", then add the consolidation scripts as your workspace matures. The design is documented in Part 6.
+A template [SKILL.md](../skills/end-session/SKILL.md) is included, with placeholders for your memory folder, fragment folder and task list. It names the scripts that own the mechanical edits (prep, finalize, commit) but does not ship them, since they depend on your layout. Build incrementally: start with "write session summary + commit", then add consolidation scripts as your workspace matures. Design: Part 6.
 
-### /loop (heavily used)
-Claude Code built-in. Runs a prompt on a repeating interval. Usage: `/loop 30m /dev-session myproject`. The overnight work loop - set before bed, wake up to finished features. See [Part 7](07-overnight-loop.md) for the full workflow. No SKILL.md needed.
+### /loop
+Claude Code built-in. Runs a prompt on a repeating interval. Usage: `/loop 30m work the top item in IDEAS.md`. The overnight work loop - set before bed, wake up to finished features. See [Part 7](07-overnight-loop.md) for the full workflow. No SKILL.md needed.
 
-### /dev-session (heavily used)
-Smart session composition with IDEAS.md orchestration, TDD gate, budget awareness, scope definition, and rule capture. The primary skill for actual project work. See [Part 4](04-dev-session.md) for full detail.
-
-No starter SKILL.md included - this skill integrates with IDEAS.md, budget awareness tools, and the git workflow. Build it after the workspace CLAUDE.md, IDEAS.md, and budget tools are set up. The design is fully documented in Part 4.
-
-### [/commit-chunks](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-chunks/SKILL.md) (regularly used)
+### [/commit-chunks](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-chunks/SKILL.md)
 Commit changed files in logical chunks - one commit per feature/fix/topic. Analyses what's staged/unstaged and proposes a commit split with draft messages. Prevents the "committed everything in one giant blob" problem that makes git history unreadable.
 
-### [/deep-dive](https://github.com/DavoDC/claude-playbook/blob/main/skills/deep-dive/SKILL.md) (occasional)
+### [/deep-dive](https://github.com/DavoDC/claude-playbook/blob/main/skills/deep-dive/SKILL.md)
 
 Deep investigation of a topic, file, directory or repo. Two mechanisms make it different from asking Claude to look at something carefully.
 
-It uses a commit-anchored delta (see [Part 10](10-advanced.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
+It uses a commit-anchored delta (see [Part 16](16-commit-anchored-delta.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
 
-And it generates its lenses before it scans, using the framework in [Part 12](12-audit-lenses.md), then states in its output which cells it walked and which it deliberately skipped. That second half is what stops the fifth pass over a repo confirming what the fourth one said: the delta tells you which files to re-read, and only the lens framework tells you what to ask of them.
+And it generates its lenses before it scans, using the framework in [Part 12](12-audit-lenses.md), then states which cells it walked and which it deliberately skipped. That stops the fifth pass over a repo confirming what the fourth said: the delta says which files to re-read, only the lens framework says what to ask of them.
 
 ### [/cross-synth](https://github.com/DavoDC/claude-playbook/blob/main/skills/cross-synth/SKILL.md)
 Cross-synthesise any N subjects (repos, files, docs, configs, tests, features) side-by-side: find what's shared, what's missing, what's inconsistent, and what one subject can teach the others. Horizontal analysis - where `/deep-dive` goes deep on one thing, `/cross-synth` goes wide across many.
 
-### [/process-feedback](https://github.com/DavoDC/claude-playbook/blob/main/skills/process-feedback/SKILL.md) (occasional)
-Takes a `feedback_*.txt` file written by the user (raw notes, corrections, wishes) and produces two outputs: new IDEAS.md entries for product work, and Claude rule files for feedback. The bridge between user notes and the improvement system.
-
-### [/refine-ideas](https://github.com/DavoDC/claude-playbook/blob/main/skills/refine-ideas/SKILL.md) (occasional)
-Interactively clarify IDEAS.md priorities. Asks one question per item, derives semantic tiers from your answers. Use when IDEAS.md has gotten messy or when you've added a bunch of items and need to re-sort.
-
-### [/commit-all](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-all/SKILL.md) (rarely used)
-Commit all changed files in one go. Less surgical than `/commit-chunks` - use when you want everything staged and committed without thinking about logical grouping.
-
-### [/reflection](https://github.com/DavoDC/claude-playbook/blob/main/skills/reflection/SKILL.md) (rarely used)
+### [/reflection](https://github.com/DavoDC/claude-playbook/blob/main/skills/reflection/SKILL.md)
 Read recent session history and update CLAUDE.md, memory files, and workspace based on patterns found. Uses commit-anchored delta - only reads sessions added since the last reflection, stays fast. Run every few sessions or after a major block of work.
 
-[Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/reflection/SKILL.md)
+### [/process-feedback](https://github.com/DavoDC/claude-playbook/blob/main/skills/process-feedback/SKILL.md)
+Takes a `feedback_*.txt` file written by the user (raw notes, corrections, wishes) and produces two outputs: new IDEAS.md entries for product work, and Claude rule files for feedback. The bridge between user notes and the improvement system.
 
-### [/step-commits](https://github.com/DavoDC/claude-playbook/blob/main/skills/step-commits/SKILL.md) (rarely used)
+### [/refine-ideas](https://github.com/DavoDC/claude-playbook/blob/main/skills/refine-ideas/SKILL.md)
+Interactively clarify IDEAS.md priorities. Asks one question per item, derives semantic tiers from your answers. Use when IDEAS.md has gotten messy or when you've added a bunch of items and need to re-sort.
+
+### [/step-commits](https://github.com/DavoDC/claude-playbook/blob/main/skills/step-commits/SKILL.md)
 Plan changes as atomic commits upfront before implementing. Define the commit sequence first, then execute one commit at a time. Good for complex multi-step changes where getting the commit order right matters.
 
-### [/human-voice](https://github.com/DavoDC/claude-playbook/blob/main/skills/human-voice/SKILL.md) (rarely used)
+### [/commit-all](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-all/SKILL.md)
+Commit all changed files in one go. Less surgical than `/commit-chunks` - use when you want everything staged and committed without thinking about logical grouping.
+
+### [/human-voice](https://github.com/DavoDC/claude-playbook/blob/main/skills/human-voice/SKILL.md)
 Audit and rewrite text to remove AI writing patterns. For anything written to a person.
 
 **Tier 1 - always replace:** delve, leverage (as verb), utilize, robust, comprehensive, cutting-edge, seamless, meticulous, actionable, paradigm, testament to, underscores, holistic, synergy, "in order to", "serves as", "best practices"
@@ -182,9 +175,6 @@ Audit and rewrite text to remove AI writing patterns. For anything written to a 
 **Structural tells:** uniform paragraph length (vary deliberately), excessive bullet lists in personal messages (prose is almost always better), formulaic openings that start with broad context instead of the actual point
 
 Two modes: `rewrite` (default) or `detect` (flags only, no rewriting).
-
-### [/checkpoint](https://github.com/DavoDC/claude-playbook/blob/main/skills/checkpoint/SKILL.md) (use in overnight loops)
-Create named restore points during long sessions or loops. `create <name>` commits current state and logs the checkpoint with SHA and context percentage. `list` shows today's checkpoints. `verify <name>` shows diff since that checkpoint.
 
 ---
 
@@ -205,40 +195,8 @@ More detailed than `/today`. Categorises all pending items into: can do now, nee
 ### /self-audit
 Workspace compliance check. Read-only - reports findings, never auto-fixes. Checks MEMORY.md health, pending actions for stale items, .gitignore gaps, skill integrity, hooks configuration.
 
-### /validate-rules *(build your own)*
-Check that enforced-rules.md and feedback files are internally consistent and not contradicting each other. Also runs validation to ensure hook-enforced rules are actually implemented in the hooks.
-
-### /pre-rebuild
-Pre-rebuild checklist before a major refactor or rebuild. Ensures you've captured the current state, understand what exists, and have a recovery plan before destroying anything.
-
-### /code-review *(build your own)*
-Review the current diff for correctness bugs at configurable effort levels. No starter provided - straightforward to build: "read `git diff HEAD`, check for correctness issues, output findings."
-
-### /security-review *(build your own)*
-Security-focused code review. Looks for OWASP top 10, credential leaks, injection vulnerabilities. No starter provided - can be as simple as: "read the diff, check for the OWASP top 10, report findings grouped by severity."
-
-### /release *(build your own)*
-Structured release process: version bump, changelog, tag, push. No starter provided - the steps are specific enough to your versioning scheme and release channel that a generic one would need rewriting anyway.
-
-### /save-memory *(build your own)*
-Manually save a piece of information to the memory system. No starter provided - straightforward: "write the fact to `memory/<category>/<name>.md`, add a pointer to `memory/MEMORY.md`, commit."
-
-### [/check-compact](https://github.com/DavoDC/claude-playbook/blob/main/skills/check-compact/SKILL.md)
-Context size check: counts exchanges in the current session; replies with one line - "Context heavy - please run /compact now." if heavy, or "Context light - no compact needed (~N exchanges)." if light. Run when unsure if compaction is needed before a large task.
-
-[Starter SKILL.md](https://github.com/DavoDC/claude-playbook/blob/main/skills/check-compact/SKILL.md)
-
-### [/survey-repo](https://github.com/DavoDC/claude-playbook/blob/main/skills/survey-repo/SKILL.md)
-Quick codebase summary: language, purpose, key files, tests, entry points, open TODOs. Use when starting work on an unfamiliar repo.
-
 ### [/undo-commits](https://github.com/DavoDC/claude-playbook/blob/main/skills/undo-commits/SKILL.md)
 Undo the last N commits via `git reset --soft`, show what's staged, help recommit cleanly. Safe - never rebases, never force-pushes.
-
-### /health
-Workspace health check. Detects skill gaps, hook count anomalies, file bloat, stale peer-sync reviews, unindexed memory files.
-
-### /skill-suggest *(build your own)*
-Context-aware skill recommendations. Describe a task and it detects the intent (exploration, implementation, debugging, review, ...) and suggests the most relevant installed skills, with an optional `--detailed` mode for full guidance on each match. Uses keyword matching, so treat suggestions as a starting point, not a verdict.
 
 ### [/repo-status](https://github.com/DavoDC/claude-playbook/blob/main/skills/repo-status/SKILL.md)
 Multi-repo status overview. For each repo in a configured directory: current branch, uncommitted changes count, and unpushed commits count. Output as a compact table. Flags repos with dirty files, unpushed commits, or unexpected branches. Never fetches (no network requirement). Read-only.
@@ -251,30 +209,26 @@ Run before container rebuilds, session ends, or switching between repos. Build y
 
 ## Skill Library Maintenance
 
-Every skill installed under `.claude/skills/` loads its name and one-line description into every session's context, whether or not that session ever calls it. A skill nobody invokes this month is a permanent tax on all the sessions that never call it either - the usage tiers above (heavily used, occasional, rarely used) exist specifically to surface which ones are paying for themselves and which aren't. The fix isn't fewer skills up front, since you can't know in advance which will earn their keep. It's a retirement loop.
+Every skill under `.claude/skills/` loads its name and one-line description into every session's context, whether or not that session calls it, so a skill nobody invokes is a permanent tax on all sessions. You can't know in advance which skills will earn their keep, so the fix isn't fewer skills up front but a retirement loop.
 
-**Log invocations, then retire on evidence, not vibes.** The session logger hook records which skill fired on each `/command`, which over time gives actual usage data instead of a guess about what "feels" used. On a regular cadence - each `/reflection`, or a periodic `/health` pass - look at what hasn't fired in a long stretch and move it out of `.claude/skills/` into an archive folder, for example `archive/skills/`. Archive, never delete: keep the file git-tracked and runnable exactly as it was, just outside the directory that gets loaded into context every session. Bringing one back is a file move, not a rebuild.
+**Log invocations, then retire on evidence, not vibes.** The session logger hook records which skill fired on each `/command`, giving actual usage data. On a regular cadence - for example each `/reflection` - move skills that haven't fired in a long stretch out of `.claude/skills/` into an archive folder, for example `archive/skills/`. Archive, never delete: keep the file git-tracked and runnable, just outside the directory loaded every session. Bringing one back is a file move, not a rebuild.
 
-**Keep a retired-skills index.** Retiring a skill without a record of it means forgetting it exists the next time the process comes up. One entry per retired skill - what it did, when it was retired, and the path to bring it back - in an index file next to the archive folder. The index is what makes retirement safe: you're not deleting capability, you're moving its cost from "every session" to "the one session you actually need it."
+**Keep a retired-skills index.** One entry per retired skill - what it did, when it was retired, and the path to bring it back - in an index file next to the archive. Without a record you forget it exists. The index makes retirement safe: you move its cost from "every session" to "the one session you need it."
 
-**Prefer reading a retired skill in place over promoting it back.** For a process that comes up genuinely occasionally - once a quarter, once every few months - the cheapest move is to open the archived SKILL.md and follow it manually, not to reinstall it. Promoting it back "just for this one use" is exactly how the context tax creeps back in: nobody re-retires it afterward, and a few months later it's dead weight in every session again.
+**Prefer reading a retired skill in place over promoting it back.** For a genuinely occasional process, open the archived SKILL.md and follow it manually. Do not promote something back "just for this one use": nobody re-retires it afterwards, and a few months later it is dead weight in every session again.
 
-**Track the retirement decision itself, not just the retirement.** Archiving a skill is easy to execute and easy to forget about afterward - the file moves, the index gets a line, and the judgment call ("was this the right thing to retire?") quietly disappears with it. Put that judgment call on a visible backlog instead of letting it evaporate: a line in your ideas or backlog doc naming the skill and the open question keeps it revisitable. This matters most when the retirement was a close call rather than an obvious one - a skill with low but nonzero usage, or one that overlaps with something else that stayed installed. A decision sitting on a backlog gets reconsidered when circumstances change; a decision that only exists as a completed action in an archive folder does not.
+**Track the retirement decision itself.** Archiving is easy to execute and forget; the judgment call ("was this the right thing to retire?") disappears with it. Put it on a visible backlog: a line in your ideas or backlog doc naming the skill and the open question. Most important for close calls - low but nonzero usage, or overlap with something that stayed installed. A decision on a backlog gets reconsidered when circumstances change; one that exists only as a completed action in an archive folder does not.
 
-**The promotion criterion - and the part invocation counts alone will miss.** A skill earns its place installed if EITHER of two things is true: it's invoked directly and regularly, OR another installed skill routes into it as part of its own workflow. The second criterion is the non-obvious one. A real failure mode: a ranking/prioritisation skill was retired because its own direct invocation count was low, while several of the thinking skills that stayed installed all called into it as a step in their own process. The result was a dead command sitting in the middle of what had been a working chain - the routing calls into it silently failed, and nobody noticed until something downstream broke. Before retiring anything, grep the other installed skills for its name, not just its own invocation log.
+**The promotion criterion - and what invocation counts miss.** A skill earns its place installed if EITHER it is invoked directly and regularly, OR another installed skill routes into it as part of its workflow. The second is non-obvious: a ranking skill can have a low direct count while several thinking skills call it as a step; retire it and the routing calls silently fail until something downstream breaks. Before retiring anything, grep the other installed skills for its name, not just its invocation log.
 
-**The case frequency cannot decide.** The two criteria above both come down to observable use. Neither can separate *dead* from *rare by nature and high consequence when needed*: a pre-rebuild checklist, a recovery procedure, an annual audit. A low count means both things and looks identical either way, so a human judgement is required before any retirement in that class, and no counter will supply it.
+**The case frequency cannot decide.** Both criteria come down to observable use, and neither separates *dead* from *rare by nature and high consequence when needed*: a pre-rebuild checklist, a recovery procedure, an annual audit. A low count looks identical either way, so a human judgement is required before retiring anything in that class; no counter supplies it.
 
-For that class the right answer is usually **neither install nor delete**. Keep it archived, tracked and runnable, and open the file and follow it when the moment comes. A process needed once every month or two is better off as a plain document than as a skill, because the document costs nothing on the sessions that do not need it while a skill pays its description line on all of them.
+For that class the answer is usually **neither install nor delete**. Keep it archived, tracked and runnable, and open the file when the moment comes. A process needed once every month or two is better as a plain document than a skill, because the document costs nothing on sessions that don't need it while a skill pays its description line on all of them. Reach for a skill when a process needs Claude to make judgment calls across several steps on a regular basis; reach for a doc for reference material consulted rarely.
 
-**Do not promote something back "just for this one use".** That is exactly how the cost creeps back: nobody re-retires it afterwards, and a few months later it is dead weight in every session again.
+**Match new corrections against the archive by lesson, not by name.** When a fresh correction comes in, check whether an archived feedback file already covers that lesson; if so the archival was premature and the rule should come back rather than be rewritten under a new name. Matching file names misses this every time, since the second occurrence of a lesson almost never arrives with the same wording. An archive nobody checks against is just a slower delete.
 
-**Match new corrections against the archive by lesson, not by name.** The same discipline applies to archived rules. When a fresh correction comes in, check whether an archived feedback file already covers that lesson - and if one does, the archival was premature and the rule should come back rather than be rewritten under a new name. Matching on file names alone misses this every time, because the second occurrence of a lesson almost never arrives with the same wording as the first. An archive nobody checks against is just a slower delete.
+**Retiring from your own machine is not a reason to unpublish.** The counter informs only one of two different questions. Retirement asks "is this worth its description-line tax in every one of MY sessions", a fact about one person's habits. Publishing asks "would somebody with different repos and a different job find this valuable", which invocation counts say nothing about. A skill can be dead weight on the machine that wrote it and the most useful file in the library for the person who clones it. The only grounds for pulling something from a shared library are that it leaks something private, that the idea is actually wrong, or that the library's owner says so. "We stopped running it" is none of those, and the third is a decision rather than an inference.
 
-**The corollary.** A process you run only every month or two is often better off as a plain doc than as a skill at all. The doc is the runnable artifact - you or Claude reads it and follows the steps - and it costs nothing on every session that doesn't need it, versus a skill's permanent description-line tax paid regardless of use. Reach for a skill when a process needs Claude to make judgment calls across several steps on a regular basis; reach for a doc when it's reference material consulted rarely.
+**When a decision has a written rule, read the rule, not the record of past actions.** An archive index tells you what was done, never what should be done.
 
-**Retiring from your own machine is not a reason to unpublish.** The two decisions answer different questions and the counter only informs one of them. Retirement asks "is this worth its description-line tax in every one of MY sessions", which is a fact about one person's habits. Publishing asks "would somebody with different repos and a different job find this idea valuable", which invocation counts say nothing about whatsoever. A skill can be dead weight on the machine that wrote it and the single most useful file in the library for the person who clones it. The only grounds for pulling something out of a shared library are that it leaks something private, that the idea is actually wrong, or that the person whose library it is says so. "We stopped running it" is none of those, and the third one is a decision rather than an inference - which is the whole point of the paragraph below.
-
-The failure this prevents is worth naming because it is not hypothetical here. That rule was written down, and then a later maintenance pass removed four skills from the published set anyway, on exactly the zero-usage criterion the rule forbids, having read the archive index rather than the rule. The archive index recorded the retirements as facts; the rule that said those facts were not grounds for unpublishing lived one file away and was never opened. **When a decision has a written rule, the rule is the input, and the record of past actions is not a substitute for it.** An index tells you what was done, never what should be done, and the two are easy to confuse when the index is the more convenient file to read.
-
-**And no sweep retires anything without the owner saying so.** Usage data is an input to that conversation, never the decision itself, because the counter cannot see the two cases that matter most: a skill other skills route into, and a skill that is rare by nature and high consequence when it fires. Both look exactly like dead weight in the log. Propose the list, name the evidence for each, and let a human answer - a retirement is cheap to defer and expensive to reverse, since the thing that is really lost is not the file but the reason nobody wrote down.
+**And no sweep retires anything without the owner saying so.** Usage data is an input to that conversation, never the decision, because the counter cannot see the two cases that matter most: a skill other skills route into, and a skill rare by nature and high consequence when it fires. Both look like dead weight in the log. Propose the list, name the evidence for each, and let a human answer; retirement is cheap to defer and expensive to reverse, since what is really lost is not the file but the reason nobody wrote down.

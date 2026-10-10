@@ -411,3 +411,41 @@ TARGET="${1:-$REAL_TARGET_PATH}"
 ```
 
 Evidence: applied to a repair script touching a live browser cookie database - the parameterized version let the destructive path be validated against a copy before it ever touched the real file.
+
+### Example Hooks You Can Run
+
+Working, neutral versions of the recipes below live in `hooks/examples/`, with `hooks/examples/test_examples.py` running each against sample payloads (a deny case, a pass case, a malformed payload, and a control proving an oversized read is really refused). Copy one, edit its constants, register it in `settings.json` with a timeout.
+
+### Read-Size Guard (PreToolUse on Read)
+
+A whole-file read of a large file costs context for the rest of the session. The guard denies a `Read` with no offset or limit when the file exceeds a byte ceiling, and the stderr message tells Claude to re-read a section or search instead. A read that names an offset or limit always passes, so the escape hatch is built in. See `hooks/examples/read_size_guard.py`.
+
+### Bash Output Cap (PreToolUse on Bash)
+
+Some commands reliably print thousands of lines. Keep a short list of patterns for the ones you actually hit, and deny them unless the command already limits its output with `head`, `tail`, `grep`, `wc` or a redirect to a file. Denying before the run is better than trimming after, because the flood never enters context. See `hooks/examples/bash_output_cap.py`.
+
+### Edit-Without-Agent Tripwire (PostToolUse on Edit|Write)
+
+If the main session keeps editing files itself after a long stretch of mechanical work, it is probably doing work a subagent should do. The tripwire counts edits per session in a small state file and, at a threshold, injects one reminder as `additionalContext`. It never blocks: it observes and nudges once. See `hooks/examples/edit_without_agent_tripwire.py`.
+
+### Stop-Hook Unscheduled-Resume Guard (Stop)
+
+If a budget script prints a `RESUME:` line when usage is high, acting on it is a judgement call a long loop can forget, and the work then idles past the reset. A Stop hook scans the current turn of the transcript for that line and, if no one-shot schedule follows it, blocks the stop with an instruction to schedule one. The payload's `stop_hook_active` flag is honoured first so the hook can never loop. See `hooks/examples/stop_resume_guard.py`.
+
+### Convention-Reminder Injection (PreToolUse on Read|Write|Edit)
+
+Rules that apply to one kind of file are easy to forget until the file is open. A hook matches by file name and returns `permissionDecision: "allow"` plus a one-line `additionalContext` the first time that file is touched in a session, then stays quiet. It is advice at the moment of need, not a gate. See `hooks/examples/convention_reminder.py`.
+
+### Hooks Deny or Observe, Never Approve
+
+A hook (or any plugin that intercepts tool calls) that answers "allow" can override a stricter check elsewhere, and a handler that answers without passing control on can stop later hooks from running at all. Keep your own interceptors to two jobs: deny, or observe and add context. The convention-reminder above returns "allow" only because it is advisory and sits beside the real guards, never in place of them. If you write interceptors as code, lint them for this rule and make the lint part of your test run.
+
+### Absent Is Not Malformed
+
+When a safety check resolves a setting with a default, treat a missing key and a present-but-unexpected value as different cases. Test membership to apply the default; coerce anything present by truthiness, or send it to an explicit "violation" result. The tempting shape, `value if isinstance(value, bool) else DEFAULT`, silently maps a present `1` or `"1"` to the safe default and reports safe while the dangerous flag is set. When you find one resolver with this shape, grep the rest of the module for the same shape, because it repeats.
+
+The distinction matters in the opposite direction for hook plumbing: an unparseable hook payload should fail open (exit 0), since a broken guard that blocks everything is worse than none. Fail open on your own errors, fail closed on a present, parsed violation.
+
+### Timeouts and a Health Check
+
+Every hook needs an explicit numeric timeout, because a stuck hook freezes the session. On some platforms the bare name `python3` resolves to a stub that hangs and ignores timeouts, so call the interpreter you know works there. Run `hooks/examples/check_hook_health.py` after any settings edit: it fails if a hook lacks a timeout, uses bare `python3`, names a script that does not exist, or if `disableAllHooks` was left on.

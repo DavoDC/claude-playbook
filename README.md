@@ -80,7 +80,7 @@ workspace/          <- you always run Claude from here
 
 **Why not just use a project repo?** If your preferences live in a project repo, they disappear when you start a new project. With a workspace repo, every session starts with your rules loaded, your skills available, and context from past sessions. Every correction you make to Claude compounds across all future sessions and all projects.
 
-The whole system depends on this one structural choice. See `docs/11-workspace-repo.md` for the full setup guide.
+The whole system depends on this one structural choice. See `docs/10-workspace-repo.md` for the full setup guide.
 
 ---
 
@@ -111,21 +111,21 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [01 - The CLAUDE.md Layer](docs/01-claude-md.md) | Core | Workspace and project CLAUDE.md - what goes where and why |
 | [02 - The Improvement Loop](docs/02-improvement-loop.md) | Core | Enforced rules, feedback files, the rule promotion hierarchy |
 | [03 - IDEAS.md and Roadmap](docs/03-ideas-and-roadmap.md) | Core | Priority queue, HISTORY.md archive, the roadmap layer |
-| [05 - Budget Awareness](docs/05-budget-awareness.md) | Core | The three budget axes, what session-status.sh does, how to build it |
-| [06 - Sessions and Memory](docs/06-sessions-and-memory.md) | Field note | /end-session, session fragments, the file-based memory system |
-| [07 - The Overnight Loop](docs/07-overnight-loop.md) | Field note | /loop over IDEAS.md, restore points |
-| [08 - Skills Reference](docs/08-skills.md) | Field note | Every shipped skill, ordered by impact |
-| [09 - Hooks](docs/09-hooks.md) | Field note | Events, exit codes, blast radius triage, the fail-open trap, the `if:` field |
-| [09b - Hook Recipes](docs/09-hooks-recipes.md) | Field note | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
-| [11 - The Workspace Repo](docs/11-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
-| [12 - Audit Lenses](docs/12-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, and the re-ranking lenses |
-| [13 - Multi-Agent Orchestration](docs/13-multi-agent-orchestration.md) | Field note | Model choice, delegation, budget before fan-out, briefs, accepting work back, external content as data |
-| [14 - Concurrent Sessions](docs/14-concurrent-sessions.md) | Field note | Several sessions on one working tree: commits, shared logs, locks, git rules |
-| [15 - Verification Habits](docs/15-verification-habits.md) | Field note | Re-test inherited limits, enumerate before confirming, observation harness, live-process checks |
-| [16 - Commit-Anchored Delta](docs/16-commit-anchored-delta.md) | Field note | Re-audit only what changed since the last anchor |
-| [17 - Freeze the Consumer](docs/17-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
-| [18 - CLAUDE.md Worked Examples](docs/18-claude-md-examples.md) | Field note | What a project note changes in practice |
-| [19 - Reframing Blocked Problems](docs/19-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
+| [04 - Budget Awareness](docs/04-budget-awareness.md) | Core | The three budget axes, what session-status.sh does, how to build it |
+| [05 - Sessions and Memory](docs/05-sessions-and-memory.md) | Field note | /end-session, session fragments, the file-based memory system |
+| [06 - The Overnight Loop](docs/06-overnight-loop.md) | Field note | /loop over IDEAS.md, restore points |
+| [07 - Skills Reference](docs/07-skills.md) | Field note | Every shipped skill, ordered by impact |
+| [08 - Hooks](docs/08-hooks.md) | Field note | Events, exit codes, blast radius triage, the fail-open trap, the `if:` field |
+| [09 - Hook Recipes](docs/09-hooks-recipes.md) | Field note | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
+| [10 - The Workspace Repo](docs/10-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
+| [11 - Audit Lenses](docs/11-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, and the re-ranking lenses |
+| [12 - Multi-Agent Orchestration](docs/12-multi-agent-orchestration.md) | Field note | Model choice, delegation, budget before fan-out, briefs, accepting work back, external content as data |
+| [13 - Concurrent Sessions](docs/13-concurrent-sessions.md) | Field note | Several sessions on one working tree: commits, shared logs, locks, git rules |
+| [14 - Verification Habits](docs/14-verification-habits.md) | Field note | Re-test inherited limits, enumerate before confirming, observation harness, live-process checks |
+| [15 - Commit-Anchored Delta](docs/15-commit-anchored-delta.md) | Field note | Re-audit only what changed since the last anchor |
+| [16 - Freeze the Consumer](docs/16-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
+| [17 - CLAUDE.md Worked Examples](docs/17-claude-md-examples.md) | Field note | What a project note changes in practice |
+| [18 - Reframing Blocked Problems](docs/18-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
 
 Core files' referenced tools and snippets are asserted by `tools/selftest.sh` on every push; Field note files are dated patterns from practice that the harness does not check - see "What's Guaranteed vs What's Field Notes" above for the full distinction.

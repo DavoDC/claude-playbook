@@ -1,4 +1,4 @@
-# Part 7: The Overnight Loop Workflow
+# Part 6: The Overnight Loop Workflow
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
@@ -20,7 +20,7 @@ The key is that each iteration is self-contained. Each iteration:
 3. Handles its own commit and close-out
 4. The next iteration starts fresh with the updated IDEAS.md
 
-Without the budget gate (see [Part 5](05-budget-awareness.md)), the loop would hammer rate limits and fail. The budget awareness tooling is what makes overnight automation safe.
+Without the budget gate (see [Part 4](04-budget-awareness.md)), the loop would hammer rate limits and fail. The budget awareness tooling is what makes overnight automation safe.
 
 ## Restore Points During Loops
 

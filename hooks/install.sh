@@ -19,4 +19,4 @@ for hook in pre-commit commit-msg privacy-scan.sh; do
     echo "installed: $hook"
 done
 
-echo "Done. See docs/09-hooks.md for what these hooks check."
+echo "Done. See docs/08-hooks.md for what these hooks check."

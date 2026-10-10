@@ -109,7 +109,7 @@ There is no special syntax. Clear markdown instructions are enough. Claude reads
 
 ## Skills Worth Building Yourself
 
-These are described in [docs/08-skills.md](../docs/08-skills.md) and are worth implementing as custom skills for your own setup:
+These are described in [docs/07-skills.md](../docs/07-skills.md) and are worth implementing as custom skills for your own setup:
 
 - **`/loop`** - repeat a command on a schedule (overnight automation)
 

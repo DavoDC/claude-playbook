@@ -25,7 +25,7 @@ If the stored anchor no longer exists in the history, report that distinctly. It
 
 **Generating lenses and generating findings are different activities. Doing the first one first is what breaks out of the previous pass's blind spot.**
 
-Read `docs/12-audit-lenses.md` and walk its generator rather than picking from a list:
+Read `docs/11-audit-lenses.md` and walk its generator rather than picking from a list:
 
 - **The matrix.** SUBJECT (product code, tests, the instrument, config, data and output, docs, the usage surface, dependencies and platform, history and process, our own recent changes, the audit itself) crossed with QUESTION (correct, fails safely, honest, consistent, usable, fast enough, secure, missing).
 - **The people.** A first-time user, a security reviewer, someone debugging at two in the morning with only the log, a packager, someone on the other operating system, someone with narrower permissions, the team inheriting it, yourself in a year.
@@ -74,7 +74,7 @@ Two specific checks, both cheap and both learned the hard way:
 All five, and all five were learned by skipping them.
 
 1. **Check file ownership before assigning work, not after reading the reports.** Findings in files owned by someone else's open pull request cannot be fixed, and that is knowable up front.
-2. **Run ONE extreme lens over the resulting BACKLOG, not over the code.** See Part 12. Cheapest step in the process and the only one that improves items you are not touching. Record what moved. "Nothing moved" is a real result.
+2. **Run ONE extreme lens over the resulting BACKLOG, not over the code.** See Part 11. Cheapest step in the process and the only one that improves items you are not touching. Record what moved. "Nothing moved" is a real result.
 3. **Audit your own CAPTURE as a separate step, after the fixing.** Fixing is absorbing: what you act on gets remembered and what you defer evaporates into a report nobody reopens. Grep the backlog for a distinctive phrase from each finding rather than trusting recall. One round's capture check found six findings missed entirely, a better return than any single lens.
 4. **Record the new anchor** for this scope so the next dive reads only the delta.
 5. **Update the coverage record**, from verified results, at the end. Never from intent at the start.

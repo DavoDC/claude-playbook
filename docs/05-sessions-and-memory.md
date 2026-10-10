@@ -1,4 +1,4 @@
-# Part 6: Sessions and Memory
+# Part 5: Sessions and Memory
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
@@ -131,7 +131,7 @@ Evidence and analysis want opposite treatment. Evidence is immutable and accumul
 
 ## Cheap Orientation at Session Start
 
-Reading a long task list and a long session history at the start of every session is a fixed cost with little return. Have a SessionStart hook run `tools/session-brief.py`, which prints a handful of open items and the latest few session headings under a hard byte cap, and make the rule that source files are read only by section, with an offset and limit. Pair it with a measured baseline (see Part 5) so you can tell whether the start-of-session cost is actually going down.
+Reading a long task list and a long session history at the start of every session is a fixed cost with little return. Have a SessionStart hook run `tools/session-brief.py`, which prints a handful of open items and the latest few session headings under a hard byte cap, and make the rule that source files are read only by section, with an offset and limit. Pair it with a measured baseline (see Part 4) so you can tell whether the start-of-session cost is actually going down.
 
 ## Common Gotchas
 
@@ -162,4 +162,4 @@ A practical fix: clone the docs locally so the whole corpus is greppable in one 
 git clone https://github.com/ericbuess/claude-code-docs
 ```
 
-See `docs/11-workspace-repo.md` for where this clone should live and why. Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.
+See `docs/10-workspace-repo.md` for where this clone should live and why. Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.

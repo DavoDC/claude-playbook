@@ -1,4 +1,4 @@
-# Part 14: Concurrent Sessions on One Working Tree
+# Part 13: Concurrent Sessions on One Working Tree
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 

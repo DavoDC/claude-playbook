@@ -1,4 +1,4 @@
-# Part 11: The Workspace Repo
+# Part 10: The Workspace Repo
 
 > **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
@@ -46,7 +46,7 @@ git init && git checkout -b main
 mkdir -p .claude/rules .claude/skills memory/feedback
 ```
 
-Copy `templates/CLAUDE_workspace.md` from this playbook to the root as `CLAUDE.md`. Copy `templates/enforced-rules.md` to `.claude/rules/enforced-rules.md`. Edit both to match how you actually work.
+Copy the workspace CLAUDE.md template from `templates/` to the root as `CLAUDE.md`. Copy the enforced-rules template from `templates/` to `.claude/rules/enforced-rules.md`. Edit both to match how you actually work.
 
 That's the workspace. Now always run Claude from this directory.
 

@@ -278,7 +278,7 @@ fi
 # valid, checkable script), so the rule stays a single unambiguous check
 # instead of a pile of heuristics that could disagree with each other.
 # ---------------------------------------------------------------------------
-HOOKS_DOC_1="$REPO_ROOT/docs/09-hooks.md"
+HOOKS_DOC_1="$REPO_ROOT/docs/08-hooks.md"
 HOOKS_DOC_2="$REPO_ROOT/docs/09-hooks-recipes.md"
 HOOKBLOCK_DIR="$TEST_TMPDIR/hookblocks"
 mkdir -p "$HOOKBLOCK_DIR"

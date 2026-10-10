@@ -32,14 +32,14 @@ MIN_WORDS = 14
 ALLOW = [
     (
         "Cheapest step in the process and the only one that improves items you are not touching.",
-        frozenset({"docs/12-audit-lenses.md", "skills/deep-dive/SKILL.md"}),
+        frozenset({"docs/11-audit-lenses.md", "skills/deep-dive/SKILL.md"}),
         "skills/deep-dive/SKILL.md restates the audit-lenses closing "
         "re-rank line so someone reading the skill standalone gets the "
         "point without also opening the chapter it points at.",
     ),
     (
         "Grep the backlog for a distinctive phrase from each finding rather than trusting recall.",
-        frozenset({"docs/12-audit-lenses.md", "skills/deep-dive/SKILL.md"}),
+        frozenset({"docs/11-audit-lenses.md", "skills/deep-dive/SKILL.md"}),
         "skills/deep-dive/SKILL.md restates the audit-lenses backlog-dedup "
         "instruction for the same standalone-reading reason as the entry "
         "above.",

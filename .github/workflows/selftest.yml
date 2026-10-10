@@ -32,7 +32,7 @@ jobs:
       # actions/runner-images, not PowerShell/cmd - selftest.sh is a bash
       # script and needs it either way. The Windows leg is not redundant
       # with the Ubuntu leg: this repo makes Windows-specific claims (see
-      # docs/09-hooks.md "Critical for Windows"), and only a real Windows
+      # docs/08-hooks.md "Critical for Windows"), and only a real Windows
       # runner proves the temp-dir isolation in selftest.sh actually holds
       # up where Python resolves tempfile.gettempdir() via TEMP, not TMPDIR.
       - name: Run selftest.sh

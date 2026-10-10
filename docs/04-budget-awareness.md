@@ -1,4 +1,4 @@
-# Part 5: Budget Awareness
+# Part 4: Budget Awareness
 
 > **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
@@ -161,7 +161,7 @@ The levers above are habits. These are mechanisms: each one removes a recurring 
 
 **Read and shell caps.** Deny a whole-file read of a large file and ask for a section, and deny known-flooding shell commands unless their output is already limited. Both are hooks, and working examples are in `hooks/examples/`.
 
-**Serial, bundled subagents.** Many small parallel subagents cost the orchestrator more context, because each report and diff must be read and checked, than a few larger sequential ones. Group queued fixes by shared code location, dispatch one bundle, verify the artifact, then dispatch the next. See [Part 13](13-multi-agent-orchestration.md#serial-bundled-dispatch).
+**Serial, bundled subagents.** Many small parallel subagents cost the orchestrator more context, because each report and diff must be read and checked, than a few larger sequential ones. Group queued fixes by shared code location, dispatch one bundle, verify the artifact, then dispatch the next. See [Part 12](12-multi-agent-orchestration.md#serial-bundled-dispatch).
 
 ## The Bottleneck Is Often a Human Action, Not Model Budget
 
@@ -169,7 +169,7 @@ Everything above measures whether the model has budget left. Also check the oppo
 
 Keep an explicit ranked list of "waiting on a human action" items and work it down before starting new work, as you would check the budget axes. The two constraints are measured by different instruments: a budget readout shows capacity left, and nothing shows how much finished work is parked behind a click. When usage is well under the ceiling and output still feels stalled, look there first.
 
-This is not an argument against delegating when delegation is right - see [Part 13](13-multi-agent-orchestration.md#when-to-delegate-vs-do-it-directly). It is an argument for checking, before delegating or building more, whether the bottleneck is capacity to build or a short list only a human can finish. Building more just grows a backlog that was never short of finished work.
+This is not an argument against delegating when delegation is right - see [Part 12](12-multi-agent-orchestration.md#when-to-delegate-vs-do-it-directly). It is an argument for checking, before delegating or building more, whether the bottleneck is capacity to build or a short list only a human can finish. Building more just grows a backlog that was never short of finished work.
 
 ---
 

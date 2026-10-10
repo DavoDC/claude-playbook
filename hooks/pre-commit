@@ -3,7 +3,7 @@
 #
 # Generic and safe to publish: no repo name or path is hardcoded here. Any
 # sibling repo opts INTO this protection by dropping a `.private-root` marker
-# file at its own root (see docs/09-hooks.md for the marker format; guard.py
+# file at its own root (see docs/08-hooks.md for the marker format; guard.py
 # in the main playbook uses the same convention). This hook globs for those
 # markers under the parent of this repo and derives its token list from what
 # it finds - so the list is different on every machine, and this file never

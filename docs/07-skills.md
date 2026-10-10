@@ -1,4 +1,4 @@
-# Part 8: Skills Reference
+# Part 7: Skills Reference
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
@@ -129,12 +129,12 @@ Generate options for a genuinely open-ended problem using a named method rather 
 ## Daily Workflow Skills
 
 ### /end-session
-Close out a session: write session record, reconcile tasks, drain memory, commit everything. The crux of the improvement loop. Run at the end of every session. See [Part 6](06-sessions-and-memory.md) for full detail.
+Close out a session: write session record, reconcile tasks, drain memory, commit everything. The crux of the improvement loop. Run at the end of every session. See [Part 5](05-sessions-and-memory.md) for full detail.
 
-A template [SKILL.md](../skills/end-session/SKILL.md) is included, with placeholders for your memory folder, fragment folder and task list. It names the scripts that own the mechanical edits (prep, finalize, commit) but does not ship them, since they depend on your layout. Build incrementally: start with "write session summary + commit", then add consolidation scripts as your workspace matures. Design: Part 6.
+A template [SKILL.md](../skills/end-session/SKILL.md) is included, with placeholders for your memory folder, fragment folder and task list. It names the scripts that own the mechanical edits (prep, finalize, commit) but does not ship them, since they depend on your layout. Build incrementally: start with "write session summary + commit", then add consolidation scripts as your workspace matures. Design: Part 5.
 
 ### /loop
-Claude Code built-in. Runs a prompt on a repeating interval. Usage: `/loop 30m work the top item in IDEAS.md`. The overnight work loop - set before bed, wake up to finished features. See [Part 7](07-overnight-loop.md) for the full workflow. No SKILL.md needed.
+Claude Code built-in. Runs a prompt on a repeating interval. Usage: `/loop 30m work the top item in IDEAS.md`. The overnight work loop - set before bed, wake up to finished features. See [Part 6](06-overnight-loop.md) for the full workflow. No SKILL.md needed.
 
 ### [/commit-chunks](https://github.com/DavoDC/claude-playbook/blob/main/skills/commit-chunks/SKILL.md)
 Commit changed files in logical chunks - one commit per feature/fix/topic. Analyses what's staged/unstaged and proposes a commit split with draft messages. Prevents the "committed everything in one giant blob" problem that makes git history unreadable.
@@ -143,9 +143,9 @@ Commit changed files in logical chunks - one commit per feature/fix/topic. Analy
 
 Deep investigation of a topic, file, directory or repo. Two mechanisms make it different from asking Claude to look at something carefully.
 
-It uses a commit-anchored delta (see [Part 16](16-commit-anchored-delta.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
+It uses a commit-anchored delta (see [Part 15](15-commit-anchored-delta.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
 
-And it generates its lenses before it scans, using the framework in [Part 12](12-audit-lenses.md), then states which cells it walked and which it deliberately skipped. That stops the fifth pass over a repo confirming what the fourth said: the delta says which files to re-read, only the lens framework says what to ask of them.
+And it generates its lenses before it scans, using the framework in [Part 11](11-audit-lenses.md), then states which cells it walked and which it deliberately skipped. That stops the fifth pass over a repo confirming what the fourth said: the delta says which files to re-read, only the lens framework says what to ask of them.
 
 ### [/cross-synth](https://github.com/DavoDC/claude-playbook/blob/main/skills/cross-synth/SKILL.md)
 Cross-synthesise any N subjects (repos, files, docs, configs, tests, features) side-by-side: find what's shared, what's missing, what's inconsistent, and what one subject can teach the others. Horizontal analysis - where `/deep-dive` goes deep on one thing, `/cross-synth` goes wide across many.

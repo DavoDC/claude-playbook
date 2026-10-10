@@ -13,6 +13,10 @@
 
 GH_ROOT="${GH_ROOT:-$(dirname "$(git rev-parse --show-toplevel)")}"
 
+# Generic layer first: user paths, emails, IPs, internal hostnames, and the
+# per-machine private-terms file. It runs even when no .private-root marker exists.
+sh "$(dirname "$0")/privacy-scan.sh" staged || exit 1
+
 PATTERN=""
 for t in $(
     for marker in "$GH_ROOT"/*/.private-root; do

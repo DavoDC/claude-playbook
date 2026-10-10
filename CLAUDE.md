@@ -50,7 +50,7 @@ Never update this repo automatically. Only when explicitly asked.
 
 ## Commit message hygiene
 
-Never include private source attribution in commit messages. Describe the content only. `hooks/commit-msg` blocks this: it derives its token list at runtime from `.private-root` markers on whatever machine it runs on, so no private term is hardcoded anywhere in this repo. It reports line numbers and withholds the match, because printing the token would be the leak. Run `sh hooks/install.sh` once after cloning - `.git/hooks/` is not tracked, so a fresh clone has no protection until you do.
+Never include private source attribution in commit messages. Describe the content only. `hooks/commit-msg` blocks this: it derives its token list at runtime from `.private-root` markers on whatever machine it runs on, so no private term is hardcoded anywhere in this repo. It reports line numbers and withholds the match, because printing the token would be the leak. A generic layer, `hooks/privacy-scan.sh`, also blocks user paths, emails, IPs and internal hostnames, plus any term you list in `.git/private-terms.txt` (untracked, per machine); add your own names and employer terms there. Run `sh hooks/install.sh` once after cloning - `.git/hooks/` is not tracked, so a fresh clone has no protection until you do.
 
 ---
 

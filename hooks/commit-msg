@@ -9,6 +9,9 @@
 GH_ROOT="${GH_ROOT:-$(dirname "$(git rev-parse --show-toplevel)")}"
 MSG_FILE="$1"
 
+# Generic layer first (see hooks/privacy-scan.sh); runs even with no .private-root marker.
+sh "$(dirname "$0")/privacy-scan.sh" msg "$MSG_FILE" || exit 1
+
 PATTERN=""
 for t in $(
     for marker in "$GH_ROOT"/*/.private-root; do

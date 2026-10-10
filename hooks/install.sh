@@ -13,7 +13,7 @@ DEST_DIR="$REPO_ROOT/.git/hooks"
 
 mkdir -p "$DEST_DIR"
 
-for hook in pre-commit commit-msg; do
+for hook in pre-commit commit-msg privacy-scan.sh; do
     cp "$SRC_DIR/$hook" "$DEST_DIR/$hook"
     chmod +x "$DEST_DIR/$hook"
     echo "installed: $hook"

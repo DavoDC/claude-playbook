@@ -432,6 +432,26 @@ for TOOL in token-baseline.py session-brief.py; do
 done
 
 # ---------------------------------------------------------------------------
+# Assertion 10: the generic privacy scan passes its own positive and negative
+# controls (and the installed hooks match the tracked ones), and the whole
+# working tree, tracked and untracked, is clean under it.
+# ---------------------------------------------------------------------------
+PRIV_OUTPUT=$(sh "$SCRIPT_DIR/selftest_privacy.sh" 2>&1 | tail -1)
+if [ "$PRIV_OUTPUT" = "PRIVACY SELFTEST PASS" ]; then
+    echo "PASS: assertion 10 - privacy scan controls ($PRIV_OUTPUT)"
+else
+    FAILED=1
+    echo "FAIL: assertion 10 - privacy scan controls ($PRIV_OUTPUT)"
+fi
+if TREE_OUTPUT=$(sh "$SCRIPT_DIR/../hooks/privacy-scan.sh" tree 2>&1); then
+    echo "PASS: assertion 10 - working tree is clean under the generic privacy scan"
+else
+    FAILED=1
+    echo "FAIL: assertion 10 - generic privacy scan hit in the working tree"
+    echo "$TREE_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
 # Verdict (always last line, so `tail -3` gives the result)
 # ---------------------------------------------------------------------------
 if [ "$FAILED" -eq 0 ]; then

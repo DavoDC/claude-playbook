@@ -1,0 +1,132 @@
+{
+  "_comment": "Ruleset for this repo, and the template to copy for yours: change root, the files globs and the terms_file path. Run: python3 tools/doc_lint/doc_lint.py --config tools/doc_lint/doc_lint.config.json",
+  "root": "../..",
+  "rules": [
+    {
+      "id": "no-em-en-dash",
+      "type": "forbidden-pattern",
+      "files": ["**/*.md", "**/*.sh", "**/*.py", "**/*.json"],
+      "patterns": ["[\\N{EN DASH}\\N{EM DASH}]"],
+      "message": "em/en dash (use a regular hyphen)"
+    },
+    {
+      "id": "no-personal-outcomes",
+      "type": "forbidden-pattern",
+      "files": ["**/*.md"],
+      "ignore_case": true,
+      "patterns": ["\\b\\d[\\d,.]*\\s*[kK]?\\s+(stars|forks|followers|downloads|subscribers)\\b", "\\b(my|his)\\s+(revenue|earnings|income|followers)\\b", "\\bnothing came of it\\b"],
+      "message": "personal outcome or scoreboard (reach, revenue, stars, forks, followers)"
+    },
+    {
+      "id": "no-history-narration",
+      "type": "forbidden-pattern",
+      "files": ["docs/**/*.md", "templates/**/*.md", "skills/**/*.md"],
+      "ignore_case": true,
+      "patterns": ["\\bincident\\s+\\d{4}-\\d{2}", "\\b(added|removed|renamed|changed|fixed|learned|decided)\\s+(on\\s+|in\\s+)?\\d{4}-\\d{2}-\\d{2}", "\\bDecision \\d{4}-\\d{2}-\\d{2}"],
+      "message": "maintenance narration (state the current rule, not when it changed)"
+    },
+    {
+      "id": "no-usage-counts",
+      "type": "forbidden-pattern",
+      "files": ["docs/**/*.md", "skills/**/*.md"],
+      "ignore_case": true,
+      "patterns": ["\\bused\\s+\\d+\\s+times\\b", "\\b\\d+\\s+invocations\\b", "\\bthe most[- ]used (skill|command|hook|tool)\\b", "\\bI (use|run)\\b.{0,30}\\b(daily|every day|every session)\\b"],
+      "message": "usage count or personal ranking"
+    },
+    {
+      "id": "no-dead-official-docs-url",
+      "type": "forbidden-pattern",
+      "files": ["**/*.md", "**/*.sh", "**/*.py"],
+      "exclude": ["tools/doc_lint/**"],
+      "patterns": ["docs\\.anthropic\\.com/en/(docs/)?claude-code"],
+      "message": "dead official-docs host form; use https://code.claude.com/docs/en/<topic>"
+    },
+    {
+      "id": "doc-tier-marker",
+      "type": "required-pattern",
+      "files": ["docs/*.md"],
+      "pattern": "^> \\*\\*(Core|Field note)\\.\\*\\*",
+      "within_lines": 6,
+      "message": "doc needs a Core or Field note tier marker right under its title"
+    },
+    {
+      "id": "doc-opening-title",
+      "type": "required-pattern",
+      "files": ["docs/*.md"],
+      "pattern": "\\A# \\S",
+      "within_lines": 1,
+      "message": "doc must open with a single H1 title stating its one topic"
+    },
+    {
+      "id": "doc-vague-title",
+      "type": "forbidden-pattern",
+      "files": ["docs/*.md"],
+      "ignore_case": true,
+      "skip_code": true,
+      "patterns": ["^# .*\\b(advanced|misc|miscellaneous|patterns|other|general|stuff)\\b"],
+      "message": "vague title suggests a collection of unrelated things (one topic per doc)"
+    },
+    {
+      "id": "doc-max-words",
+      "type": "max-words",
+      "files": ["docs/*.md"],
+      "limit": 5000,
+      "message": "doc is long enough to probably hold more than one topic"
+    },
+    {
+      "id": "one-paragraph-one-line",
+      "type": "max-line-shape",
+      "files": ["README.md", "docs/**/*.md"]
+    },
+    {
+      "id": "readme-docs-index",
+      "type": "index-sync",
+      "index": "README.md",
+      "files": ["docs/*.md"]
+    },
+    {
+      "id": "skills-readme-index",
+      "type": "index-sync",
+      "index": "skills/README.md",
+      "files": ["skills/*/SKILL.md"],
+      "mode": "mention",
+      "name_from": "parent"
+    },
+    {
+      "id": "link-resolve",
+      "type": "link-resolve",
+      "files": ["README.md", "docs/**/*.md", "tools/**/*.md", "templates/**/*.md", "skills/**/*.md"]
+    },
+    {
+      "id": "skill-name-reference",
+      "type": "name-reference",
+      "files": ["README.md", "docs/**/*.md", "skills/**/*.md"],
+      "scope": "inline-code",
+      "pattern": "^/([a-z][a-z0-9-]*)(?:\\s.*)?$",
+      "exists_in": ["skills/{name}/SKILL.md", ".claude/skills/{name}/SKILL.md"],
+      "allow_file": "native-commands.txt"
+    },
+    {
+      "id": "heading-duplication",
+      "type": "heading-uniqueness-across-files",
+      "files": ["docs/*.md"],
+      "min_level": 2,
+      "ignore": ["^The Problem$", "^Overview$", "^Summary$", "^Why$", "^Setup$", "^See also$", "^Related$", "^Examples?$", "^Quick start$", "^Rules?$"]
+    },
+    {
+      "id": "doc-sequential-numbering",
+      "type": "sequential-numbering",
+      "files": ["docs/*.md"],
+      "number_pattern": "^(\\d+)-",
+      "unnumbered_last": ["checklist.md"],
+      "heading_part": true
+    },
+    {
+      "id": "no-private-terms",
+      "type": "forbidden-terms-file",
+      "enabled": false,
+      "files": ["**/*.md", "**/*.sh", "**/*.py", "**/*.json"],
+      "terms_file": "../../.git/private-terms.txt"
+    }
+  ]
+}

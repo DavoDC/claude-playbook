@@ -1,0 +1,44 @@
+# Built-in Claude Code slash commands that the skill-name-reference rule accepts without a skill folder.
+# One name per line, no slash. Extend as the harness grows; check against the official docs.
+# Documentation placeholders:
+command
+skill-name
+name
+# Built-ins:
+add-dir
+agents
+bug
+clear
+compact
+config
+context
+cost
+doctor
+effort
+export
+fast
+help
+hooks
+ide
+init
+login
+logout
+loop
+mcp
+memory
+model
+permissions
+plugin
+plan
+privacy-settings
+resume
+review
+rewind
+schedule
+security-review
+simplify
+statusline
+status
+terminal-setup
+usage
+vim

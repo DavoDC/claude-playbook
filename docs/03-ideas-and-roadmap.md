@@ -8,7 +8,7 @@ Every project repo gets a `docs/IDEAS.md`. It is the forward-looking priority li
 
 Rules that make it work:
 - Ordered by priority (not by when you added them)
-- Use semantic tiers: TIER 0 (blocking/critical) through TIER 3 (nice-to-have). Full specification: `templates/BACKLOG-SPEC.md`
+- Use semantic tiers: TIER 0 (blocking/critical) through TIER 4 (parked). Full specification, and the `tools/backlog.py` editor that enforces it: `templates/BACKLOG-SPEC.md`
 - When something ships: remove from IDEAS.md, add a dated entry to `docs/HISTORY.md`
 - Never mark done with checkmarks and leave the entry - remove completely
 

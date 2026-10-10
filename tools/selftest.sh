@@ -23,6 +23,7 @@
 #   8. no long sentence appears in two places across this repo's .md files,
 #      outside a short, scoped allow list (tools/selftest_dedup.py holds
 #      the exceptions and the reason for each).
+#  11. the backlog tool's tests (tools/backlog_tests/run.py) all pass.
 #
 # Output discipline: silent pass, verbose fail. Each passing assertion
 # prints one PASS line and nothing else. A failing assertion prints
@@ -449,6 +450,20 @@ else
     FAILED=1
     echo "FAIL: assertion 10 - generic privacy scan hit in the working tree"
     echo "$TREE_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 11: the backlog tool's own tests pass (stdlib runner, no pytest).
+# The runner exits non-zero when nothing ran, so an empty suite cannot pass.
+# ---------------------------------------------------------------------------
+BACKLOG_OUTPUT=$(python3 "$SCRIPT_DIR/backlog_tests/run.py" 2>&1)
+BACKLOG_EXIT=$?
+if [ "$BACKLOG_EXIT" -eq 0 ] && [ "$(printf '%s\n' "$BACKLOG_OUTPUT" | tail -1)" = "BACKLOG TESTS PASS" ]; then
+    echo "PASS: assertion 11 - $(printf '%s\n' "$BACKLOG_OUTPUT" | tail -2 | head -1)"
+else
+    FAILED=1
+    echo "FAIL: assertion 11 - backlog tool tests failed (exit $BACKLOG_EXIT)"
+    echo "$BACKLOG_OUTPUT"
 fi
 
 # ---------------------------------------------------------------------------

@@ -434,7 +434,9 @@ If a budget script prints a `RESUME:` line when usage is high, acting on it is a
 
 Rules that apply to one kind of file are easy to forget until the file is open. A hook matches by file name and returns `permissionDecision: "allow"` plus a one-line `additionalContext` the first time that file is touched in a session, then stays quiet. It is advice at the moment of need, not a gate. See `hooks/examples/convention_reminder.py`.
 
-### Hooks Deny or Observe, Never Approve
+### Block Raw Edits to the Backlog File (PreToolUse on Edit|Write|Bash)
+
+A backlog edited by hand drifts from its generated sections, and a prose rule against it relies on memory. A PreToolUse hook denies `Edit` and `Write` whose path names `IDEAS.md` or `HISTORY.md`, and `Bash` commands that redirect into them or run `sed -i` on them. The deny message names the replacement command from `templates/BACKLOG-SPEC.md` (`python3 tools/backlog.py add`, `shape`, `close`). Allow one logged escape hatch, such as an environment variable set for a single reorganisation, so a broken parser can never strand the file. It denies only and never approves.
 
 A hook (or any plugin intercepting tool calls) answering "allow" can override a stricter check elsewhere, and a handler that answers without passing control on can stop later hooks running. Keep your interceptors to two jobs: deny, or observe and add context. The convention-reminder above returns "allow" only because it is advisory and sits beside the real guards. If you write interceptors as code, lint them for this rule as part of your test run.
 

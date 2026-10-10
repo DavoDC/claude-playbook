@@ -1,0 +1,5 @@
+{
+  "agent_owner": "Claude",
+  "human_owner": "Human",
+  "locations": ["backlogs/{repo}/IDEAS.md", "../{repo}/docs/IDEAS.md"]
+}

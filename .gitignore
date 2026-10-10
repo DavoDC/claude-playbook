@@ -1,0 +1,4 @@
+# Per-machine tool config; copy the .example.json beside it to create each one
+config/*.json
+!config/*.example.json
+__pycache__/

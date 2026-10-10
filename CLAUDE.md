@@ -93,7 +93,8 @@ One sentence of workflow context + a pointer beats three paragraphs that go stal
 ```
 docs/         the guide, split by topic, numbered
 templates/    CLAUDE.md and enforced-rules starters
-tools/        statusline, budget and session-status scripts, plus a launcher
+tools/        statusline, budget and session-status scripts, backlog.py (with tests), plus a launcher
+config/       example JSON settings (real config is gitignored)
 skills/       skill SKILL.md files
 hooks/        this repo's own privacy git hooks, plus install.sh
 ```

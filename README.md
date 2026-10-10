@@ -8,15 +8,15 @@ For people who use Claude Code daily and are tired of re-correcting the same mis
 
 ## The Three Gaps This Fills
 
-By default, Claude Code has three significant gaps that most users don't notice until they're badly bitten by them:
+Out of the box, Claude Code lacks three things, and each one costs you time until you add it:
 
-**1. No budget awareness**
-
-Claude has no idea whether it's at 5% or 95% of its rate limits. It will happily start a 3-hour overnight loop at 82% of its 5-hour quota and wonder why it gets throttled. The `tools/` in this repo surface that data and make decisions based on it - before any work starts.
-
-**2. No improvement memory**
+**1. No improvement memory**
 
 Every correction you make in a session evaporates at the end. You end up correcting the same behaviours repeatedly across months. The feedback_*.md system creates a library of rules calibrated to your actual failure modes - not generic advice, but the specific mistakes that happen in your work.
+
+**2. No budget awareness**
+
+Claude has no idea whether it's at 5% or 95% of its rate limits. It will happily start a 3-hour overnight loop at 82% of its 5-hour quota and wonder why it gets throttled. The `tools/` in this repo surface that data and make decisions based on it - before any work starts.
 
 **3. No structured work selection**
 
@@ -80,7 +80,7 @@ workspace/          <- you always run Claude from here
 
 **Why not just use a project repo?** If your preferences live in a project repo, they disappear when you start a new project. With a workspace repo, every session starts with your rules loaded, your skills available, and context from past sessions. Every correction you make to Claude compounds across all future sessions and all projects.
 
-The whole system depends on this one structural choice. See `docs/11-workspace-repo.md` for the full setup guide.
+The whole system depends on this one structural choice. See `docs/12-workspace-repo.md` for the full setup guide.
 
 ---
 
@@ -117,16 +117,19 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [07 - Skills Reference](docs/07-skills.md) | Field note | Every shipped skill, ordered by impact |
 | [08 - Hooks](docs/08-hooks.md) | Field note | Events, exit codes, blast radius triage, the fail-open trap, the `if:` field |
 | [09 - Hook Recipes](docs/09-hooks-recipes.md) | Field note | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
-| [10 - Privacy Hooks for a Public Repo](docs/10-privacy-hooks-public-repo.md) | Field note | Commit-time guards that keep private names and paths out, report where never what, and secrets that reach git anyway |
-| [11 - The Workspace Repo](docs/11-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
-| [12 - Audit Lenses](docs/12-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, and the re-ranking lenses |
-| [13 - Multi-Agent Orchestration](docs/13-multi-agent-orchestration.md) | Field note | Model choice, delegation, budget before fan-out, briefs, accepting work back, external content as data |
-| [14 - Concurrent Sessions](docs/14-concurrent-sessions.md) | Field note | Several sessions on one working tree: commits, shared logs, locks, git rules |
-| [15 - Verification Habits](docs/15-verification-habits.md) | Field note | Re-test inherited limits, bounded-search absences, observation harness, test quality, live-process checks |
-| [16 - Commit-Anchored Delta](docs/16-commit-anchored-delta.md) | Field note | Re-audit only what changed since the last anchor |
-| [17 - Freeze the Consumer](docs/17-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
-| [18 - CLAUDE.md Worked Examples](docs/18-claude-md-examples.md) | Field note | What a project note changes in practice |
-| [19 - Reframing Blocked Problems](docs/19-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
+| [10 - The Shorthand System](docs/10-shorthand-system.md) | Field note | A typed short term that triggers a defined behaviour: the glossary file, the prompt hook, the rules for what earns a row, and QUAD as the worked example |
+| [11 - Privacy Hooks for a Public Repo](docs/11-privacy-hooks-public-repo.md) | Field note | Commit-time guards that keep private names and paths out, report where never what, and secrets that reach git anyway |
+| [12 - The Workspace Repo](docs/12-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
+| [13 - Audit Lenses](docs/13-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, the re-ranking lenses, and how to run a pass |
+| [14 - Reading a Measurement](docs/14-reading-a-measurement.md) | Field note | Deciding whether a number or green result can be believed: operate the tool, validate the probe, input states that fake a result, success signals, exit states |
+| [15 - Auditing Your Own Changes](docs/15-auditing-your-own-changes.md) | Field note | Recent changes as an audit scope, consequence over file, composition defects, correlated readers |
+| [16 - Multi-Agent Orchestration](docs/16-multi-agent-orchestration.md) | Field note | Model choice, delegation, budget before fan-out, briefs, accepting work back, external content as data |
+| [17 - Concurrent Sessions](docs/17-concurrent-sessions.md) | Field note | Several sessions on one working tree: commits, shared logs, locks, git rules |
+| [18 - Verification Habits](docs/18-verification-habits.md) | Field note | Re-test inherited limits, bounded-search absences, observation harness, test quality, live-process checks |
+| [19 - Commit-Anchored Delta](docs/19-commit-anchored-delta.md) | Field note | Re-audit only what changed since the last anchor |
+| [20 - Freeze the Consumer](docs/20-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
+| [21 - CLAUDE.md Worked Examples](docs/21-claude-md-examples.md) | Field note | What a project note changes in practice |
+| [22 - Reframing Blocked Problems](docs/22-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
 
 Core files' referenced tools and snippets are asserted by `tools/selftest.sh` on every push; Field note files are dated patterns from practice that the harness does not check - see "What's Guaranteed vs What's Field Notes" above for the full distinction.

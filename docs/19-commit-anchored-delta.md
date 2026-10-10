@@ -1,4 +1,4 @@
-# Part 16: The Commit-Anchored Delta Pattern
+# Part 19: The Commit-Anchored Delta Pattern
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
@@ -27,6 +27,6 @@ The core data structure: a JSON file mapping `scope:lens` -> `{sha, date, findin
 
 The lens (content/staleness/security/etc.) tracks different audit types separately: a content audit and a staleness audit of the same folder can sit at different anchors.
 
-The delta says WHICH files to re-read, not what to ask of them; asking the same question of new files is how a fifth audit round confirms the fourth. [Part 12](12-audit-lenses.md) covers generating the questions before you scan and recording coverage so "have we looked at this" is answerable.
+The delta says WHICH files to re-read, not what to ask of them; asking the same question of new files is how a fifth audit round confirms the fourth. [Part 13](13-audit-lenses.md) covers generating the questions before you scan and recording coverage so "have we looked at this" is answerable.
 
-Reading the changed files is not the same as running them; see [Operate the tool, do not read it](12-audit-lenses.md#operate-the-tool-do-not-read-it).
+Reading the changed files is not the same as running them; see [Operate the tool, do not read it](14-reading-a-measurement.md#operate-the-tool-do-not-read-it).

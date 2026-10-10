@@ -360,8 +360,8 @@ Git hooks differ. They work under WSL, but a Windows git client that shells out 
 
 On Windows: write git hooks (`.git/hooks/`) as `.ps1` or `.bat` scripts. Claude Code hooks (`.claude/settings.json`) can stay bash.
 
-Note: `hooks/pre-commit` and `hooks/commit-msg` in this repo (see [Part 10](10-privacy-hooks-public-repo.md)) are POSIX `sh`, the exception warned about above: they only run for commits through Git Bash, never a GUI client's own commit flow. If you commit through a Windows GUI client, port them to `.ps1`/`.bat` first.
+Note: `hooks/pre-commit` and `hooks/commit-msg` in this repo (see [Part 11](11-privacy-hooks-public-repo.md)) are POSIX `sh`, the exception warned about above: they only run for commits through Git Bash, never a GUI client's own commit flow. If you commit through a Windows GUI client, port them to `.ps1`/`.bat` first.
 
 ## Privacy Guard Git Hooks
 
-This repo ships tracked `pre-commit` and `commit-msg` git hooks, plus a generic scanner, that block a commit carrying private names, paths or personal identifiers; they report where, never what. They are git hooks, not Claude Code hooks, and are covered in [Part 10](10-privacy-hooks-public-repo.md).
+This repo ships tracked `pre-commit` and `commit-msg` git hooks, plus a generic scanner, that block a commit carrying private names, paths or personal identifiers; they report where, never what. They are git hooks, not Claude Code hooks, and are covered in [Part 11](11-privacy-hooks-public-repo.md).

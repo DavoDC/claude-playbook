@@ -1,4 +1,4 @@
-# Part 15: Verification and Iteration Habits
+# Part 18: Verification and Iteration Habits
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
@@ -98,4 +98,4 @@ Budget readouts measure whether the model has capacity left. Also check the oppo
 
 Keep an explicit ranked list of "waiting on a human action" items and work it down before starting new work, as you would check the budget axes. The two constraints are measured by different instruments: nothing shows how much finished work is parked behind a click. When usage is well under the ceiling and output still feels stalled, look there first.
 
-This is not an argument against delegating when delegation is right; see [Part 13](13-multi-agent-orchestration.md#when-to-delegate-vs-do-it-directly). It is an argument for checking, before delegating or building more, whether the bottleneck is capacity to build or a short list only a human can finish.
+This is not an argument against delegating when delegation is right; see [Part 16](16-multi-agent-orchestration.md#when-to-delegate-vs-do-it-directly). It is an argument for checking, before delegating or building more, whether the bottleneck is capacity to build or a short list only a human can finish.

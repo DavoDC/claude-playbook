@@ -24,6 +24,8 @@
 #      outside a short, scoped allow list (tools/selftest_dedup.py holds
 #      the exceptions and the reason for each).
 #  11. the backlog tool's tests (tools/backlog_tests/run.py) all pass.
+#  12. the shorthand-term hook and its glossary template pass their tests
+#      (hooks/examples/test_shorthand_detector.py).
 #
 # Output discipline: silent pass, verbose fail. Each passing assertion
 # prints one PASS line and nothing else. A failing assertion prints
@@ -464,6 +466,20 @@ else
     FAILED=1
     echo "FAIL: assertion 11 - backlog tool tests failed (exit $BACKLOG_EXIT)"
     echo "$BACKLOG_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 12: the shorthand-term hook behaves against the shipped glossary
+# template (hit, miss, ignored paste/fence/frame, tip cap, fail-open) and the
+# template rows are well formed. Includes an empty-glossary control.
+# ---------------------------------------------------------------------------
+SHORTHAND_OUTPUT=$(python3 "$REPO_ROOT/hooks/examples/test_shorthand_detector.py" 2>&1)
+if [ $? -eq 0 ]; then
+    echo "PASS: assertion 12 - $SHORTHAND_OUTPUT"
+else
+    FAILED=1
+    echo "FAIL: assertion 12 - shorthand hook tests failed"
+    echo "$SHORTHAND_OUTPUT"
 fi
 
 # ---------------------------------------------------------------------------

@@ -161,7 +161,7 @@ The levers above are habits. These are mechanisms: each one removes a recurring 
 
 **Read and shell caps.** Deny a whole-file read of a large file and ask for a section, and deny known-flooding shell commands unless their output is already limited. Both are hooks, and working examples are in `hooks/examples/`.
 
-**Serial, bundled subagents.** Many small parallel subagents cost the orchestrator more context, because each report and diff must be read and checked, than a few larger sequential ones. Group queued fixes by shared code location, dispatch one bundle, verify the artifact, then dispatch the next. See [Part 13](13-multi-agent-orchestration.md#serial-bundled-dispatch).
+**Serial, bundled subagents.** Many small parallel subagents cost the orchestrator more context, because each report and diff must be read and checked, than a few larger sequential ones. Group queued fixes by shared code location, dispatch one bundle, verify the artifact, then dispatch the next. See [Part 16](16-multi-agent-orchestration.md#serial-bundled-dispatch).
 
 ---
 

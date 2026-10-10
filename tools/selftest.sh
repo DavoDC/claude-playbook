@@ -416,6 +416,22 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Assertion 9: the token-baseline and session-brief tools pass their built-in
+# selftests. Each selftest includes a positive control that must be flagged,
+# so a tool that silently stopped checking would fail here.
+# ---------------------------------------------------------------------------
+for TOOL in token-baseline.py session-brief.py; do
+    TOOL_OUTPUT=$(python3 "$SCRIPT_DIR/$TOOL" --selftest 2>&1)
+    if [ $? -eq 0 ]; then
+        echo "PASS: assertion 9 - $TOOL selftest ($TOOL_OUTPUT)"
+    else
+        FAILED=1
+        echo "FAIL: assertion 9 - $TOOL selftest"
+        echo "$TOOL_OUTPUT"
+    fi
+done
+
+# ---------------------------------------------------------------------------
 # Verdict (always last line, so `tail -3` gives the result)
 # ---------------------------------------------------------------------------
 if [ "$FAILED" -eq 0 ]; then

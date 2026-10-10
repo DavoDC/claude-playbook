@@ -1,0 +1,5 @@
+{
+  "_note": "Ceilings ratchet down only. Keys match the result fields of token-baseline.py. Copy this file, set values just above your own first measurement, then run token-baseline.py --ratchet whenever a cleanup lowers the cost.",
+  "first_turn_median": 60000,
+  "avg_ctx_per_turn": 120000
+}

@@ -91,6 +91,9 @@ Claude Code makes it available as `/<name>` in any session run from that workspa
 | [check-compact](check-compact/SKILL.md) | Check if context is large enough to warrant compaction, skip if not |
 | [reflection](reflection/SKILL.md) | Read recent session history, extract patterns, update workspace config and memory |
 | [repo-status](repo-status/SKILL.md) | Multi-repo status - branch, dirty count, unpushed commits per repo. Read-only, never fetches |
+| [whats-next](whats-next/SKILL.md) | Lean numbered list of next actions, each tagged Claude or you |
+| [end-session](end-session/SKILL.md) | Template: session fragment, task reconcile, log row, learning routing, commit |
+| [today](today/SKILL.md) | Template: top priorities with next step, the queue, tactical items, health flags |
 
 ---
 
@@ -111,7 +114,6 @@ There is no special syntax. Clear markdown instructions are enough. Claude reads
 These are described in [docs/08-skills.md](../docs/08-skills.md) and are worth implementing as custom skills for your own setup:
 
 - **`/dev-session`** - the structured session workflow from [docs/04-dev-session.md](../docs/04-dev-session.md)
-- **`/end-session`** - session drain, task reconcile, memory commit
 - **`/loop`** - repeat a command on a schedule (overnight automation)
 - **`/health`** - workspace health check (hook counts, file bloat, etc.)
 

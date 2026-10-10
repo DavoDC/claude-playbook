@@ -131,7 +131,7 @@ Generate options for a genuinely open-ended problem using a named method rather 
 ### /end-session (heavily used)
 Close out a session: write session record, reconcile tasks, drain memory, commit everything. The crux of the improvement loop. Run at the end of every session. See [Part 6](06-sessions-and-memory.md) for full detail.
 
-No starter SKILL.md included - this skill calls workspace-specific scripts (session consolidation, finalize stages). Build it incrementally: start with a simple "write session summary + commit" skill, then add the consolidation scripts as your workspace matures. The design is fully documented in Part 6.
+A template [SKILL.md](../skills/end-session/SKILL.md) is included, with placeholders for your memory folder, fragment folder and task list. It names the scripts that own the mechanical edits (prep, finalize, commit) but does not ship them, because they depend on your layout. Build it incrementally: start with "write session summary + commit", then add the consolidation scripts as your workspace matures. The design is documented in Part 6.
 
 ### /loop (heavily used)
 Claude Code built-in. Runs a prompt on a repeating interval. Usage: `/loop 30m /dev-session myproject`. The overnight work loop - set before bed, wake up to finished features. See [Part 7](07-overnight-loop.md) for the full workflow. No SKILL.md needed.
@@ -190,8 +190,11 @@ Create named restore points during long sessions or loops. `create <name>` commi
 
 ## Supporting Skills
 
-### /today
-Quick view of today's strategic and tactical focus. Reads the directives overview (strategic) and pending-actions.md (tactical), shows top 3-5 items. Also includes a budget gate - if context is at 80%+ it stops and tells you to run `/end-session` before planning anything.
+### [/today](../skills/today/SKILL.md)
+Quick view of today's strategic and tactical focus. Reads a priority overview (strategic) and pending-actions.md (tactical), shows the top 3 with their next step plus the whole queue. Also includes a budget gate - if context is at 80%+ it stops and tells you to run `/end-session` before planning anything. Shipped as a template: point its three source paths at your own roadmap files.
+
+### [/whats-next](../skills/whats-next/SKILL.md)
+A numbered list of next actions and nothing else, each tagged as something Claude can do alone or something that needs you. Small on purpose.
 
 ### /plan-day
 More detailed than `/today`. Categorises all pending items into: can do now, needs you, needs team, quick wins. Recommends parallel sessions when there are 2+ independent tasks that would each take 30+ minutes.

@@ -98,9 +98,9 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 |------|------------|
 | `docs/` | Full guide split by topic - start with `01-claude-md.md` |
 | `templates/` | Ready-to-use CLAUDE.md, enforced-rules and backlog (IDEAS/HISTORY) starters |
-| `tools/` | statusline, budget and session-status scripts, loop-health measurement, the `backlog.py` backlog editor (spec: `templates/BACKLOG-SPEC.md`, config: `config/backlog.example.json`), plus a launcher |
+| `tools/` | statusline, budget and session-status scripts, loop-health measurement, the `backlog.py` backlog editor (spec: `templates/BACKLOG-SPEC.md`, config: `config/backlog.example.json`), the `doc_lint/` config-driven doc linter (ruleset: `tools/doc_lint/doc_lint.config.json`), the `check-capacity.py` file and group size checker (config: `config/capacity.example.json`), the `scratch-overdue.py` delete-after marker checker, the `prose-lint.py` wrap, dash and commit-subject linter, plus a launcher |
 | `skills/` | skill files - thinking, git, review, and workflow tools |
-| `hooks/` | git hooks that keep private details out of commits, plus an installer |
+| `hooks/` | git hooks that keep private details out of commits, a `privacy-scan.sh history` pre-publish scan, plus an installer |
 
 ---
 
@@ -131,6 +131,8 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [21 - CLAUDE.md Worked Examples](docs/21-claude-md-examples.md) | Field note | What a project note changes in practice |
 | [22 - Reframing Blocked Problems](docs/22-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
 | [23 - When To Stop Refining](docs/23-when-to-stop-refining.md) | Field note | Stopping rules for audits and deep dives that always find more |
+| [24 - Config-Driven Doc Linting](docs/24-config-driven-doc-linting.md) | Core | Turning prose rules about docs into JSON-configured checks: dashes, wrapping, indexes, links, numbering, private terms |
+| [25 - Bug Reports and PR Descriptions](docs/25-bug-reports-and-pr-descriptions.md) | Field note | Writing an upstream ticket and a pull request description a stranger can act on: evidence, minimal repro, expected and actual, what you tried |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
 
 Core files' referenced tools and snippets are asserted by `tools/selftest.sh` on every push; Field note files are dated patterns from practice that the harness does not check - see "What's Guaranteed vs What's Field Notes" above for the full distinction.

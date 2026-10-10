@@ -26,6 +26,12 @@
 #  11. the backlog tool's tests (tools/backlog_tests/run.py) all pass.
 #  12. the shorthand-term hook and its glossary template pass their tests
 #      (hooks/examples/test_shorthand_detector.py).
+#  13. the doc linter passes its tests and the repo is clean under its
+#      shipped ruleset (tools/doc_lint/).
+#  14. the capacity checker passes its selftest and its example config parses.
+#  15. the scratch-marker checker passes its selftest.
+#  16. the prose and commit-message linter passes its selftest.
+#  17. the hook-health checker and the example hook suite pass.
 #
 # Output discipline: silent pass, verbose fail. Each passing assertion
 # prints one PASS line and nothing else. A failing assertion prints
@@ -436,8 +442,9 @@ done
 
 # ---------------------------------------------------------------------------
 # Assertion 10: the generic privacy scan passes its own positive and negative
-# controls (and the installed hooks match the tracked ones), and the whole
-# working tree, tracked and untracked, is clean under it.
+# controls (including the history mode: a deleted leak and a term in an old
+# commit message are found, a clean history passes), the installed hooks match
+# the tracked ones, and the whole working tree is clean under it.
 # ---------------------------------------------------------------------------
 PRIV_OUTPUT=$(sh "$SCRIPT_DIR/selftest_privacy.sh" 2>&1 | tail -1)
 if [ "$PRIV_OUTPUT" = "PRIVACY SELFTEST PASS" ]; then
@@ -480,6 +487,107 @@ else
     FAILED=1
     echo "FAIL: assertion 12 - shorthand hook tests failed"
     echo "$SHORTHAND_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 13: the doc linter passes its unit tests, and this repo is clean
+# under the shipped ruleset (tools/doc_lint/doc_lint.config.json). The tests
+# include a positive control per check type, so a rule that stopped firing
+# fails here; the repo run proves the docs obey their own rules.
+# ---------------------------------------------------------------------------
+LINT_TEST_OUTPUT=$(cd "$SCRIPT_DIR/doc_lint" && python3 -m unittest test_doc_lint 2>&1)
+LINT_TEST_EXIT=$?
+if [ "$LINT_TEST_EXIT" -eq 0 ]; then
+    echo "PASS: assertion 13 - doc_lint unit tests ($(printf '%s\n' "$LINT_TEST_OUTPUT" | grep -E '^Ran ' | head -1))"
+else
+    FAILED=1
+    echo "FAIL: assertion 13 - doc_lint unit tests failed"
+    echo "$LINT_TEST_OUTPUT"
+fi
+LINT_REPO_OUTPUT=$(python3 "$SCRIPT_DIR/doc_lint/doc_lint.py" --config "$SCRIPT_DIR/doc_lint/doc_lint.config.json" --root "$REPO_ROOT" 2>&1)
+if [ $? -eq 0 ]; then
+    echo "PASS: assertion 13 - repo is clean under the shipped doc_lint ruleset"
+else
+    FAILED=1
+    echo "FAIL: assertion 13 - doc_lint findings in this repo"
+    echo "$LINT_REPO_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 14: the capacity checker passes its built-in selftest, which
+# includes positive controls (a soft overrun warns, a hard overrun fails, a
+# group over budget fails while each member is under its own limit) and a
+# check that the shipped example config parses.
+# ---------------------------------------------------------------------------
+CAP_OUTPUT=$(python3 "$SCRIPT_DIR/check-capacity.py" --selftest 2>&1)
+CAP_EXIT=$?
+if [ "$CAP_EXIT" -eq 0 ]; then
+    CAP_CFG_OUTPUT=$(python3 "$SCRIPT_DIR/check-capacity.py" --config "$REPO_ROOT/config/capacity.example.json" --root "$TEST_TMPDIR" 2>&1)
+    CAP_CFG_EXIT=$?
+else
+    CAP_CFG_EXIT=0
+fi
+if [ "$CAP_EXIT" -eq 0 ] && [ "$CAP_CFG_EXIT" -ne 2 ]; then
+    echo "PASS: assertion 14 - check-capacity.py ($CAP_OUTPUT; example config parses)"
+else
+    FAILED=1
+    echo "FAIL: assertion 14 - check-capacity.py"
+    echo "$CAP_OUTPUT"
+    echo "$CAP_CFG_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 15: the scratch-marker checker passes its selftest (a reached
+# date, an aged free-text condition and a missing marker are flagged; a
+# future date and a fresh entry are not) and exits 2 on a missing folder.
+# ---------------------------------------------------------------------------
+SCR_OUTPUT=$(python3 "$SCRIPT_DIR/scratch-overdue.py" --selftest 2>&1)
+SCR_EXIT=$?
+python3 "$SCRIPT_DIR/scratch-overdue.py" --dir "$TEST_TMPDIR/no-such-scratch-dir" >/dev/null 2>&1
+SCR_MISSING_EXIT=$?
+if [ "$SCR_EXIT" -eq 0 ] && [ "$SCR_MISSING_EXIT" -eq 2 ]; then
+    echo "PASS: assertion 15 - scratch-overdue.py ($SCR_OUTPUT; missing folder exits 2)"
+else
+    FAILED=1
+    echo "FAIL: assertion 15 - scratch-overdue.py (selftest exit $SCR_EXIT, missing-folder exit $SCR_MISSING_EXIT, wanted 0 and 2)"
+    echo "$SCR_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 16: the prose and commit-message linter passes its selftest and
+# refuses a long subject, a wrapped paragraph and a dash character.
+# ---------------------------------------------------------------------------
+PL_OUTPUT=$(python3 "$SCRIPT_DIR/prose-lint.py" --selftest 2>&1)
+PL_EXIT=$?
+PL_OUTPUT=$(echo "$PL_OUTPUT" | tail -1)
+printf 'Subject\n\nfirst short line\nsecond short line\n' > "$TEST_TMPDIR/pl-msg.txt"
+python3 "$SCRIPT_DIR/prose-lint.py" --commit-msg "$TEST_TMPDIR/pl-msg.txt" >/dev/null 2>&1
+PL_BAD_EXIT=$?
+if [ "$PL_EXIT" -eq 0 ] && [ "$PL_BAD_EXIT" -eq 1 ]; then
+    echo "PASS: assertion 16 - prose-lint.py ($PL_OUTPUT; wrapped message exits 1)"
+else
+    FAILED=1
+    echo "FAIL: assertion 16 - prose-lint.py (selftest exit $PL_EXIT, wrapped-message exit $PL_BAD_EXIT, wanted 0 and 1)"
+    echo "$PL_OUTPUT"
+fi
+
+# ---------------------------------------------------------------------------
+# Assertion 17: the hook-health checker flags each defect it names (missing
+# timeout, bare python3 in a command or in a script the command runs, missing
+# script, bad statusLine, disableAllHooks, unparseable settings) and passes a
+# clean file; the example hook suite, which drives it, also passes.
+# ---------------------------------------------------------------------------
+HH_OUTPUT=$(python3 "$REPO_ROOT/hooks/examples/check_hook_health.py" --selftest 2>&1)
+HH_EXIT=$?
+HX_OUTPUT=$(python3 "$REPO_ROOT/hooks/examples/test_examples.py" 2>&1)
+HX_EXIT=$?
+if [ "$HH_EXIT" -eq 0 ] && [ "$HX_EXIT" -eq 0 ]; then
+    echo "PASS: assertion 17 - hook health ($HH_OUTPUT) and example hooks ($HX_OUTPUT)"
+else
+    FAILED=1
+    echo "FAIL: assertion 17 - hook health selftest exit $HH_EXIT, example hooks exit $HX_EXIT"
+    echo "$HH_OUTPUT"
+    echo "$HX_OUTPUT"
 fi
 
 # ---------------------------------------------------------------------------

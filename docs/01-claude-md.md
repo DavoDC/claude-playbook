@@ -59,7 +59,7 @@ Target:
 - Workspace CLAUDE.md (your rules, preferences, workflow): **100-150 lines max**
 - Per-repo CLAUDE.md (project-specific notes): **50-80 lines** is plenty
 
-The line target is a proxy for a byte ceiling, which is what actually costs tokens: set a hard byte limit for each always-loaded file, with a down-only ratchet (each cleanup that brings the file under its ceiling lowers the ceiling to match, never raises it). If it grows past the ceiling, move content out; detailed explanations go in on-demand `feedback_*.md` files.
+The line target is a proxy for a byte ceiling, which is what actually costs tokens: set a hard byte limit for each always-loaded file, with a down-only ratchet (each cleanup that brings the file under its ceiling lowers the ceiling to match, never raises it). `tools/check-capacity.py` holds those ceilings in a config file and reports the room left before you edit (see [Part 4](04-budget-awareness.md), "Size ceilings, and a budget for the group"). If it grows past the ceiling, move content out; detailed explanations go in on-demand `feedback_*.md` files.
 
 **The key discipline:** CLAUDE.md holds principles and rules, not explanations. CLAUDE.md says "do X"; the feedback file says "because Y happened."
 

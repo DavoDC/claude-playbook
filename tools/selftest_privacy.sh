@@ -52,6 +52,24 @@ printf 'host at %s\n' "$IP" > f.txt && git add f.txt
 OUT=$(sh .git/hooks/privacy-scan.sh staged 2>&1)
 case "$OUT" in *"$IP"*) echo "FAIL: output echoed the match"; FAIL=1 ;; *) echo "ok: match withheld in output" ;; esac
 
+# history mode: a leak that was committed and later deleted must still be found, in a file
+# version and in a commit message; a clean history must pass; the output must withhold the match.
+H=$(mktemp -d)
+( cd "$H" && git init -q . && git config user.email t@example.com && git config user.name t
+  printf 'host at %s\n' "$IP" > old.txt && git add old.txt && git commit -qm "add notes"
+  git rm -q old.txt && printf 'clean\n' > new.txt && git add new.txt && git commit -qm "drop notes" )
+HOUT=$(cd "$H" && sh "$HERE/hooks/privacy-scan.sh" history 2>&1); HRC=$?
+if [ "$HRC" -ne 0 ] && echo "$HOUT" | grep -q 'old.txt'; then echo "ok: blocked: leak deleted from the tree but present in history"; else echo "FAIL: history scan missed a deleted leak"; FAIL=1; fi
+case "$HOUT" in *"$IP"*) echo "FAIL: history output echoed the match"; FAIL=1 ;; *) echo "ok: match withheld in history output" ;; esac
+( cd "$H" && printf 'about acmecorp\n' > m.txt && git add m.txt && git commit -qm "mention acmecorp build" )
+printf 'acmecorp\n' > "$H/terms.txt"
+if (cd "$H" && PRIVACY_TERMS_FILE="$H/terms.txt" sh "$HERE/hooks/privacy-scan.sh" history 2>&1 | grep -q 'commit '); then echo "ok: blocked: private term in a commit message in history"; else echo "FAIL: history scan missed a term in a commit message"; FAIL=1; fi
+C=$(mktemp -d)
+( cd "$C" && git init -q . && git config user.email t@example.com && git config user.name t
+  printf 'plain text\n' > a.txt && git add a.txt && git commit -qm "initial" )
+if (cd "$C" && sh "$HERE/hooks/privacy-scan.sh" history >/dev/null 2>&1); then echo "ok: allowed: clean history"; else echo "FAIL: clean history wrongly blocked"; FAIL=1; fi
+rm -rf "$H" "$C"
+
 # installed hooks must equal the tracked ones in the real repo (drift check)
 if [ -d "$HERE/.git/hooks" ]; then
     for h in pre-commit commit-msg privacy-scan.sh; do

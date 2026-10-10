@@ -115,6 +115,8 @@ See `docs/12-workspace-repo.md` for the full explanation of why this matters.
 ## Audit Habits
 
 - [ ] **Generate lenses before scanning, and record which ones you did not apply.** A skipped lens with a reason is a decision. An unlisted lens is a blind spot. See `docs/13-audit-lenses.md`.
+- [ ] **For every prose rule about your docs, ask whether a check can see a violation; if so, make it a config rule.** See `docs/24-config-driven-doc-linting.md`.
+- [ ] **Before filing an upstream bug or opening a pull request, cold-read the text as a stranger and re-run the reproduction from scratch.** See `docs/25-bug-reports-and-pr-descriptions.md`.
 
 ## Habits Worth Having
 

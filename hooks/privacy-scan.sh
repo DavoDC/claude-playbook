@@ -5,6 +5,9 @@
 #   privacy-scan.sh staged        scan added lines of the staged diff (used by pre-commit)
 #   privacy-scan.sh msg FILE      scan a commit message file (used by commit-msg)
 #   privacy-scan.sh tree          scan every non-ignored working-tree file, tracked or not
+#   privacy-scan.sh history       pre-publish scan of EVERY commit message and every file version
+#                                 reachable from any ref, including deleted files and old content
+#                                 (reports path and commit or blob id, never the match)
 #
 # Two layers, both fail-closed (exit 1 on any hit):
 #   1. Generic shapes that identify a machine or person: absolute user paths, email
@@ -19,7 +22,7 @@
 
 MODE="$1"
 GIT_DIR_PATH=$(git rev-parse --git-dir 2>/dev/null)
-TERMS_FILE="$GIT_DIR_PATH/private-terms.txt"
+TERMS_FILE="${PRIVACY_TERMS_FILE:-$GIT_DIR_PATH/private-terms.txt}"
 
 SHAPES='[A-Za-z]:\\Users\\[A-Za-z0-9._-]+|/(home|Users)/[A-Za-z0-9._-]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b|\b[a-z0-9-]+\.(corp|internal|intranet|lan)\b'
 ALLOW='[\\/](name|you|user|username|yourname|your-name|me|example)$|noreply@|@example\.|:(0\.0\.0\.0|127\.0\.0\.1|192\.0\.2\.[0-9]+|198\.51\.100\.[0-9]+|203\.0\.113\.[0-9]+)$'
@@ -75,8 +78,31 @@ tree)
         scan_text "$f" < "$top/$f"
     done
     ;;
+history)
+    work=$(mktemp -d)
+    git rev-list --all > "$work/commits"
+    while read -r c; do
+        [ -n "$c" ] || continue
+        git log -1 --format=%B "$c" > "$work/msg"
+        scan_text "commit ${c%"${c#????????}"}" < "$work/msg"
+    done < "$work/commits"
+    # Every distinct file version ever stored: "<blob> <path>", listed once per blob.
+    git rev-list --objects --all | git cat-file --batch-check='%(objecttype) %(objectname) %(rest)' \
+        | grep '^blob ' | sort -u -k2,2 > "$work/blobs"
+    while read -r _ sha path; do
+        [ -n "$path" ] || continue
+        case "$path" in *.png|*.jpg|*.jpeg|*.gif|*.ico|*.pdf|*.zip) continue ;; esac
+        git cat-file -p "$sha" > "$work/blob" 2>/dev/null
+        scan_text "$path @ ${sha%"${sha#???????}"}" < "$work/blob"
+        if [ -s "$TERMS_FILE" ] && echo "$path" | grep -qFi -f "$TERMS_FILE"; then
+            echo "  $path (file name, blob ${sha%"${sha#???????}"})"
+            FOUND=1
+        fi
+    done < "$work/blobs"
+    rm -rf "$work"
+    ;;
 *)
-    echo "usage: privacy-scan.sh staged | msg FILE | tree" >&2
+    echo "usage: privacy-scan.sh staged | msg FILE | tree | history" >&2
     exit 2
     ;;
 esac

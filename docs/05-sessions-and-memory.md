@@ -34,7 +34,7 @@ Then a second screen picks the model (sonnet / haiku / opus). The selected comma
 
 ## /end-session - The Session Drain
 
-`/end-session` is the most-used skill in a serious setup. It is the crux of the continuous improvement loop - everything good that happened in a session gets preserved here.
+`/end-session` is the skill that closes every working session. It is the crux of the continuous improvement loop - everything good that happened in a session gets preserved here.
 
 ### What It Does
 

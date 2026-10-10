@@ -18,6 +18,8 @@ These are POSIX `sh`, so they run only for commits through Git Bash, never a GUI
 
 ## A Privacy Guard Must Report WHERE, Never WHAT
 
+The same `commit-msg` slot can also run the message-shape checks from [Part 24](24-config-driven-doc-linting.md).
+
 A hook that finds a private token and echoes the matching line has printed it into the terminal, any CI log that captured the run, and the transcript of any assistant committing on your behalf, a wider audience than the commit it blocked. The wrong version looks more helpful, which is why it is easy to write. So the pre-commit hook prints file names and the commit-msg hook prints line numbers; neither prints the match. A location is enough to act on and costs nothing if it leaks.
 
 The general form applies to any check over sensitive data: a rule that names the thing it protects instantiates the leak it exists to prevent. The public copy of a privacy rule says "no private repo names"; the private copy is where the names live. The same split applies to the guard's own output.
@@ -28,7 +30,15 @@ When one of a pair of hooks implements a safety rule, check the other for that r
 
 The marker mechanism protects only against names of sibling repos and does nothing on a machine with no marker. A second layer, `hooks/privacy-scan.sh`, runs first in both hooks and fails closed on shapes that identify a machine or person: absolute user paths, email addresses, IPv4 addresses and internal hostnames (placeholder forms such as a user called `name`, `noreply@` addresses and documentation IP ranges are allowed). It also reads `private-terms.txt` inside your own `.git/` directory, one case-insensitive term per line, for names, employer, products and internal systems; that file is never tracked, so the terms are never published. Like the marker layer it reports file and line, never the match.
 
-`sh hooks/privacy-scan.sh tree` scans every non-ignored file, tracked or not, which covers the gap that a hook sees only staged content. `tools/selftest_privacy.sh` holds positive and negative controls and checks that installed hooks equal the tracked ones; `tools/selftest.sh` runs both. History, `--no-verify` and non-git writes are not covered, so the periodic whole-tree scan remains required.
+`sh hooks/privacy-scan.sh tree` scans every non-ignored file, tracked or not, which covers the gap that a hook sees only staged content. `tools/selftest_privacy.sh` holds positive and negative controls and checks that installed hooks equal the tracked ones; `tools/selftest.sh` runs both. `--no-verify` and non-git writes are not covered by the hooks, so the periodic whole-tree scan remains required, and history has its own scan (next section).
+
+## Before Making a Repo Public: Scan History
+
+A public bug report or pull request description is the same exposure in a smaller space; `privacy-scan.sh msg FILE` works on a saved draft of one (see [Part 25](25-bug-reports-and-pr-descriptions.md)).
+
+A hook sees what is about to be committed. Publishing exposes every commit ever made, including files deleted long ago and messages written before the rules existed, so the pre-publish question is about history, not the tree. `sh hooks/privacy-scan.sh history` answers it with the same two layers (generic shapes plus your `private-terms.txt`) over every commit message and every distinct file version reachable from any branch or tag, and also checks old file names against your terms. Output is a path with a short blob id, or `commit` with a short commit id, plus line numbers, never the match. `PRIVACY_TERMS_FILE` points it at a different term list, for scanning a repo other than the one the list lives in.
+
+The routine is: put the terms in the untracked list, run the history scan, fix what it names, and run it again until it exits 0. A hit in an old file version means the tree is clean but the history is not; fixing it needs a history rewrite (see the section below), and every rewritten commit gets a new id, so do it before anyone clones. The scan reads every object, so it takes minutes on a long history; run it once at the decision point, not in a hook. It does not scan author names or emails in commit metadata, binary files, or anything outside git, so check those by eye. A clean run means the shapes and terms you listed are absent, not that nothing sensitive remains.
 
 ## Secrets That Get Into Git Anyway
 

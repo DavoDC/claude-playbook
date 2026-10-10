@@ -196,6 +196,9 @@ Quick view of today's strategic and tactical focus. Reads a priority overview (s
 ### [/whats-next](../skills/whats-next/SKILL.md)
 A numbered list of next actions and nothing else, each tagged as something Claude can do alone or something that needs you. Small on purpose.
 
+### [/handoff](../skills/handoff/SKILL.md)
+Writes the prompt that starts a fresh session on unfinished work. A script reads mechanical state off disk (branch, dirty files, scratch files), and the model adds only the judgment: the outcome, what is out of scope, and a live-verified date on every outward-facing instruction. Decides first whether a handoff is warranted at all.
+
 ### /plan-day
 More detailed than `/today`. Categorises all pending items into: can do now, needs you, needs team, quick wins. Recommends parallel sessions when there are 2+ independent tasks that would each take 30+ minutes.
 

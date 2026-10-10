@@ -92,6 +92,7 @@ Claude Code makes it available as `/<name>` in any session run from that workspa
 | [reflection](reflection/SKILL.md) | Read recent session history, extract patterns, update workspace config and memory |
 | [repo-status](repo-status/SKILL.md) | Multi-repo status - branch, dirty count, unpushed commits per repo. Read-only, never fetches |
 | [whats-next](whats-next/SKILL.md) | Lean numbered list of next actions, each tagged Claude or you |
+| [handoff](handoff/SKILL.md) | Writes the prompt that starts a fresh session: state read from disk by a script, judgment added by the model |
 | [end-session](end-session/SKILL.md) | Template: session fragment, task reconcile, log row, learning routing, commit |
 | [today](today/SKILL.md) | Template: top priorities with next step, the queue, tactical items, health flags |
 

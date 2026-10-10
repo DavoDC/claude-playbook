@@ -1,0 +1,14 @@
+{
+  "files": {
+    "CLAUDE.md": {"soft_bytes": 8000, "hard_bytes": 10000, "max_lines": 150},
+    ".claude/rules/enforced-rules.md": {"soft_bytes": 20000, "hard_bytes": 30000}
+  },
+  "groups": [
+    {
+      "name": "always-loaded",
+      "files": ["CLAUDE.md", ".claude/rules/enforced-rules.md", "~/.claude/CLAUDE.md"],
+      "soft_bytes": 24000,
+      "hard_bytes": 32000
+    }
+  ]
+}

@@ -109,6 +109,13 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [09b - Hook Recipes](docs/09-hooks-recipes.md) | Field note | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
 | [11 - The Workspace Repo](docs/11-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
 | [12 - Audit Lenses](docs/12-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, and the re-ranking lenses |
+| [13 - Multi-Agent Orchestration](docs/13-multi-agent-orchestration.md) | Field note | Model choice, delegation, budget before fan-out, briefs, accepting work back, external content as data |
+| [14 - Concurrent Sessions](docs/14-concurrent-sessions.md) | Field note | Several sessions on one working tree: commits, shared logs, locks, git rules |
+| [15 - Verification Habits](docs/15-verification-habits.md) | Field note | Re-test inherited limits, enumerate before confirming, observation harness, live-process checks |
+| [16 - Commit-Anchored Delta](docs/16-commit-anchored-delta.md) | Field note | Re-audit only what changed since the last anchor |
+| [17 - Freeze the Consumer](docs/17-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
+| [18 - CLAUDE.md Worked Examples](docs/18-claude-md-examples.md) | Field note | What a project note changes in practice |
+| [19 - Reframing Blocked Problems](docs/19-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
 
 Core files' referenced tools and snippets are asserted by `tools/selftest.sh` on every push; Field note files are dated patterns from practice that the harness does not check - see "What's Guaranteed vs What's Field Notes" above for the full distinction.

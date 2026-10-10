@@ -130,6 +130,7 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [20 - Freeze the Consumer](docs/20-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
 | [21 - CLAUDE.md Worked Examples](docs/21-claude-md-examples.md) | Field note | What a project note changes in practice |
 | [22 - Reframing Blocked Problems](docs/22-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
+| [23 - When To Stop Refining](docs/23-when-to-stop-refining.md) | Field note | Stopping rules for audits and deep dives that always find more |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
 
 Core files' referenced tools and snippets are asserted by `tools/selftest.sh` on every push; Field note files are dated patterns from practice that the harness does not check - see "What's Guaranteed vs What's Field Notes" above for the full distinction.

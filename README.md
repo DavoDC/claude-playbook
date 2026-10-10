@@ -6,11 +6,21 @@ For people who use Claude Code daily and are tired of re-correcting the same mis
 
 ---
 
-## What You Get
+## The Three Gaps This Fills
 
-- **Budget awareness.** Claude knows whether it is at 5% or 95% of its rate limits before it starts a long job, so an overnight loop never begins at 82% of the 5-hour quota and gets throttled. The `tools/` in this repo surface that data and gate decisions on it.
-- **Corrections that stick.** Every correction you make is saved as a rule, so you stop repeating yourself across months. The `feedback_*.md` system builds a library calibrated to your actual failure modes, not generic advice.
-- **Work picked for you.** A priority-ordered `IDEAS.md` gives Claude a scope contract before any code is written. It takes the top actionable item, so you do not have to direct it.
+By default, Claude Code has three significant gaps that most users don't notice until they're badly bitten by them:
+
+**1. No budget awareness**
+
+Claude has no idea whether it's at 5% or 95% of its rate limits. It will happily start a 3-hour overnight loop at 82% of its 5-hour quota and wonder why it gets throttled. The `tools/` in this repo surface that data and make decisions based on it - before any work starts.
+
+**2. No improvement memory**
+
+Every correction you make in a session evaporates at the end. You end up correcting the same behaviours repeatedly across months. The feedback_*.md system creates a library of rules calibrated to your actual failure modes - not generic advice, but the specific mistakes that happen in your work.
+
+**3. No structured work selection**
+
+Without a priority queue, Claude works on whatever is in front of it - often the wrong thing. An IDEAS.md priority queue gives it a scope contract and a priority-ordered list before any code is written. It picks the top actionable item; you don't have to direct it.
 
 ---
 

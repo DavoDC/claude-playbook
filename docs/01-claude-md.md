@@ -59,7 +59,7 @@ Target:
 - Workspace CLAUDE.md (your rules, preferences, workflow): **100-150 lines max**
 - Per-repo CLAUDE.md (project-specific notes): **50-80 lines** is plenty
 
-If it's growing past 150 lines, move content out. Detailed explanations go in `feedback_*.md` files that only load on demand, not every session.
+Treat the line target as a proxy for a byte ceiling, which is what actually costs tokens: set a hard byte limit for each always-loaded file, and apply a down-only ratchet so that every time a cleanup brings the file under its ceiling you lower the ceiling to match, never raise it. If it's growing past its ceiling, move content out. Detailed explanations go in `feedback_*.md` files that only load on demand, not every session.
 
 **The key discipline:** CLAUDE.md holds principles and rules, not explanations. If you're writing paragraphs explaining WHY a rule exists, that belongs in a feedback file. CLAUDE.md says "do X" - the feedback file says "because Y happened." Keep them split.
 
@@ -155,7 +155,7 @@ When you want Claude to work through a task without interrupting you:
 ```
 - Keep working on directives - work through goals autonomously. Don't stop unless truly blocked.
 - Don't re-ask for things already granted.
-- Use subagents for parallel research - launch multiple Explore agents for independent tasks.
+- Ration subagents - measure remaining budget first, dispatch one at a time with related work bundled into each brief, and fan out in parallel only for small, genuinely independent tasks.
 - Use TaskCreate for multi-step plans - any task with 3+ distinct steps benefits from task tracking. Create tasks upfront, mark in_progress when starting, completed when done.
 ```
 

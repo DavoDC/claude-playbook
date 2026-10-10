@@ -129,6 +129,10 @@ The reason this split matters is that evidence and analysis want opposite treatm
 
 ---
 
+## Cheap Orientation at Session Start
+
+Reading a long task list and a long session history at the start of every session is a fixed cost with little return. Have a SessionStart hook run `tools/session-brief.py`, which prints a handful of open items and the latest few session headings under a hard byte cap, and make the rule that source files are read only by section, with an offset and limit. Pair it with a measured baseline (see Part 5) so you can tell whether the start-of-session cost is actually going down.
+
 ## Common Gotchas
 
 ### Manual Edits Getting Overwritten

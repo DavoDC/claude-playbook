@@ -108,9 +108,9 @@ The mixed case is important. Running Opus for the entire session when only the f
 
 **Solo Sonnet (default):** One session plans, executes, and commits. Right for most work where items are scoped and judgment calls are few.
 
-**Solo Haiku (mechanical sweeps):** Em-dash removal, frontmatter normalization, format passes across many files. Haiku has 200K context but less judgment - use only for well-defined mechanical work.
+**Solo Haiku (narrow mechanical sweeps):** Greps, lists and reformatting passes whose output is cheap to verify, where the brief names the exact operation and the exact output format. Haiku has less judgment, so its output is never treated as verified: spot-check it against the source or rerun the search yourself. Sonnet is the safer default for mechanical work, and Haiku is worth choosing only once you have measured that it holds up on your task.
 
-**Sonnet orchestrator + Haiku workers:** Sonnet runs the top-level loop, spawns Haiku subagents via `Agent(model="haiku", ...)` for mechanical subtasks. Sonnet sees plan and result summaries; Haiku pays the file-scanning tokens. On a 10-item loop where 8 items are mechanical, this can cut cost 60-70%.
+**Sonnet orchestrator + Haiku workers:** Sonnet runs the top-level loop, spawns Haiku subagents via `Agent(model="haiku", ...)` for mechanical subtasks. Sonnet sees plan and result summaries; Haiku pays the file-scanning tokens.
 
 **Opus planner + Sonnet executor (cross-session):** Opus designs the approach. User reviews the plan. Fresh Sonnet session executes it. Keeps judgment costs in one session, execution costs in another.
 
@@ -184,7 +184,7 @@ What that looks like when it goes wrong: a wide batch dispatched in one go, most
 Three rules, each of which is cheap and none of which is obvious until after the first time:
 
 - **Measure the remaining budget before the first dispatch, not after.** An unmeasured figure is the actual failure here. The check costs one command; the alternative costs the batch.
-- **Cap the width, and cap it lower than feels necessary.** A handful of concurrent workers is a reasonable ceiling, and fewer when each brief is long, because a long brief multiplies the fixed per-worker cost by the width before any real work starts. Two waves of two that both finish beat one wave of eight that does not.
+- **Cap the width, and cap it lower than feels necessary.** One worker at a time is the default, and a small number (two to four) is the ceiling for tasks that are truly independent; go lower still when each brief is long, because a long brief multiplies the fixed per-worker cost by the width before any real work starts. Two waves of two that both finish beat one wave of eight that does not.
 - **Every worker writes its report to a file as it goes, not at the end.** This is the single highest-value instruction in any parallel brief. When a batch does get cut off, the workers that were writing incrementally have left usable partial results on disk, and the ones that were composing a final summary have left nothing. In the incident above, this instruction is the only reason the work did not have to start from zero.
 
 Resuming a stalled batch is a narrow re-dispatch of the specific gaps, one or two workers at a time, not a re-run of the original width.
@@ -361,6 +361,32 @@ The rule has to be about handling rather than suspicion, because the trustworthy
 - **When relaying a genuine change of instruction to a running subagent, hand it evidence it can check, not a bare claim of authority.** "The orchestrator says the plan changed" is indistinguishable, from the subagent's position, from an injected instruction claiming exactly that - and a subagent that treats an unverified authority claim with suspicion is behaving correctly, not malfunctioning. If a mid-task course correction has to reach a subagent, give it something it can verify itself: a file it can read, a diff it can inspect, a state change it can observe. The fix for a subagent that rightly resists an unverified mid-task correction is to change how the correction is delivered, never to make the subagent less cautious.
 
 ---
+
+## Delegation Rules That Earn Their Place
+
+### The Delegation Contract
+
+Paste the same short preamble at the top of every implementation brief: do the work described and no more; name adjacent findings in the report instead of fixing them; verify your own change before reporting (run the test, re-read the diff); report the artifact and any deviation, not a summary of intent; and stop and ask if the brief leaves something genuinely ambiguous. Then fill in the brief itself: exact files in scope, the exact change, the verification command, and what done looks like. A brief that says "work out the right approach" belongs to a stronger tier. End every brief with: write script files rather than piping code into an interpreter, run nothing in the background, and leave no process running when you report.
+
+### Serial, Bundled Dispatch
+
+Dispatch implementation subagents one at a time, and bundle logically related fixes into each. The orchestrator's context fills from reading reports, diffs and verification output, so a few large sequential dispatches cost less than many small parallel ones. Fan out only when the tasks are unrelated and small. Parallel agents that share a file which a tool reads and rewrites whole can sweep each other's uncommitted changes into their own commits, so brief each one to diff shared files before committing and check afterwards that nothing was duplicated or lost.
+
+### Hand Over a Named Counterexample, Not an Open Hunt
+
+A subagent asked to "look for bugs" tends to return nothing concrete or plausible claims it never verified. A subagent given a precise suspected defect (this code path, this crash point, this observable bad state) does the hard part well: it forces a real reproduction and fixes only what is proven. Spotting the candidate needs your knowledge of what is expensive to get wrong in this codebase, so keep that step; delegate reproducing and fixing it.
+
+### No Sleep-Polling
+
+Never wrap a slow command in a loop that sleeps and checks whether the process is gone. The harness already notifies when a background command finishes, and a hand-rolled poll tends to be left running. Tell subagents this explicitly in any brief that includes a slow command: either run it in the foreground with a long explicit timeout, or carry on with other work and let the completion notice arrive.
+
+### A Decision Gate Is a Separate Dispatch
+
+Never put a decision (prior-art check, naming, go or no-go verdict) and the build that depends on it in the same brief. The agent will start building before the verdict exists, and you cannot veto work that has already landed. Dispatch the gate alone, read its written verdict yourself, decide, and only then write the build brief. Builds behind one approved gate can still be bundled.
+
+### Git Rules For Shared Trees
+
+Three rules follow from several sessions sharing one working tree. Never amend: by the time you amend, HEAD may be a sibling session's commit, so the amend rewrites its message and leaves yours untouched. Fix a wrong message or trailer with a new commit. Always scope a commit with a pathspec. After a `git mv`, the pathspec must name the old paths as well as the new ones, because the move stages a deletion at each old path and a pathspec listing only the new paths commits the additions and leaves the deletions staged; confirm with `git status --short` afterwards, since the commit looks right either way.
 
 ## The Single Most Valuable Habit
 

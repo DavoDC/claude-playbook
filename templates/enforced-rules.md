@@ -4,6 +4,10 @@
 <!-- It is auto-loaded by Claude Code and applies to every session across all repos. -->
 <!-- Keep rules short (one bullet, under 120 chars), with a feedback file reference. -->
 <!-- See docs/02-improvement-loop.md for how to use and grow this file. -->
+<!-- Size: set a hard byte limit and a lower soft limit for this file, enforced by a hook. -->
+<!-- To add a rule: (1) write the feedback file first, because this file gets trimmed and the feedback file survives; -->
+<!-- (2) a rule for one workflow belongs in that process doc instead; (3) trim equal-or-larger text first; -->
+<!-- (4) then add ONE bullet under 120 characters that points at the feedback file. -->
 
 ---
 

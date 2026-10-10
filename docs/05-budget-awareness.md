@@ -153,6 +153,20 @@ The most token-efficient approach:
 
 ---
 
+## Token-Saving Mechanisms That Compound
+
+The levers above are habits. These are mechanisms: each one removes a recurring cost without relying on anyone remembering.
+
+**A session-start brief.** A SessionStart hook prints a few lines (the first handful of open tasks, the latest few session headings, today's date, branch and dirty-file count) so a session orients without reading long files. Cap it in bytes, not lines, so a pathological file cannot blow the budget, and let a missing source file produce an empty section rather than an error. `tools/session-brief.py` is a working, tested version with configurable paths.
+
+**A token baseline with a down-only ratchet.** Claude Code writes a transcript per session. `tools/token-baseline.py` reads them and reports the median first-turn context (what every session pays before you type), the average per turn, compactions, and oversized shell results. Store a ceiling for each number in a small JSON file (`tools/token-ceilings.example.json`), run `--check` in your test run so a regression fails loudly, and run `--ratchet` after a cleanup so the ceiling only ever moves down. Without a measurement, "we saved tokens" is a belief.
+
+**Size ceilings, and a budget for the group.** A per-file limit misses the case where several always-loaded files each sit under their own cap while their sum keeps growing. Keep a short manifest of every file that loads into every session, check the combined size against a soft and a hard byte budget, and run that check whenever any member is edited.
+
+**Read and shell caps.** Deny a whole-file read of a large file and ask for a section, and deny known-flooding shell commands unless their output is already limited. Both are hooks, and working examples are in `hooks/examples/`.
+
+**Serial, bundled subagents.** Many small parallel subagents cost the orchestrator more context, because each report and diff must be read and checked, than a few larger sequential ones. Group queued fixes by shared code location, dispatch one bundle, verify the artifact, then dispatch the next. See Part 10.
+
 ## The Bottleneck Is Often a Human Action, Not Model Budget
 
 Everything above measures whether the model has enough budget left to keep working. It is just as important to check the opposite direction: whether finished work is sitting idle because it is waiting on a small human action - a click, a yes/no answer, plugging something in, approving a change - rather than on more model capacity at all. This is easy to miss precisely because the natural instinct when budget is healthy is to keep building, and building is the wrong response to a queue that was never blocked on building in the first place.
@@ -178,6 +192,8 @@ In `.claude/settings.json`:
   }
 }
 ```
+
+Platform caveat: the bare name `python3` is not a real interpreter everywhere. On Windows it can be a Store stub that hangs and ignores timeouts, so use `python` or a full interpreter path there, and run it by hand once before trusting it in a hook or status line.
 
 The key is camelCase and `"type": "command"` is mandatory. A wrong key is accepted silently, so the symptom is not an error but every budget check below reporting no data forever.
 

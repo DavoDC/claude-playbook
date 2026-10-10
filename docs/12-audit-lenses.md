@@ -239,6 +239,12 @@ Run a log of the last week's commits with file statistics and treat the changed-
 
 **Distinguish a new feature under-delivering from a regression before ranking either.** A new check that is imperfect leaves every non-matching case no worse off. A changed behaviour can make a working case fail. Ask whether the previous code handled the failing input correctly; if there was no check at all before, it is not a regression however ugly it looks.
 
+## Audit by Consequence, Not Only by File
+
+A file-by-file audit and a consequence-first audit find different defects, and the second finds the dangerous ones. Reading every function surfaces what is wrong with code that is present. It does not reliably surface what is wrong with code that is missing, because an absent guard has no line to land on. The worst defects in a workflow tool live in the composition: a protection applied on only one path, a value rebuilt between two steps, an argument omitted under a condition.
+
+Before an audit, write the two or three concrete bad outcomes in the user's terms (a wrong file moved, a wrong number believed, the job left half done) and file findings under those headings. Trace each outcome backwards through every branch that can reach it, including the branch where a protection is skipped because a condition was not met. Rank by consequence, not by how much code a finding touches, and run this pass separately from the file-by-file one. If the honest answer is that very little is at risk, say so plainly.
+
 ## How to walk a cell
 
 One read-only agent per cell, or per subject where its open questions are related. The prompt that works has five parts, and dropping any one measurably degrades the result.

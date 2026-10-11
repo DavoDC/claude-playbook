@@ -35,19 +35,11 @@ Which files are special Claude configuration and which are just personal files i
 
 `.claude/rules/enforced-rules.md` is "extended CLAUDE.md": Claude Code loads every file in `.claude/rules/` that has no `paths` frontmatter at launch, with the same priority as CLAUDE.md. That lets you offload detailed rules (keeping CLAUDE.md under 150 lines) without losing coverage. `MEMORY.md` is not loaded this way, so list it in CLAUDE.md's session start checklist.
 
----
+The workspace CLAUDE.md covers how you work across everything; each project CLAUDE.md covers what that project is and how to build and run it. `.claude/skills/` holds your custom slash commands.
 
-- **Workspace CLAUDE.md** - loaded globally for all sessions. Covers your working style, universal rules, how you want Claude to behave across everything.
-- **Project CLAUDE.md** - inside each individual repo. Covers what that specific project does, its architecture, constraints, and how to build/run it.
+**Do not use `/init` to generate these.** It produces a generic starter that does not reflect how you work. Start with three or four rules and grow it; every time you correct Claude, add the correction so it never recurs. That compounding is the entire game.
 
-**Do not use `/init` to generate these.** It produces a generic starter file that doesn't reflect how you work. Build CLAUDE.md by telling Claude what to add. Start with three or four rules and grow it; every time you correct Claude, add the correction so it never recurs. That compounding is the entire game.
-
-The `.claude/` folder also contains:
-- `settings.json` - hooks (shell scripts that run on events)
-- `settings.local.json` - permissions and MCP server config
-- `skills/` - custom slash commands you define
-
-Keep hooks in `settings.json` and permissions in `settings.local.json`. Never mix them - splitting hooks across both files causes double-fire.
+Keep hooks in `settings.json` and permissions in `settings.local.json`. Never mix them: splitting hooks across both files causes double-fire.
 
 ---
 
@@ -63,14 +55,12 @@ The line target is a proxy for a byte ceiling, which is what actually costs toke
 
 **The key discipline:** CLAUDE.md holds principles and rules, not explanations. CLAUDE.md says "do X"; the feedback file says "because Y happened."
 
-The `enforced-rules.md` pattern helps. Split the load:
-- `CLAUDE.md` - your core working style and principles (loaded every session)
-- `.claude/rules/enforced-rules.md` - hard rules distilled from past failures (also loaded every session, but separate file so you can audit each independently)
-- `feedback_*.md` - the WHY behind each rule (loaded only when relevant, on demand)
+Split the load across three files, three jobs, none doing another's:
+- `CLAUDE.md`: core working style and principles (loaded every session)
+- `.claude/rules/enforced-rules.md`: hard rules distilled from past failures (also loaded every session, but separate so each can be audited independently)
+- `feedback_*.md`: the WHY behind each rule (loaded on demand)
 
-Three files, three jobs. None of them should do another's job.
-
-When any of these files points to "where to find an example of X," prefer a grep search term over a hardcoded path. A path like "look in project/data/logs/" goes wrong once the repo is renamed, restructured or archived; a term like `TimedRotating|getLogger` finds the current best example, including files that didn't exist when you wrote the doc, and comes up empty rather than stale. The exception is a template file you maintain on purpose; a path is fine there. Before adding a "look here" table to a process doc, ask whether the path will still exist in a year; if unsure, use a grep term.
+When any of these points to "where to find an example of X," prefer a grep search term over a hardcoded path. A path like "look in project/data/logs/" goes wrong once the repo is renamed or restructured; a term like `TimedRotating|getLogger` finds the current best example and comes up empty rather than stale. A template file you maintain on purpose is the exception.
 
 ---
 
@@ -89,7 +79,7 @@ If a better approach exists, say so first.
 
 This single instruction changes the quality of every response; without it Claude rubber-stamps everything.
 
-One way pushing back goes wrong: when a user names a specific mechanism - "plugin", "macro", "extension", the literal name of a feature they know exists - that name is a constraint on the solution space, not a gesture at a category of fix. Proposing a cleaner, more general architecture overrides information the user already gave you. Investigate the named mechanism on the real system first. One project spent months on a cloud-API integration route while the user kept saying "plugin"; the answer was an already-installed native plugin dialog needing zero registration, findable in minutes had the word been read literally. If you substitute a different approach after investigating, say so explicitly.
+One way pushing back goes wrong: when a user names a specific mechanism ("plugin", "macro", "extension"), that name is a constraint on the solution space, not a gesture at a category of fix. Proposing a cleaner architecture overrides information the user already gave you. Investigate the named mechanism on the real system first. One project spent months on a cloud-API integration route while the user kept saying "plugin"; the answer was an already-installed native plugin dialog needing zero registration, findable in minutes. If you substitute a different approach after investigating, say so explicitly.
 
 ### 2. Fix AND Prevent
 
@@ -101,11 +91,11 @@ When fixing a bug or correcting a mistake, always do BOTH:
 (2) add a guard so it can't recur - a test, a CLAUDE.md rule, or a validation check
 ```
 
-A guard fails quietly when its selection criterion and pass criterion are the same property. A checker that only examines inputs which already look valid never finds the ones that don't: the worst violations are skipped before being checked, and the guard reports success while doing nothing. Decide what to check from something independent of correctness (file path, a marker, surrounding structure), never the property being validated. Treat an empty result as a failure to investigate, not a clean pass; a check that found nothing and one that never ran look identical.
+A guard fails quietly when its selection criterion and pass criterion are the same property: a checker that only examines inputs which already look valid never finds the ones that don't. Decide what to check from something independent of correctness (file path, a marker, surrounding structure). Treat an empty result as a failure to investigate; a check that found nothing and one that never ran look identical.
 
-Fix and guard closes a single door. The third rung is where the compounding happens: name the structural reason the setup allowed the bug, ask what else shares that gap, and ask which existing review should have caught it - then fix that review too. Otherwise the next bug with the same root cause gets fixed and guarded individually, forever.
+Fix and guard closes a single door. The third rung is where the compounding happens: name the structural reason the setup allowed the bug, ask what else shares that gap, and ask which existing review should have caught it, then fix that review too. Otherwise the next bug with the same root cause gets fixed and guarded individually, forever.
 
-The discipline also runs the other way. When something you tried is genuinely good - a prompt phrasing, a workflow shortcut, a way of splitting a task - decide immediately whether it should recur. A high-value one-off left as a one-off wastes most of its value, and the details of what made it work fade.
+It runs the other way too: when something you tried is genuinely good (a prompt phrasing, a workflow shortcut), decide immediately whether it should recur. A high-value one-off left as a one-off wastes most of its value.
 
 ### 3. Research Approach
 
@@ -119,9 +109,9 @@ Tell Claude the order to look for information:
 
 This stops Claude from hallucinating API docs or stating things that are only true in old versions.
 
-A worse failure than being wrong: reporting that something doesn't exist when the search didn't look hard enough. A grep for one spelling, case or file extension that finds nothing proves the search was bounded, not that the thing is absent. Before closing on a negative, vary case, separators (hyphen, underscore, space, none), singular and plural, and check the file types and directories searched were the right ones. Then either widen the search and report a true negative, or say exactly what you searched. "No hits under this path in markdown files" is honest; "There is no such thing" is usually untested.
+A worse failure than being wrong: reporting that something doesn't exist when the search didn't look hard enough. A grep for one spelling, case or extension that finds nothing proves the search was bounded, not that the thing is absent. Before closing on a negative, vary case, separators, singular and plural, and check the file types and directories searched. Then widen the search, or say exactly what you searched: "No hits under this path in markdown files" is honest; "There is no such thing" is usually untested (the full rule is in [Part 19](19-verification-habits.md)).
 
-Before building any diff, match or reconciliation, say what the unit of comparison is and check it is what the question is about. A file-level diff can report most files unchanged while the record inside them moved, split or merged across files: accurate and useless. Ask: if every container changed shape but the real unit was preserved, would this comparison still say so? If that is possible you're comparing the wrong thing; restate the unit before writing the comparison.
+Before building any diff, match or reconciliation, say what the unit of comparison is. A file-level diff can report most files unchanged while the record inside them moved, split or merged across files: accurate and useless. If every container changed shape but the real unit was preserved, would the comparison still say so? If not, restate the unit first.
 
 ### 4. Before Acting on Files
 
@@ -142,8 +132,8 @@ Define exactly how you want Claude to write:
 - Write reports as markdown. No slide-deck formatting.
 - Document as you go - write findings immediately, don't accumulate in context.
 - No unexplained acronyms - define on first use.
-- Write markdown at full width, one paragraph per line - don't hard-wrap prose at 70-80 characters. Renderers reflow paragraphs anyway, so a hard wrap is invisible to a reader and just adds noisy diffs where one edit touches several wrap-points instead of one line. Lists, tables, code blocks, and ASCII diagrams keep their natural shape - this is about prose only.
-- Never write exact counts in any doc - test counts, skill counts, config entry counts, anything that changes as work continues. They go stale silently: the doc doesn't know a test got added, the reader assumes the number shown is current, and it's already wrong. Use a qualifier instead ("several", "over a dozen", "comprehensive as of DATE") or drop the number entirely. This applies to your own CLAUDE.md and feedback files just as much as a public README.
+- Write markdown at full width, one paragraph per line - don't hard-wrap prose at 70-80 characters. Renderers reflow anyway, so a hard wrap is invisible to a reader and only adds noisy diffs. Lists, tables and code keep their natural shape.
+- Never write exact counts in any doc (tests, skills, config entries, anything that changes as work continues). They go stale silently and the reader assumes the number is current. Use a qualifier ("several", "comprehensive as of DATE") or drop the number. This applies to your own CLAUDE.md and feedback files as much as a public README.
 ```
 
 The em/en dash rule sounds trivial but matters if you have a write-guard hook - em dashes in files will block edits.
@@ -233,7 +223,7 @@ See `templates/CLAUDE_project.md` for a ready-to-fill template.
 
 ### When It Grows Too Big: Split Off a DevContext.md
 
-CLAUDE.md is auto-loaded every session whether or not the work needs it. A project CLAUDE.md's scope is orientation and harm prevention only: what the repo does, build/test/run commands, key paths, and safety rules preventing data loss or broken invariants. Internals, code patterns and architecture notes are implementation detail, not worth paying for on sessions that never touch the code. Split them into a demand-loaded file, for example `docs/References/DevContext.md`, read only when working on implementation. Split when CLAUDE.md exceeds roughly 150 lines, or more than half is implementation notes. One project's CLAUDE.md grew past 300 lines because every dev session appended learnings to it; the fix was two files with different load times, not one file hand-trimmed every few weeks.
+A project CLAUDE.md's scope is orientation and harm prevention only: what the repo does, build/test/run commands, key paths, and safety rules preventing data loss or broken invariants. Internals, code patterns and architecture notes are not worth paying for on sessions that never touch the code. Split them into a demand-loaded file, for example `docs/References/DevContext.md`, when CLAUDE.md exceeds roughly 150 lines or more than half is implementation notes. One project's CLAUDE.md grew past 300 lines because every dev session appended learnings to it; the fix was two files with different load times, not one file hand-trimmed every few weeks.
 
 ### Section 1: One-Line Summary
 
@@ -332,9 +322,9 @@ The importer MUST ONLY operate on the staging folder. Never on the library root.
 Never refactor this to accept a folderPath parameter.
 ```
 
-Prohibitions are half of it. Name two lists explicitly: what the agent may do without asking, and what it must always hand back to you. An unstated boundary gets rediscovered by crossing it, and the correction covers only that case. Naming both lists closes the whole class at once.
+Name two lists explicitly: what the agent may do without asking, and what it must always hand back to you. An unstated boundary gets rediscovered by crossing it, and the correction covers only that case; naming both lists closes the whole class.
 
-The harder half: when a task hits a step the agent cannot run - a push, a production deploy, an account credential, a physical action - deliver the complete solution with that one step clearly handed over, never quietly shrink the deliverable to what could be executed. A narrowed deliverable reads as finished until the un-run step matters. State the handoff in the output every time.
+When a task hits a step the agent cannot run (a production deploy, an account credential, a physical action), deliver the complete solution with that one step clearly handed over, never quietly shrink the deliverable to what could be executed. A narrowed deliverable reads as finished until the un-run step matters.
 
 ### Section 9: Critical Platform Gotchas
 
@@ -360,8 +350,8 @@ When a feature is implemented: remove from IDEAS.md, add to HISTORY.md.
 Never mark done with checkmarks - remove the entry completely.
 ```
 
-The backlog need not live in the project repo. Keeping it outside (for example in your workspace repo, a folder per project) keeps unshipped plans out of a public repo and holds every project's queue in one place; put the path in this line so Claude finds it. Inside the repo (`docs/IDEAS.md`) is fine for a private project.
+The backlog need not live in the project repo. Keeping it in your workspace repo keeps unshipped plans out of a public repo and holds every queue in one place; put the path in this line. `docs/IDEAS.md` inside the repo is fine for a private project.
 
-A habit to codify alongside it: when you dump a burst of raw, half-formed ideas on Claude, tell it to save the raw text verbatim first, in its own section, before any refined version. A refined-only summary bakes Claude's interpretation in as the record; if it missed the point, the original is gone. Use a "Raw (verbatim)" section with the exact text - obvious typos fixed, substance untouched - followed by a "Processed" section with the expanded, connected, prioritised version. Only for genuine idea dumps, not routine back-and-forth.
+A habit to codify alongside it: when you dump a burst of raw, half-formed ideas, tell Claude to save the raw text verbatim first, in its own "Raw (verbatim)" section (obvious typos fixed, substance untouched), followed by a "Processed" section with the expanded, prioritised version. A refined-only summary bakes Claude's interpretation in as the record; if it missed the point, the original is gone. Only for genuine idea dumps.
 
-That habit does not protect the way out: verbatim capture is safe going in, not automatically safe coming back out. The fact inside a raw sentence can be fine to publish while the sentence is not, because the phrasing carries identifying context the fact alone does not - who said it, what system they worked in, what workaround they described. Verbatim capture is a one-way valve: write down exactly as heard, never forward or publish exactly as heard. The generalising step - from "here is the raw sentence" to "here is the reusable fact, stripped of who and where" - must happen at the boundary where content leaves private capture for anything shareable, not whenever someone revisits the note. The two get confused because the fidelity that makes verbatim capture valuable also makes moving it verbatim risky.
+Verbatim capture is safe going in, not coming back out. The fact inside a raw sentence can be fine to publish while the sentence is not, because the phrasing carries identifying context (who said it, what system they worked in). It is a one-way valve: write down exactly as heard, never forward or publish exactly as heard. The generalising step, from the raw sentence to the reusable fact stripped of who and where, must happen at the boundary where content leaves private capture for anything shareable.

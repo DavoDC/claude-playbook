@@ -80,15 +80,15 @@ workspace/          <- you always run Claude from here
 
 **Why not just use a project repo?** If your preferences live in a project repo, they disappear when you start a new project. With a workspace repo, every session starts with your rules loaded, your skills available, and context from past sessions. Every correction you make to Claude compounds across all future sessions and all projects.
 
-The whole system depends on this one structural choice. See `docs/12-workspace-repo.md` for the full setup guide.
+The whole system depends on this one structural choice. See `docs/13-workspace-repo.md` for the full setup guide.
 
 ---
 
 ## What's Guaranteed vs What's Field Notes
 
-`tools/`, `templates/`, and every settings.json snippet documented in these docs are the asserted core - `tools/selftest.sh` checks all three on every push, so a typo in any copied-out snippet fails CI. Run it yourself in seconds: `bash tools/selftest.sh`.
+`tools/`, `templates/`, and every settings.json snippet documented in these docs are the asserted core: `tools/selftest.sh` checks all three on every push, so a typo in any copied-out snippet fails CI. Run it yourself in seconds: `bash tools/selftest.sh`.
 
-Within `docs/`, each file is marked Core or Field note right under its heading (see the Tier column below). Core files reference only the tools and settings snippets covered by that same `selftest.sh` run. Field note files are dated observations from real use, useful but not mechanically verified - Claude Code's harness ships continuously, so any such claim about how it behaves is a snapshot, not a permanent fact, which is why each one carries the date it was last reviewed.
+Each file in `docs/` is marked Core or Field note under its heading (see the Tier column below). Core files reference only tools and snippets covered by that same run. Field notes are observations from real use, not mechanically verified; the harness ships continuously, so a claim about how it behaves is a snapshot, which is why each carries its last-reviewed date.
 
 ---
 
@@ -117,12 +117,12 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [07 - Skills Reference](docs/07-skills.md) | Field note | Every shipped skill, ordered by impact |
 | [08 - Hooks](docs/08-hooks.md) | Field note | Events, exit codes, delivery channels, the `if:` field, settings split, registration, Windows git hooks |
 | [09 - Hook Recipes](docs/09-hooks-recipes.md) | Field note | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
-| [10 - The Shorthand System](docs/10-shorthand-system.md) | Field note | A typed short term that triggers a defined behaviour: the glossary file, the prompt hook, the rules for what earns a row, and QUAD as the worked example |
-| [11 - Privacy Hooks for a Public Repo](docs/11-privacy-hooks-public-repo.md) | Field note | Commit-time guards that keep private names and paths out, report where never what, and secrets that reach git anyway |
-| [12 - The Workspace Repo](docs/12-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
-| [13 - Audit Lenses](docs/13-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, the re-ranking lenses, and how to run a pass |
-| [14 - Reading a Measurement](docs/14-reading-a-measurement.md) | Field note | Deciding whether a number or green result can be believed: operate the tool, validate the probe, input states that fake a result, success signals, exit states |
-| [15 - Hook Failure Modes](docs/15-hook-failure-modes.md) | Field note | How guards fail silently and how to keep a set of them honest: blast radius, the fail-open and quoting traps, bypasses, retiring a guard by fire rate |
+| [10 - Hook Failure Modes](docs/10-hook-failure-modes.md) | Field note | How guards fail silently and how to keep a set of them honest: blast radius, the fail-open and quoting traps, bypasses, retiring a guard by fire rate |
+| [11 - The Shorthand System](docs/11-shorthand-system.md) | Field note | A typed short term that triggers a defined behaviour: the glossary file, the prompt hook, the rules for what earns a row, and QUAD as the worked example |
+| [12 - Privacy Hooks for a Public Repo](docs/12-privacy-hooks-public-repo.md) | Field note | Commit-time guards that keep private names and paths out, report where never what, and secrets that reach git anyway |
+| [13 - The Workspace Repo](docs/13-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
+| [14 - Audit Lenses](docs/14-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, the re-ranking lenses, and how to run a pass |
+| [15 - Reading a Measurement](docs/15-reading-a-measurement.md) | Field note | Deciding whether a number or green result can be believed: operate the tool, validate the probe, input states that fake a result, success signals, exit states |
 | [16 - Auditing Your Own Changes](docs/16-auditing-your-own-changes.md) | Field note | Recent changes as an audit scope, consequence over file, composition defects, correlated readers |
 | [17 - Multi-Agent Orchestration](docs/17-multi-agent-orchestration.md) | Field note | Model choice, delegation, budget before fan-out, briefs, accepting work back, external content as data |
 | [18 - Concurrent Sessions](docs/18-concurrent-sessions.md) | Field note | Several sessions on one working tree: commits, shared logs, locks, git rules |
@@ -136,7 +136,7 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [26 - Bug Reports and PR Descriptions](docs/26-bug-reports-and-pr-descriptions.md) | Field note | Writing an upstream ticket and a pull request description a stranger can act on: evidence, minimal repro, expected and actual, what you tried |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
 
-Core files' referenced tools and snippets are asserted by `tools/selftest.sh` on every push; Field note files are dated patterns from practice that the harness does not check - see "What's Guaranteed vs What's Field Notes" above for the full distinction.
+The Tier column is explained under "What's Guaranteed vs What's Field Notes" above.
 
 ---
 

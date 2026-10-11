@@ -151,4 +151,4 @@ A practical fix: clone the docs locally so the whole corpus is greppable in one 
 git clone https://github.com/ericbuess/claude-code-docs
 ```
 
-See `docs/12-workspace-repo.md` for where this clone should live and why. Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.
+See `docs/13-workspace-repo.md` for where this clone should live and why. Then ask Claude to read the docs and suggest features that would help your workflow. It will find things you didn't know existed. This works especially well for initial setup - Claude can read its own docs and then self-configure for your use case.

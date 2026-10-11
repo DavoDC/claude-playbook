@@ -82,7 +82,7 @@ In practice:
 
 The commit step makes it persistent; skip it and Claude keeps making the same mistakes.
 
-To run this whole sequence over a session's worth of corrections with one typed word instead of re-explaining it, define it as a shorthand term: see [Part 10](10-shorthand-system.md).
+To run this whole sequence over a session's worth of corrections with one typed word instead of re-explaining it, define it as a shorthand term: see [Part 11](11-shorthand-system.md).
 
 ### Feedback Files
 

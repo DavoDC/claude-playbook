@@ -300,7 +300,7 @@ fi
 # ---------------------------------------------------------------------------
 HOOKS_DOC_1="$REPO_ROOT/docs/08-hooks.md"
 HOOKS_DOC_2="$REPO_ROOT/docs/09-hooks-recipes.md"
-HOOKS_DOC_3="$REPO_ROOT/docs/15-hook-failure-modes.md"
+HOOKS_DOC_3="$REPO_ROOT/docs/10-hook-failure-modes.md"
 HOOKBLOCK_DIR="$TEST_TMPDIR/hookblocks"
 mkdir -p "$HOOKBLOCK_DIR"
 

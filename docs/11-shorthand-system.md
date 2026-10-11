@@ -1,4 +1,4 @@
-# Part 10: The Shorthand System
+# Part 11: The Shorthand System
 
 > **Field note.** Written from practice. The hook and glossary template it describes are exercised by `tools/selftest.sh` (assertion 12), but the habit itself is not.
 

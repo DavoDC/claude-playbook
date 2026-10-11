@@ -11,7 +11,7 @@ folder) or of the file itself (a loose file). This script reads those lines and 
 A folder with no README of its own whose children are folders is a group (for example one folder
 per repo): its children are scanned instead. Prints nothing when nothing is flagged.
 
-Why the marker is phrased as a test still to run: docs/12-workspace-repo.md.
+Why the marker is phrased as a test still to run: docs/13-workspace-repo.md.
 
 Usage:
   scratch-overdue.py [--dir SCRATCH] [--today YYYY-MM-DD] [--max-age DAYS]

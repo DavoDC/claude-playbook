@@ -1,4 +1,4 @@
-# Part 11: Privacy Hooks for a Public Repo
+# Part 12: Privacy Hooks for a Public Repo
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
@@ -48,7 +48,7 @@ A pattern scan sees shapes and listed terms, never meaning. Prose about a named 
 
 ## Secrets That Get Into Git Anyway
 
-Keeping secrets out of git (see [Part 12](12-workspace-repo.md)) is the design-time rule. Two things go wrong even when you follow it.
+Keeping secrets out of git (see [Part 13](13-workspace-repo.md)) is the design-time rule. Two things go wrong even when you follow it.
 
 **An exact-path gitignore rule protects the file, not the secret.** `config/config.json` in `.gitignore` stops that one file from being staged, but not a copy - and a copy is exactly what a credential rotation or migration produces, as a `.bak`, a suffixed backup, or an editor copy. The copy usually holds the fresher secret and sails past the rule. Write ignore rules for anything holding a live credential as a glob (`config.json*`, not `config.json`), and verify coverage with `git check-ignore -v <path>` rather than assuming.
 

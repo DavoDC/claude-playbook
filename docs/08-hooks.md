@@ -2,7 +2,7 @@
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
-Hooks are shell scripts that run automatically on Claude Code events. They enforce rules at the system level rather than relying on Claude remembering them from CLAUDE.md. This part covers events, exit codes, configuration and registration; how hooks fail silently and how to retire a guard is in [Part 15](15-hook-failure-modes.md), and ready-made hooks are in [Part 9](09-hooks-recipes.md).
+Hooks are shell scripts that run automatically on Claude Code events. They enforce rules at the system level rather than relying on Claude remembering them from CLAUDE.md. This part covers events, exit codes, configuration and registration; how hooks fail silently and how to retire a guard is in [Part 10](10-hook-failure-modes.md), and ready-made hooks are in [Part 9](09-hooks-recipes.md).
 
 ## Events Available
 
@@ -32,7 +32,7 @@ Not the "0 vs anything else" binary it looks like:
 
 (full reference: https://code.claude.com/docs/en/hooks#exit-code-output)
 
-Exit code 1 does not block. A hook enforcing a policy must exit 2; anything else, including a crash that happens to exit 1, is silently non-blocking. A hook that crashes with an unhandled exception before its intended `exit 2` fails open, and the workflow proceeds as if the check never ran. The fail-open pattern below makes that deliberate instead of accidental:
+A hook enforcing a policy must exit 2; anything else, including a crash that happens to exit 1, is silently non-blocking, so a hook that crashes before its intended `exit 2` fails open. The pattern below makes that deliberate instead of accidental:
 
 ```bash
 #!/bin/bash
@@ -63,26 +63,22 @@ The exit code decides whether the tool call proceeds, not who reads what the hoo
 
 **Plain stderr is not a fourth channel.** On a hook that exits 0, on most events, stderr reaches neither human nor model. Writing an advisory to stderr and exiting 0 is the most natural-looking hook and a silent no-op.
 
-This produced a family of defects found in one audit: a budget monitor, a compaction counter, and every warning path in two guard scripts, all correct, registered and firing on schedule, all writing to stderr and exiting 0. Several had been considered finished for months, and each logged evidence it was working, so none was suspected. Another used `exit 1` for a policy it was meant to enforce, so it detected every violation correctly and permitted all of them.
+One audit found a family of such defects: a budget monitor, a compaction counter, and every warning path in two guard scripts, all correct, registered and firing on schedule, all writing to stderr and exiting 0. Several had been considered finished for months, and each logged evidence it was working, so none was suspected. Another used `exit 1` for a policy it was meant to enforce, so it detected every violation and permitted all of them.
 
-The question for any new hook: **who needs to act on this, and does the channel I chose actually reach them?** Not "how important does this feel" - importance pushes authors toward stderr and shouting, the wrong axis. Routine housekeeping the model should act on is `additionalContext` even if minor. A privacy check silently degraded to fail-open is `systemMessage` even though nothing is broken yet, because a person has to know. A suggestion is never exit 2, because a suggestion that blocks is not a suggestion.
+The question for any new hook: **who needs to act on this, and does the channel I chose actually reach them?** Not "how important does this feel" - importance pushes authors toward stderr and shouting. Routine housekeeping the model should act on is `additionalContext` even if minor. A privacy check silently degraded to fail-open is `systemMessage` even though nothing is broken yet, because a person has to know. A suggestion is never exit 2.
 
 One mechanical constraint: **emit one JSON object per run, not one per finding.** Two concatenated JSON objects are invalid output, so the second silently destroys the first. Queue messages and emit once at the end, and make a blocking exit suppress queued advisory output so a blocking run never also carries advice on stdout. Likewise at session start: once any structured output is emitted for an event, plain stdout lines cannot coexist with it, so anything previously printed must move inside the object.
 
 ### A Mechanism That Runs and Logs Is Not a Rail
 
-Every defect above passed the checks people actually run: registered in settings, executed, logged proof it had executed. None reached anybody.
-
-Calling an enforcement mechanism finished has two halves, and the usual review does only the first:
+Every defect above passed the checks people actually run: registered in settings, executed, logged proof it had executed. None reached anybody. Calling an enforcement mechanism finished has two halves, and the usual review does only the first:
 
 1. Something proves it **fires** on the condition it targets.
 2. Something proves it **reaches its audience**, and **fails when broken**.
 
-The second half turns a mechanism into a rail, cheaply via mutation testing: a small script that reintroduces each historical defect one at a time and asserts a specific named test goes red. A fix without an entry there is a claim; with one, a rail. It costs a few lines per defect and stops a rail rotting back into a mechanism on refactor.
+The second half turns a mechanism into a rail, cheaply via mutation testing: a small script that reintroduces each historical defect one at a time and asserts a specific named test goes red. A fix without an entry there is a claim; with one, a rail, and it stops a rail rotting back into a mechanism on refactor.
 
-**Assert the channel and the exit code. Never assert the message wording.** This is the specific reason the defects survived: a test grepping stderr for BLOCKED passes against a hook that detects the violation, prints BLOCKED, and exits 1 without blocking. The wording was always right and never the thing that was broken.
-
-This generalises past hooks: the same shape appears wherever one layer reports a condition and a layer above decides what to do with it, and an audit scoped to hooks will not enumerate it.
+**Assert the channel and the exit code. Never assert the message wording.** A test grepping stderr for BLOCKED passes against a hook that detects the violation, prints BLOCKED, and exits 1 without blocking: the wording was always right and never the thing that was broken. The same shape appears wherever one layer reports a condition and a layer above decides what to do with it, so an audit scoped to hooks will not enumerate it.
 
 ### The `if:` Field - Efficient Tool Matching
 
@@ -118,11 +114,9 @@ The `if:` field means an expensive hook (subprocess call, file I/O) costs zero o
 
 ### Allowlist Entries Are Literal String Matches
 
-A permission allowlist entry - the `if:` pattern above, or an entry in `settings.local.json`'s `allow` list - matches the exact invocation written, not the intent. A command's documentation and its allowlist entry, even written in the same commit, were typed by hand twice and nothing checks they agree. Diff the documented invocation against the allowlist entry.
+A permission allowlist entry - the `if:` pattern above, or an entry in `settings.local.json`'s `allow` list - matches the exact invocation written, not the intent. A command's documentation and its allowlist entry were typed by hand twice and nothing checks they agree (in one commit they described slightly different invocations of the same tool, and the entry didn't cover what the docs said was now possible). Diff the documented invocation against the allowlist entry.
 
 Sharper: never pre-authorize the destructive mode of a dual-mode tool as a side effect of an unrelated task. A permission loosened to unblock one docs-writing session can end up broader than needed and carries silently into every later session.
-
-Evidence: a docs update and an allowlist entry written in the same commit described slightly different invocations of the same tool; the entry didn't cover what the docs said was now possible.
 
 ---
 
@@ -136,15 +130,13 @@ Several hooks in `docs/09-hooks-recipes.md` write to log files; the pattern appl
 - `bash-audit.log` - every bash command Claude runs (with credential redaction)
 - `session-timestamps.log` - session start/end + periodic checkpoints
 
-One line appended per event; no truncation, no rotation (or slow rotation after 30 days to an archive file). Each git commit's diff then shows exactly what happened in that session - green lines only, easy to audit.
+One line appended per event; no truncation, no rotation (or slow rotation after 30 days to an archive file). **Commit them to git instead of ignoring them:** each commit's diff then shows exactly what happened in that session, green lines only (`git diff HEAD~1..HEAD -- skill-usage.log` lists every skill used), and over time the log separates skills that earn their place from ones that merely sounded useful.
 
-**Why commit them to git instead of ignoring them:** `git diff HEAD~1..HEAD -- skill-usage.log` shows every skill Claude used this session, and over time the log separates skills that earn their place from ones that merely sounded useful. The data is free if you don't gitignore it.
+**Auto-committing leftover dirty logs:** a `SessionStart` hook running `git add logs/ && git commit -m "log: session update"` catches logs left dirty when the previous session crashed before `/end-session`.
 
-**Auto-committing leftover dirty logs:** a `SessionStart` hook running `git add logs/ && git commit -m "log: session update"` catches logs left dirty when the previous session crashed before `/end-session`. Otherwise they accumulate uncommitted indefinitely.
+**Analysis tools:** simple scripts can generate monthly summaries, burn-rate graphs and skill usage rankings for the Question/Delete pass; the data is worthless if you never look.
 
-**Analysis tools:** simple Python scripts can generate monthly summaries, burn-rate graphs and skill usage rankings for the Question/Delete pass. Optional, but the data is worthless if you never look.
-
-Blocking guards belong in this pattern too; the prerequisite is stated under [Retiring a Guard, and Reading a Fire Rate](15-hook-failure-modes.md#retiring-a-guard-and-reading-a-fire-rate).
+Blocking guards belong in this pattern too; the prerequisite is stated under [Retiring a Guard, and Reading a Fire Rate](10-hook-failure-modes.md#retiring-a-guard-and-reading-a-fire-rate).
 
 ---
 
@@ -152,19 +144,19 @@ Blocking guards belong in this pattern too; the prerequisite is stated under [Re
 
 A hook only fires when registered in the `.claude/settings.json` of the directory Claude Code was launched from. There is no parent-directory fallback, and adding a directory to the session's awareness does not extend hook execution to it; only a narrow slice of settings (enabled plugins, known marketplaces) is read from an added directory. An auto-loaded instructions file follows the same rule: Claude walks up from the working directory and lazily loads instruction files in subdirectories as it reads into them, but never reaches into a sibling directory.
 
-This bites hardest in a multi-repo setup where one directory is the launch point and the others are siblings. A hook or instructions file written into a sibling repo to protect it never fires unless a session is launched from inside it. The failure is quiet: the file looks correct, runs if invoked manually, and never executes in a normal session. Safety rules written this way read as protection while providing none, worse than no guard because the repo's own files say the guard exists.
+This bites hardest in a multi-repo setup where one directory is the launch point and the others are siblings. A hook or instructions file written into a sibling repo to protect it never fires unless a session is launched from inside it. The failure is quiet: the file looks correct, runs if invoked manually, and never executes in a normal session, which is worse than no guard because the repo's own files say the guard exists.
 
-Don't duplicate the hook into every sibling (see the next section) and don't hardcode each sibling's name into the launch directory's hook, which just makes a pile of special cases. Split the concern: the sibling declares the protection it needs in a small tracked marker file, and generic marker-driven logic in the launch directory's hook discovers and enforces it for any repo that opts in. Protecting one more sibling costs a marker file, not a code change.
+Don't duplicate the hook into every sibling (next section) or hardcode each sibling's name into the launch directory's hook. Split the concern: the sibling declares the protection it needs in a small tracked marker file, and generic marker-driven logic in the launch directory's hook enforces it for any repo that opts in. Protecting one more sibling costs a marker file, not a code change.
 
 ## One Registration Point, Not One Copy Per Repo
 
 Hooks register in a project's own `.claude/settings.json` (that project only) or the user-level settings file (every project on the machine). To run a hook across many repos, register it once at user level, pointing at one canonical copy of the script.
 
-Copying the script into each repo as "safer" is a mistake. If user-level registration already covers every target, the copies do no protective work; they multiply risk. Any personal detail in the script (a home directory path, a machine name) leaks into every repo carrying a copy, including public ones; the copies drift once one is edited; and a bug fix must be applied once per repo, each a chance to miss one.
+Copying the script into each repo as "safer" is a mistake: if user-level registration already covers every target, the copies do no protective work and multiply risk. Any personal detail in the script (a home directory path, a machine name) leaks into every repo carrying a copy, including public ones; the copies drift once one is edited; and a bug fix must be applied once per repo.
 
-If such a leak is found, don't just sanitize the copies. Stripping a hardcoded path from duplicated files fixes the string and leaves the problem - a private script living in several public places - intact for the next detail. Ask why the file exists in each repo at all. Private or cross-cutting infrastructure belongs in one place: registered once at the single point of control, pointing at one canonical copy that never ships inside a repo that could go public.
+If such a leak is found, don't just sanitize the copies: stripping a hardcoded path fixes the string and leaves a private script living in several public places, intact for the next detail. Private or cross-cutting infrastructure belongs in one place, registered once at the single point of control, pointing at one canonical copy that never ships inside a repo that could go public.
 
-This is one instance of a general rule: a generated or deployed file stamped "do not edit" should be edited at its source and redeployed, never hand-edited where it landed. A directly edited deployed copy drifts from its source, and the next regeneration either overwrites the fix or leaves it coexisting with content the source no longer matches. Conversely, a generator's "managed set" covers only the artifacts it explicitly tracks, so an output hand-duplicated outside it looks generated at creation, then drifts stale when the source changes because nothing watches it.
+A general rule follows: a generated or deployed file stamped "do not edit" is edited at its source and redeployed, never where it landed, or the next regeneration overwrites the fix or coexists with content the source no longer matches. Conversely, a generator's "managed set" covers only the artifacts it explicitly tracks, so an output hand-duplicated outside it looks generated at creation, then drifts stale because nothing watches it.
 
 ## Settings Split - Critical
 
@@ -207,8 +199,4 @@ Git hooks differ. They work under WSL, but a Windows git client that shells out 
 
 On Windows: write git hooks (`.git/hooks/`) as `.ps1` or `.bat` scripts. Claude Code hooks (`.claude/settings.json`) can stay bash.
 
-Note: `hooks/pre-commit` and `hooks/commit-msg` in this repo (see [Part 11](11-privacy-hooks-public-repo.md)) are POSIX `sh`, the exception warned about above: they only run for commits through Git Bash, never a GUI client's own commit flow. If you commit through a Windows GUI client, port them to `.ps1`/`.bat` first.
-
-## Privacy Guard Git Hooks
-
-This repo ships tracked `pre-commit` and `commit-msg` git hooks, plus a generic scanner, that block a commit carrying private names, paths or personal identifiers; they report where, never what. They are git hooks, not Claude Code hooks, and are covered in [Part 11](11-privacy-hooks-public-repo.md).
+This repo's tracked `pre-commit` and `commit-msg` privacy hooks (git hooks, not Claude Code hooks; see [Part 12](12-privacy-hooks-public-repo.md)) are POSIX `sh`, the exception warned about above: they only run for commits through Git Bash, never a GUI client's own commit flow. If you commit through a Windows GUI client, port them to `.ps1`/`.bat` first.

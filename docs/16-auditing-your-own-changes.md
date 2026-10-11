@@ -2,7 +2,7 @@
 
 > **Field note.** Written from practice rather than machine-checked.
 
-The most overlooked audit subject is the recent change set, and the most dangerous defects are not in any one part but in how correct parts combine. This part covers auditing recent changes as a scope, auditing by consequence rather than by file, composition defects, and the review shapes that fail when independent workers or independent edits are merged. The lens generator is in [Part 13](13-audit-lenses.md); how to judge a measurement is in [Part 14](14-reading-a-measurement.md).
+The most overlooked audit subject is the recent change set, and the most dangerous defects are not in any one part but in how correct parts combine. This part covers auditing recent changes as a scope, auditing by consequence rather than by file, composition defects, and the review shapes that fail when independent workers or independent edits are merged. The lens generator is in [Part 14](14-audit-lenses.md); how to judge a measurement is in [Part 15](15-reading-a-measurement.md).
 
 ## Your own recent changes, as a subject
 

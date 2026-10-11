@@ -1,4 +1,4 @@
-# Part 12: The Workspace Repo
+# Part 13: The Workspace Repo
 
 > **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
@@ -91,7 +91,7 @@ Over time, the workspace becomes a detailed model of how you work. Not because o
 ## What NOT to Put Here
 
 - **Project-specific code or context** - that goes in the project repo
-- **Secrets, API keys, passwords** - use a secrets manager; keep them out of git (if one gets in anyway, see [Part 11](11-privacy-hooks-public-repo.md))
+- **Secrets, API keys, passwords** - use a secrets manager; keep them out of git (if one gets in anyway, see [Part 12](12-privacy-hooks-public-repo.md))
 - **Private names, personal data** - if you ever make the workspace public, this is a liability
 - **Temporary scratch files** - use a `TEMP/` folder with delete-after markers, not the main memory structure
 

@@ -1,6 +1,6 @@
 # Shorthand glossary
 
-A short term typed in a prompt triggers a defined behaviour instead of re-explaining it each time. This file is the only place the terms live. The hook `hooks/examples/shorthand_detector.py` reads the fenced block below on every prompt and injects the definition of any term it finds. Copy this file to `.claude/shorthand-glossary.md` (or point `SHORTHAND_GLOSSARY` at it) and replace the rows with your own. The full system, including the rules for what earns a row, is in `docs/10-shorthand-system.md`.
+A short term typed in a prompt triggers a defined behaviour instead of re-explaining it each time. This file is the only place the terms live. The hook `hooks/examples/shorthand_detector.py` reads the fenced block below on every prompt and injects the definition of any term it finds. Copy this file to `.claude/shorthand-glossary.md` (or point `SHORTHAND_GLOSSARY` at it) and replace the rows with your own. The full system, including the rules for what earns a row, is in `docs/11-shorthand-system.md`.
 
 ## Terms
 

@@ -6,7 +6,7 @@ A rule about how your docs must look is forgotten the moment a session is busy, 
 
 ## Why a config and not a script per rule
 
-Ad hoc checks accrete as one script per rule, each with its own file walking, its own exemptions for code blocks and its own output format. A config-driven linter pays that cost once. The engine owns file selection (globs), code-fence masking, output and exit codes; a rule only says which files, which check type and which parameters. The consequences are practical: a rule costs a few lines, every rule reports in the same `path:line: [rule-id] message` shape, and a mistyped rule fails loudly as a config error instead of silently checking nothing.
+One script per rule means repeated file walking, code-block exemptions and output formats. A config-driven linter pays that once: the engine owns file selection (globs), code-fence masking, output and exit codes, and a rule only says which files, which check type and which parameters. A rule costs a few lines, every rule reports as `path:line: [rule-id] message`, and a mistyped rule fails loudly as a config error instead of silently checking nothing.
 
 ## Running it
 
@@ -46,7 +46,7 @@ Start from the rules you already state in prose and ask of each one: can a check
 - **Privacy and personal data:** no personal outcome figures, no usage counts or personal rankings, no maintenance narration ("changed on DATE"). These are regex heuristics: they catch the numeric and dated shapes and miss the rest, so a clean run proves the shapes are absent, not that the prose is free of them.
 - **Shape of a doc:** a tier marker under the title, one H1 that opens the file, no vague titles such as "Misc", a word ceiling that signals a doc holding more than one topic.
 - **Structure across docs:** every doc indexed exactly once, links and anchors that resolve, command names that exist as skills, doc numbers sequential with no gaps, no heading repeated across docs.
-- **Private terms:** a `forbidden-terms-file` rule reading a list that stays outside the repo. The shipped rule is disabled and points at the untracked per-machine list the privacy hooks already use (see [Part 11](11-privacy-hooks-public-repo.md)); enable it on a machine that has the list. Never put the terms in the config, which is tracked.
+- **Private terms:** a `forbidden-terms-file` rule reading a list that stays outside the repo. The shipped rule is disabled and points at the untracked per-machine list the privacy hooks already use (see [Part 12](12-privacy-hooks-public-repo.md)); enable it on a machine that has the list. Never put the terms in the config, which is tracked.
 
 ## Adding a rule
 
@@ -71,15 +71,15 @@ A repo-health check (broken links, numbering gaps, an index that has drifted fro
 {"id": "docs-index", "type": "index-sync", "index": "README.md", "files": ["docs/*.md"]}
 ```
 
-Each catches a defect that review misses because nothing in the changed file looks wrong. A rename leaves every link to the old name dangling in files the rename never touched; `link-resolve` finds them, and with `check_anchors` it also finds a link whose heading was reworded. A deleted or inserted doc leaves a gap or a repeat in the numbers; `sequential-numbering` finds it and, with `heading_part`, finds the file whose "Part N" title no longer matches its name. A new doc that nobody added to the README table is invisible to a reader; `index-sync` finds it, and in the other direction finds an index row whose target was moved.
+Each catches a defect that review misses because nothing in the changed file looks wrong. A rename leaves links to the old name dangling in files it never touched (`link-resolve` finds them; with `check_anchors` also a link whose heading was reworded). A deleted or inserted doc leaves a gap or repeat in the numbers (`sequential-numbering`; with `heading_part` also a "Part N" title that no longer matches its file). A doc nobody added to the README table is invisible to a reader (`index-sync`, which in the other direction finds an index row whose target moved).
 
-Two cautions. Index sync runs in whichever direction you configure, so decide which side is the source of truth: files that must all be indexed (docs), or an index whose entries must all exist. The `mention` mode suits a second index kept as a looser list. And a renumbering change is the moment all three fire at once; do it as one change with `git mv`, fix the links and the index row in the same commit, and run the linter before staging so the result is green rather than partly green.
+Two cautions. Decide which side of an index is the source of truth: files that must all be indexed, or an index whose entries must all exist; `mention` mode suits a looser second index. And a renumbering fires all three at once: do it as one change with `git mv`, fix links and the index row in the same commit, and run the linter before staging.
 
 ## Files and commit messages outside the config
 
 The config walks files in the repo. Two shape rules apply just as well to text it never sees, so `tools/prose-lint.py` carries them standalone: no hard-wrapped paragraph, and no em or en dash. Pointed at files it checks those two; pointed at a commit message with `--commit-msg` it adds a third, that the subject fits `--subject-max` characters (default 72) and line 2 is blank.
 
-The reason is where the text ends up. A subject over the limit gets cut or spills into the description in most git front ends, and a body wrapped at 72 columns reads as ragged fragments in a description box that already wraps for the reader. Write each paragraph as one line and use bullets for lists. Comment lines, trailers such as `Co-Authored-By:`, fenced code, tables, headings and quotes are exempt, because each is a shape that legitimately spans short lines.
+A subject over the limit gets cut or spills into the description in most git front ends, and a body wrapped at 72 columns reads as ragged fragments in a box that already wraps. Write each paragraph as one line and use bullets for lists. Comment lines, trailers such as `Co-Authored-By:`, fenced code, tables, headings and quotes are exempt.
 
 To check every message at commit time, call it from a `commit-msg` hook. Git passes the message file as the first argument:
 
@@ -88,14 +88,14 @@ To check every message at commit time, call it from a `commit-msg` hook. Git pas
 python3 "$(dirname "$0")/../../tools/prose-lint.py" --commit-msg "$1" || exit 1
 ```
 
-If the repo already has a `commit-msg` hook (the privacy one from [Part 11](11-privacy-hooks-public-repo.md) is one), add the line to it instead of replacing the file. Run `python3 tools/prose-lint.py --selftest` to see the positive controls; it is asserted by `tools/selftest.sh`. The detector is deliberately blunt: two adjacent prose lines under 100 characters is a wrap. It will not catch a wrap at 110 columns, and it does not parse markdown, so treat a clean run as the absence of the common shape.
+If the repo already has a `commit-msg` hook (the privacy one from [Part 12](12-privacy-hooks-public-repo.md) is one), add the line to it instead of replacing the file. Run `python3 tools/prose-lint.py --selftest` to see the positive controls; it is asserted by `tools/selftest.sh`. The detector is deliberately blunt: two adjacent prose lines under 100 characters is a wrap. It will not catch a wrap at 110 columns, and it does not parse markdown, so treat a clean run as the absence of the common shape.
 
 ## What stays prose
 
-Some rules need judgement and have no mechanical form. Whether a sentence is about a mechanism or about a person, whether two docs argue the same idea in different words, whether the voice matches, whether a section sits in the doc a reader would open first: these remain review questions. The linter's heading-duplication rule and the repeated-sentence assertion in `tools/selftest.sh` catch the cheap cases of duplication and nothing more. When you add a prose rule to your own maintenance guide, write down beside it either the lint rule id that enforces it or the reason it cannot be a rule; a rule with neither is the one that will be forgotten.
+Some rules need judgement: whether a sentence is about a mechanism or a person, whether two docs argue the same idea in different words, whether the voice matches, whether a section sits in the doc a reader would open first. The heading-duplication rule and the repeated-sentence assertion in `tools/selftest.sh` catch only the cheap cases of duplication. When you add a prose rule to your own maintenance guide, write beside it either the lint rule id that enforces it or the reason it cannot be a rule; a rule with neither will be forgotten.
 
 ## Retargeting
 
 To lint another repo: copy `doc_lint.config.json`, change `root`, adjust the `files` globs to the folders that repo has, delete the rules that do not apply, and point `terms_file` at that machine's private list. The linter needs only Python 3 and has no dependencies. Run it from a pre-commit hook or a CI step with the same command; the exit code is the contract.
 
-For size and scratch-file rules that need a different shape of check (a byte budget, an expiry date), see [Part 1](01-claude-md.md) and [Part 12](12-workspace-repo.md).
+For size and scratch-file rules that need a different shape of check (a byte budget, an expiry date), see [Part 1](01-claude-md.md) and [Part 13](13-workspace-repo.md).

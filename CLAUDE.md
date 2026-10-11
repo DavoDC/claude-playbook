@@ -36,7 +36,7 @@ If you're unsure whether something is safe to include: don't include it.
 
 ## Leak safety
 
-This repo is public, so write only generic, reusable guidance. Never include names of people (other than the repo owner), employers, clients, products, internal systems, private repos, hostnames, internal URLs, ticket ids, emails, absolute user paths, usernames, credentials, usage stats, personal anecdotes, or any reference to a private workspace or its paths and tools. Use placeholders and synthetic values (example.com, a user called name). Never bypass a hook with `--no-verify`. The hooks cannot read prose, so reread what you wrote as a stranger would; see [Part 11](docs/11-privacy-hooks-public-repo.md).
+This repo is public, so write only generic, reusable guidance. Never include names of people (other than the repo owner), employers, clients, products, internal systems, private repos, hostnames, internal URLs, ticket ids, emails, absolute user paths, usernames, credentials, usage stats, personal anecdotes, or any reference to a private workspace or its paths and tools. Use placeholders and synthetic values (example.com, a user called name). Never bypass a hook with `--no-verify`. The hooks cannot read prose, so reread what you wrote as a stranger would; see [Part 12](docs/12-privacy-hooks-public-repo.md).
 
 ---
 

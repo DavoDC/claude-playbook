@@ -3,3 +3,6 @@
 # Add an id only after reading that blob by hand. Never use it for a real leak: rewrite or
 # remove the commit instead. Blank lines and # comments are ignored.
 aa4a3c13f5f58cf6ccdaff5ec963af72159c2653 early selftest_privacy.sh with a fake internal host fixture
+3e39a3801fc3b79dc58fd82d1d78bd524c0c76ee early BACKLOG-SPEC.md with a placeholder id example
+53129848e2f165374481f91ecb8dd1ad2a877cda early selftest_privacy.sh with a fake internal host fixture
+8922cdac25bf045de8dfec9b1e0801f371f0181b early checkpoint skill with example checkpoint names

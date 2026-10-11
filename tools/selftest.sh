@@ -300,12 +300,13 @@ fi
 # ---------------------------------------------------------------------------
 HOOKS_DOC_1="$REPO_ROOT/docs/08-hooks.md"
 HOOKS_DOC_2="$REPO_ROOT/docs/09-hooks-recipes.md"
+HOOKS_DOC_3="$REPO_ROOT/docs/15-hook-failure-modes.md"
 HOOKBLOCK_DIR="$TEST_TMPDIR/hookblocks"
 mkdir -p "$HOOKBLOCK_DIR"
 
 ASSERT6_OK=1
 
-BLOCKS_FOUND=$("$PY" - "$HOOKBLOCK_DIR" "$HOOKS_DOC_1" "$HOOKS_DOC_2" << 'PYEOF'
+BLOCKS_FOUND=$("$PY" - "$HOOKBLOCK_DIR" "$HOOKS_DOC_1" "$HOOKS_DOC_2" "$HOOKS_DOC_3" << 'PYEOF'
 import re, sys, os
 
 out_dir = sys.argv[1]

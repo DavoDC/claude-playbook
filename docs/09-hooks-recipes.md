@@ -2,7 +2,7 @@
 
 > **Field note.** Written from practice rather than machine-checked, and not covered by `tools/selftest.sh`. Last reviewed 2026-08-02 against Claude Code v2.1.220. Opinionated, and it may lag the harness.
 
-Ready-to-adapt hook recipes. They assume the mechanics in [Part 8](08-hooks.md) (events, exit codes, the fail-open trap, the quoting trap, the `if:` field), so read that first.
+Ready-to-adapt hook recipes. They assume the mechanics in [Part 8](08-hooks.md) (events, exit codes, the `if:` field) and the failure modes in [Part 15](15-hook-failure-modes.md) (the fail-open trap, the quoting trap), so read those first.
 
 ### Write Guard (PreToolUse on Edit/Write)
 

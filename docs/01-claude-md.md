@@ -174,7 +174,7 @@ Your core engineering standards belong here so they apply across all repos:
 
 **On that second line.** A test that cannot fail still passes, and coverage and test counts both rise when weak tests are added.
 
-The test smells to avoid, the strong form of a test, and how a runner should report are in [Part 18](18-verification-habits.md#test-quality-a-green-run-is-not-evidence).
+The test smells to avoid, the strong form of a test, and how a runner should report are in [Part 19](19-verification-habits.md#test-quality-a-green-run-is-not-evidence).
 
 ### 8. README-First
 

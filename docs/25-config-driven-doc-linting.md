@@ -1,4 +1,4 @@
-# Part 24: Config-Driven Doc Linting
+# Part 25: Config-Driven Doc Linting
 
 > **Core.** Part of the maintained quick-start path. The tools and settings snippets it references are asserted by `tools/selftest.sh` on every push.
 
@@ -18,7 +18,7 @@ Exit 0 means clean, 1 means findings, 2 means the config itself is wrong (unknow
 
 ## Config shape
 
-A config is `{"root": "..", "rules": [ ... ]}`. Each rule carries `id` (unique), `type`, `files` (globs relative to the root, with `*` and `**`) and the parameters its type needs. Optional keys on every rule: `exclude` (globs), `message` (replaces the default text) and `enabled: false` to park a rule without deleting it. The folders `.git`, `__pycache__`, `node_modules` and `.venv` are never scanned. Paths for list files (`terms_file`, `allow_file`) resolve against the config file, not the working directory.
+A config is `{"root": "..", "rules": [ ... ]}`. Each rule carries `id` (unique), `type`, `files` (globs relative to the root, with `*` and `**`) and the parameters its type needs. Optional keys on every rule: `exclude` (globs), `message` (replaces the default text), `severity` (`error`, the default, fails the run; `warn` is printed but leaves the exit code at 0, which suits a soft size limit) and `enabled: false` to park a rule without deleting it. The folders `.git`, `__pycache__`, `node_modules` and `.venv` are never scanned. Paths for list files (`terms_file`, `allow_file`) resolve against the config file, not the working directory.
 
 ## The check types
 
@@ -32,6 +32,7 @@ A config is `{"root": "..", "rules": [ ... ]}`. Each rule carries `id` (unique),
 | `name-reference` | a referenced name (a `/command`, say) with no file or folder behind it and not on the allow list | `pattern`, `exists_in`, `allow`, `allow_file`, `scope` |
 | `heading-uniqueness-across-files` | the same heading in two files, a prompt to check for duplicated content | `min_level`, `max_level`, `ignore` |
 | `max-words` | a file over a word limit, code excluded | `limit`, `skip_code` |
+| `min-words` | a file under a word minimum, code excluded | `limit`, `skip_code` |
 | `sequential-numbering` | filenames whose numbers have gaps, repeats or a wrong start, and a first heading whose "Part N" disagrees with the filename | `number_pattern`, `unnumbered_last`, `heading_part` |
 | `forbidden-terms-file` | any term from a list file, with the term masked in the output | `terms_file`, `reveal_terms` |
 
@@ -57,7 +58,7 @@ Append an object to `rules` with a built-in type, for example a banned phrase:
 
 Run the linter. A new check type is justified only when no built-in type can express the rule: add one function with the `@check(...)` decorator in `doc_lint.py`, write its test first in `tools/doc_lint/test_doc_lint.py`, and add its row to the table above.
 
-Two habits keep the rule set honest. First, give every rule a positive control: a test (or a scratch file) that violates it and proves it fires, because a pattern with a typo checks nothing and looks identical to a clean repo (see [Part 18](18-verification-habits.md)). Second, when a new rule is added, run it over the whole tree before committing: it will find existing violations, and the choice is to fix them in the same change or to narrow the rule's `files`, never to leave the suite red.
+Two habits keep the rule set honest. First, give every rule a positive control: a test (or a scratch file) that violates it and proves it fires, because a pattern with a typo checks nothing and looks identical to a clean repo (see [Part 19](19-verification-habits.md)). Second, when a new rule is added, run it over the whole tree before committing: it will find existing violations, and the choice is to fix them in the same change or to narrow the rule's `files`, never to leave the suite red.
 
 ## Repo health is three rules, not a second tool
 

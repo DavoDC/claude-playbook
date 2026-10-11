@@ -32,7 +32,7 @@ Copy `templates/CLAUDE_workspace.md` to your workspace root as `CLAUDE.md`. Read
 
 **Step 2 - Enforced rules (2 min)**
 
-Copy `templates/enforced-rules.md` to `.claude/rules/enforced-rules.md`. It applies everywhere (load behaviour: [Part 1](docs/01-claude-md.md)).
+Copy `templates/enforced-rules.md` to `.claude/rules/enforced-rules.md`. It loads every session in that repo (load behaviour: [Part 1](docs/01-claude-md.md)).
 
 **Step 3 - Install the statusline (5 min)**
 
@@ -115,24 +115,25 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [05 - Sessions and Memory](docs/05-sessions-and-memory.md) | Field note | /end-session, session fragments, the file-based memory system |
 | [06 - The Overnight Loop](docs/06-overnight-loop.md) | Field note | /loop over IDEAS.md, restore points |
 | [07 - Skills Reference](docs/07-skills.md) | Field note | Every shipped skill, ordered by impact |
-| [08 - Hooks](docs/08-hooks.md) | Field note | Events, exit codes, blast radius triage, the fail-open trap, the `if:` field |
+| [08 - Hooks](docs/08-hooks.md) | Field note | Events, exit codes, delivery channels, the `if:` field, settings split, registration, Windows git hooks |
 | [09 - Hook Recipes](docs/09-hooks-recipes.md) | Field note | Write guard, budget monitor, session logger, and the rest of the ready-to-use hooks |
 | [10 - The Shorthand System](docs/10-shorthand-system.md) | Field note | A typed short term that triggers a defined behaviour: the glossary file, the prompt hook, the rules for what earns a row, and QUAD as the worked example |
 | [11 - Privacy Hooks for a Public Repo](docs/11-privacy-hooks-public-repo.md) | Field note | Commit-time guards that keep private names and paths out, report where never what, and secrets that reach git anyway |
 | [12 - The Workspace Repo](docs/12-workspace-repo.md) | Core | Why one dedicated git repo for all Claude config - the organizing principle behind the whole system |
 | [13 - Audit Lenses](docs/13-audit-lenses.md) | Field note | How to scope an audit so it finds what the last one missed - the lens generator, coverage as cells, the re-ranking lenses, and how to run a pass |
 | [14 - Reading a Measurement](docs/14-reading-a-measurement.md) | Field note | Deciding whether a number or green result can be believed: operate the tool, validate the probe, input states that fake a result, success signals, exit states |
-| [15 - Auditing Your Own Changes](docs/15-auditing-your-own-changes.md) | Field note | Recent changes as an audit scope, consequence over file, composition defects, correlated readers |
-| [16 - Multi-Agent Orchestration](docs/16-multi-agent-orchestration.md) | Field note | Model choice, delegation, budget before fan-out, briefs, accepting work back, external content as data |
-| [17 - Concurrent Sessions](docs/17-concurrent-sessions.md) | Field note | Several sessions on one working tree: commits, shared logs, locks, git rules |
-| [18 - Verification Habits](docs/18-verification-habits.md) | Field note | Re-test inherited limits, bounded-search absences, observation harness, test quality, live-process checks |
-| [19 - Commit-Anchored Delta](docs/19-commit-anchored-delta.md) | Field note | Re-audit only what changed since the last anchor |
-| [20 - Freeze the Consumer](docs/20-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
-| [21 - CLAUDE.md Worked Examples](docs/21-claude-md-examples.md) | Field note | What a project note changes in practice |
-| [22 - Reframing Blocked Problems](docs/22-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
-| [23 - When To Stop Refining](docs/23-when-to-stop-refining.md) | Field note | Stopping rules for any task: define done first, then core and optional stop tests |
-| [24 - Config-Driven Doc Linting](docs/24-config-driven-doc-linting.md) | Core | Turning prose rules about docs into JSON-configured checks: dashes, wrapping, indexes, links, numbering, private terms |
-| [25 - Bug Reports and PR Descriptions](docs/25-bug-reports-and-pr-descriptions.md) | Field note | Writing an upstream ticket and a pull request description a stranger can act on: evidence, minimal repro, expected and actual, what you tried |
+| [15 - Hook Failure Modes](docs/15-hook-failure-modes.md) | Field note | How guards fail silently and how to keep a set of them honest: blast radius, the fail-open and quoting traps, bypasses, retiring a guard by fire rate |
+| [16 - Auditing Your Own Changes](docs/16-auditing-your-own-changes.md) | Field note | Recent changes as an audit scope, consequence over file, composition defects, correlated readers |
+| [17 - Multi-Agent Orchestration](docs/17-multi-agent-orchestration.md) | Field note | Model choice, delegation, budget before fan-out, briefs, accepting work back, external content as data |
+| [18 - Concurrent Sessions](docs/18-concurrent-sessions.md) | Field note | Several sessions on one working tree: commits, shared logs, locks, git rules |
+| [19 - Verification Habits](docs/19-verification-habits.md) | Field note | Re-test inherited limits, bounded-search absences, observation harness, test quality, live-process checks |
+| [20 - Commit-Anchored Delta](docs/20-commit-anchored-delta.md) | Field note | Re-audit only what changed since the last anchor |
+| [21 - Freeze the Consumer](docs/21-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
+| [22 - CLAUDE.md Worked Examples](docs/22-claude-md-examples.md) | Field note | What a project note changes in practice |
+| [23 - Reframing Blocked Problems](docs/23-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
+| [24 - When To Stop Refining](docs/24-when-to-stop-refining.md) | Field note | Stopping rules for any task: define done first, then core and optional stop tests |
+| [25 - Config-Driven Doc Linting](docs/25-config-driven-doc-linting.md) | Core | Turning prose rules about docs into JSON-configured checks: dashes, wrapping, indexes, links, numbering, private terms |
+| [26 - Bug Reports and PR Descriptions](docs/26-bug-reports-and-pr-descriptions.md) | Field note | Writing an upstream ticket and a pull request description a stranger can act on: evidence, minimal repro, expected and actual, what you tried |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
 
 Core files' referenced tools and snippets are asserted by `tools/selftest.sh` on every push; Field note files are dated patterns from practice that the harness does not check - see "What's Guaranteed vs What's Field Notes" above for the full distinction.

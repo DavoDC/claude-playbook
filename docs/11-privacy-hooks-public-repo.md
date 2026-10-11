@@ -56,4 +56,4 @@ Keeping secrets out of git (see [Part 12](12-workspace-repo.md)) is the design-t
 
 ## Related
 
-The `commit-msg` slot can also run the message-shape checks from [Part 24](24-config-driven-doc-linting.md). A public bug report or pull request description is the same exposure in a smaller space; `privacy-scan.sh msg FILE` works on a saved draft of one (see [Part 25](25-bug-reports-and-pr-descriptions.md)).
+The `commit-msg` slot can also run the message-shape checks from [Part 25](25-config-driven-doc-linting.md). A public bug report or pull request description is the same exposure in a smaller space; `privacy-scan.sh msg FILE` works on a saved draft of one (see [Part 26](26-bug-reports-and-pr-descriptions.md)).

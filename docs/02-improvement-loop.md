@@ -4,7 +4,7 @@
 
 ## Enforced Rules - The Distilled Layer
 
-Beyond CLAUDE.md, there is a second focused file: `enforced-rules.md` in `.claude/rules/`. It loads every session and applies everywhere (load behaviour: [Part 1](01-claude-md.md)).
+Beyond CLAUDE.md, there is a second focused file: `enforced-rules.md` in `.claude/rules/`. It loads every session in that repo (load behaviour: [Part 1](01-claude-md.md)).
 
 The distinction:
 - **CLAUDE.md** - comprehensive guidance, philosophy, context, all the why
@@ -100,8 +100,8 @@ Before creating a new feedback file, check for duplicates. Archive any not refer
 A pipe-delimited table in a single file tracks every improvement to the workspace since day one:
 
 ```
-| 2026-05-13 | c7ff84c | hook | enforce-feedback-folder.sh: blocks feedback_*.md outside correct folder | APPLY |
-| 2026-05-10 | 727c707 | rule | enforced-rules: error recovery discipline added | APPLY |
+| 2026-05-13 | c7ff84c | hook | block-stray-notes.sh: blocks note files written outside the notes folder | APPLY |
+| 2026-05-10 | 727c707 | rule | enforced-rules: diagnose before retrying added | APPLY |
 ```
 
 Columns: date, git SHA, category (hook/skill/rule/process/tool/config), description, portability (APPLY/SKIP/DEFER).

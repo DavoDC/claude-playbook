@@ -2,7 +2,7 @@
 
 Checks are selected and parameterised only by a JSON config file; each rule is
 {"id": ..., "type": <built-in check type>, "files": [globs], ...params}.
-See docs/24-config-driven-doc-linting.md for the check types and how to add a rule.
+See docs/25-config-driven-doc-linting.md for the check types and how to add a rule.
 
 Usage:
     python3 doc_lint.py --config <config.json> [--root PATH] [--json]
@@ -20,7 +20,8 @@ from collections import namedtuple
 from pathlib import Path
 from urllib.parse import unquote
 
-Finding = namedtuple("Finding", "path line rule message")
+Finding = namedtuple("Finding", "path line rule message severity", defaults=("error",))
+SEVERITIES = ("error", "warn")
 
 DEFAULT_EXCLUDE_DIRS = {".git", "__pycache__", "node_modules", ".venv"}
 CHECKS = {}
@@ -372,6 +373,16 @@ def c_max_words(ctx, rule):
             yield Finding(rel, 1, rule["id"], rule.get("message") or "%d words exceeds limit %d" % (n, rule["limit"]))
 
 
+@check("min-words", required=["files", "limit"])
+def c_min_words(ctx, rule):
+    skip_code = rule.get("skip_code", True)
+    for rel in ctx.select(rule):
+        mask = ctx.in_code(rel)
+        n = sum(len(ln.split()) for i, ln in enumerate(ctx.lines(rel)) if not (skip_code and mask[i]))
+        if n < rule["limit"]:
+            yield Finding(rel, 1, rule["id"], rule.get("message") or "%d words is under minimum %d" % (n, rule["limit"]))
+
+
 @check("forbidden-terms-file", required=["files", "terms_file"])
 def c_forbidden_terms_file(ctx, rule):
     terms = [t.lower() for t in read_list_file(ctx, rule, "terms_file")]
@@ -436,6 +447,8 @@ def validate(rules):
         t = r.get("type")
         if t not in CHECKS:
             raise ConfigError("rule %r: unknown type %r (known: %s)" % (rid, t, ", ".join(sorted(CHECKS))))
+        if r.get("severity", "error") not in SEVERITIES:
+            raise ConfigError("rule %r: severity must be one of %s" % (rid, ", ".join(SEVERITIES)))
         _, required, regex_params = CHECKS[t]
         for p in required:
             if p not in r:
@@ -460,7 +473,8 @@ def run(config, root, config_dir):
         if r.get("enabled", True) is False:
             continue
         fn = CHECKS[r["type"]][0]
-        findings.extend(fn(ctx, r))
+        sev = r.get("severity", "error")
+        findings.extend(f._replace(severity=sev) for f in fn(ctx, r))
     findings.sort(key=lambda f: (f.path, f.line, f.rule))
     return findings
 
@@ -495,11 +509,12 @@ def main(argv=None):
         print("elapsed %.3fs" % elapsed, file=sys.stderr)
     else:
         for f in findings:
-            print("%s:%d: [%s] %s" % (f.path, f.line, f.rule, f.message))
+            tag = "warn: " if f.severity == "warn" else ""
+            print("%s:%d: [%s] %s%s" % (f.path, f.line, f.rule, tag, f.message))
         for rid in sorted(counts):
             print("  %s: %d" % (rid, counts[rid]))
         print("%d finding(s) in %d rule(s); elapsed %.3fs" % (len(findings), len(counts), elapsed))
-    return 1 if findings else 0
+    return 1 if any(f.severity == "error" for f in findings) else 0
 
 
 if __name__ == "__main__":

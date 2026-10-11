@@ -1,4 +1,4 @@
-# Part 15: Auditing Your Own Changes and Their Compositions
+# Part 16: Auditing Your Own Changes and Their Compositions
 
 > **Field note.** Written from practice rather than machine-checked.
 
@@ -6,7 +6,7 @@ The most overlooked audit subject is the recent change set, and the most dangero
 
 ## Your own recent changes, as a subject
 
-No round ever points anything at this, and it is high-yield ground. Run a log of the last week's commits with file statistics and treat the changed-file list as the audit scope rather than the whole repo. For each changed file, list its callers and its state dependents, then ask which of those were re-tested. The answer is usually none. The commit-anchored version of this scope, which keeps the anchor between rounds, is in [Part 19](19-commit-anchored-delta.md).
+No round ever points anything at this, and it is high-yield ground. Run a log of the last week's commits with file statistics and treat the changed-file list as the audit scope rather than the whole repo. For each changed file, list its callers and its state dependents, then ask which of those were re-tested. The answer is usually none. The commit-anchored version of this scope, which keeps the anchor between rounds, is in [Part 20](20-commit-anchored-delta.md).
 
 **Hardening commits first.** Which recent commits were framed as fixes, guards, caps or safety, and what did each one break? A change framed as protective is the one whose author and reviewers are least likely to ask what it breaks, which makes hardening commits the highest-risk input to this subject rather than the safest.
 

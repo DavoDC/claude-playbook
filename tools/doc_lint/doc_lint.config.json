@@ -67,6 +67,14 @@
       "message": "vague title suggests a collection of unrelated things (one topic per doc)"
     },
     {
+      "id": "doc-soft-words",
+      "type": "max-words",
+      "files": ["docs/*.md"],
+      "limit": 4000,
+      "severity": "warn",
+      "message": "doc is approaching the size where it should be checked for a second topic"
+    },
+    {
       "id": "doc-max-words",
       "type": "max-words",
       "files": ["docs/*.md"],

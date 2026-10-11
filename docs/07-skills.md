@@ -143,7 +143,7 @@ Commit changed files in logical chunks - one commit per feature/fix/topic. Analy
 
 Deep investigation of a topic, file, directory or repo. Two mechanisms make it different from asking Claude to look at something carefully.
 
-It uses a commit-anchored delta (see [Part 19](19-commit-anchored-delta.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
+It uses a commit-anchored delta (see [Part 20](20-commit-anchored-delta.md)) so it only reads files that changed since the last dive of the same scope, which is what makes repeating it cheap.
 
 And it generates its lenses before it scans, using the framework in [Part 13](13-audit-lenses.md), then states which cells it walked and which it deliberately skipped. That stops the fifth pass over a repo confirming what the fourth said: the delta says which files to re-read, only the lens framework says what to ask of them.
 

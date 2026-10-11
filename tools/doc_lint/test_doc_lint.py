@@ -191,6 +191,30 @@ class MaxWords(unittest.TestCase):
         self.assertEqual(f, [])
 
 
+class MinWords(unittest.TestCase):
+    def test_under_minimum(self):
+        f = run_rules({"a.md": "w " * 5}, [{"id": "mn", "type": "min-words", "files": ["*.md"], "limit": 10}])
+        self.assertEqual(ids(f), ["mn"])
+
+    def test_at_minimum_ok(self):
+        f = run_rules({"a.md": "w " * 10}, [{"id": "mn", "type": "min-words", "files": ["*.md"], "limit": 10}])
+        self.assertEqual(f, [])
+
+
+class Severity(unittest.TestCase):
+    def test_default_is_error(self):
+        f = run_rules({"a.md": "w " * 11}, [{"id": "mw", "type": "max-words", "files": ["*.md"], "limit": 10}])
+        self.assertEqual(f[0].severity, "error")
+
+    def test_warn_is_carried(self):
+        f = run_rules({"a.md": "w " * 11}, [{"id": "mw", "type": "max-words", "files": ["*.md"], "limit": 10, "severity": "warn"}])
+        self.assertEqual(f[0].severity, "warn")
+
+    def test_bad_severity_is_config_error(self):
+        with self.assertRaises(doc_lint.ConfigError):
+            run_rules({"a.md": "x"}, [{"id": "mw", "type": "max-words", "files": ["*.md"], "limit": 10, "severity": "fatal"}])
+
+
 class ForbiddenTermsFile(unittest.TestCase):
     def test_terms_read_from_file_and_masked(self):
         files = {"a.md": "nothing\nmentions SecretThing here\n", "terms.txt": "# comment\n\nsecretthing\n"}
@@ -295,6 +319,13 @@ class Cli(unittest.TestCase):
         self.assertEqual(data["findings"][0]["rule"], "dash")
         self.assertEqual(data["counts"]["dash"], 1)
         self.assertEqual(p.returncode, 1)
+
+    def test_warn_only_exits_0_but_prints(self):
+        rule = dict(self.RULE, severity="warn")
+        p = self._run({"a.md": "x" + EM + "y\n"}, [rule])
+        self.assertEqual(p.returncode, 0)
+        self.assertIn("warn", p.stdout)
+        self.assertIn("a.md:1: [dash]", p.stdout)
 
     def test_config_error_exit_2(self):
         p = self._run({"a.md": "x"}, [{"id": "b", "type": "bogus", "files": ["*.md"]}])

@@ -1,4 +1,4 @@
-# Part 25: Bug Reports and PR Descriptions a Stranger Can Act On
+# Part 26: Bug Reports and PR Descriptions a Stranger Can Act On
 
 > **Field note.** Written from practice rather than machine-checked.
 
@@ -93,7 +93,7 @@ Each rule above gets one of two answers: a mechanical check that can see a viola
 | Rule | Mechanical check | Otherwise |
 |------|------------------|-----------|
 | No private paths, hostnames, emails or tokens in the text | `hooks/privacy-scan.sh msg FILE` on a drafted description, and `tree` or `history` on a repo before publishing it ([Part 11](11-privacy-hooks-public-repo.md)) | none needed |
-| Description is one line per paragraph, with no dashes | `tools/prose-lint.py FILE` ([Part 24](24-config-driven-doc-linting.md)) | none needed |
+| Description is one line per paragraph, with no dashes | `tools/prose-lint.py FILE` ([Part 25](25-config-driven-doc-linting.md)) | none needed |
 | Commit subject fits and body is not wrapped | `tools/prose-lint.py --commit-msg` | none needed |
 | Required sections present (environment, steps, expected, actual) | A `required-pattern` rule in the doc linter, applied to a saved draft or to a template file | The linter checks the headings exist, not that the content is useful |
 | Reproduction is minimal and complete | none | Only running it from scratch proves it |

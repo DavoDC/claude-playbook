@@ -17,7 +17,7 @@ Usage:
   prose-lint.py --selftest
 Options: --subject-max N (default 72), --no-dash to skip the dash rule.
 Exit codes: 0 clean, 1 findings, 2 usage or unreadable file.
-Wiring a git commit-msg hook is shown in docs/24-config-driven-doc-linting.md.
+Wiring a git commit-msg hook is shown in docs/25-config-driven-doc-linting.md.
 """
 import argparse
 import re

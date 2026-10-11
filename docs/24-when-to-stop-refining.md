@@ -1,4 +1,4 @@
-# Part 23: When To Stop Refining
+# Part 24: When To Stop Refining
 
 > **Field note.** Written from practice rather than machine-checked.
 
@@ -9,7 +9,7 @@ The rule has two halves. Before you start, write down what done means. While you
 ## Why refinement does not end on its own
 
 - **Improvements are unbounded, value is not.** Later rounds still find real things, but on most tasks they matter less than the early ones. Counting what a round found measures effort; asking what it changed measures progress.
-- **Each fix is a new change to check.** Editing ten files creates ten files of new surface, so a fix-then-recheck loop can feed itself ([Part 15](15-auditing-your-own-changes.md) covers why).
+- **Each fix is a new change to check.** Editing ten files creates ten files of new surface, so a fix-then-recheck loop can feed itself ([Part 16](16-auditing-your-own-changes.md) covers why).
 - **Angles multiply.** Every new way of looking at the work (the lenses in [Part 13](13-audit-lenses.md) are one menu of them) is another full pass. Covering every angle is not a reachable goal; pick the ones that match the risks.
 - **Nobody else says stop.** On a personal project there is often no reviewer, release date or manager. If you do not set the stop, the task sets it for you, usually at the point where you are tired of it rather than where it is good.
 
@@ -88,4 +88,4 @@ Any one of these is a prompt to run the stopping test again, honestly, and stop 
 - [Part 2: The Improvement Loop](02-improvement-loop.md) for turning recurring findings into checks.
 - [Part 3: Ideas and Roadmap](03-ideas-and-roadmap.md) for where the remainder goes.
 - [Part 13: Audit Lenses](13-audit-lenses.md) for the angles that generate findings.
-- [Part 15: Auditing Your Own Changes](15-auditing-your-own-changes.md) for why each round creates new surface.
+- [Part 16: Auditing Your Own Changes](16-auditing-your-own-changes.md) for why each round creates new surface.

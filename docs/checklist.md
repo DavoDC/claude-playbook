@@ -115,8 +115,18 @@ See `docs/12-workspace-repo.md` for the full explanation of why this matters.
 ## Audit Habits
 
 - [ ] **Generate lenses before scanning, and record which ones you did not apply.** A skipped lens with a reason is a decision. An unlisted lens is a blind spot. See `docs/13-audit-lenses.md`.
-- [ ] **For every prose rule about your docs, ask whether a check can see a violation; if so, make it a config rule.** See `docs/24-config-driven-doc-linting.md`.
-- [ ] **Before filing an upstream bug or opening a pull request, cold-read the text as a stranger and re-run the reproduction from scratch.** See `docs/25-bug-reports-and-pr-descriptions.md`.
+- [ ] **For every prose rule about your docs, ask whether a check can see a violation; if so, make it a config rule.** See `docs/25-config-driven-doc-linting.md`.
+- [ ] **Before filing an upstream bug or opening a pull request, cold-read the text as a stranger and re-run the reproduction from scratch.** See `docs/26-bug-reports-and-pr-descriptions.md`.
+
+## Small Habits Worth Having
+
+- [ ] **A process under `--watch` or auto-reload has no "don't reload yet" channel.** It fires on its own timer whatever you tell it, so flag that the moment someone asks you to hold off, not after the instruction has been silently ignored.
+- [ ] **Verify a backup target is a different physical disk, not just a different drive letter.** Two letters can be partitions of one disk; walk the disk, partition, volume chain before trusting it as redundancy.
+- [ ] **When a live user's description of their screen conflicts with your reading of a screenshot, defer to the user.** A screenshot is one static frame without hover or focus state; the human has the running system.
+- [ ] **Before hardcoding a host address, port or handle, check the property its stability depends on** (for example a lease about to expire), not just the value you observed.
+- [ ] **Never ask a human to type a visually ambiguous character** (O vs 0, l vs 1 vs I) in a keybind, filename or code. The misread costs a round trip.
+- [ ] **When a "keep or revert external changes" dialog appears, name the specific deliberate change it describes before answering.** Never answer from the dialog's wording alone.
+- [ ] **Before calling a missing list or menu item broken, check whether inclusion in that list is opt-in.**
 
 ---
 

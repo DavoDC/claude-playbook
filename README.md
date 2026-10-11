@@ -98,7 +98,7 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 |------|------------|
 | `docs/` | Full guide split by topic - start with `01-claude-md.md` |
 | `templates/` | Ready-to-use CLAUDE.md, enforced-rules and backlog (IDEAS/HISTORY) starters |
-| `tools/` | statusline, budget and session-status scripts, loop-health measurement, the `backlog.py` backlog editor (spec: `templates/BACKLOG-SPEC.md`, config: `config/backlog.example.json`), the `doc_lint/` config-driven doc linter (ruleset: `tools/doc_lint/doc_lint.config.json`), the `check-capacity.py` file and group size checker (config: `config/capacity.example.json`), the `scratch-overdue.py` delete-after marker checker, the `prose-lint.py` wrap, dash and commit-subject linter, plus a launcher, and the `self-audit/` procedure for reviewing your own setup against this playbook (`tools/self-audit/README.md`) |
+| `tools/` | statusline, budget and session-status scripts, loop-health measurement, the `backlog.py` backlog editor (spec: `templates/BACKLOG-SPEC.md`, config: `config/backlog.example.json`), the `doc_lint/` config-driven doc linter (ruleset: `tools/doc_lint/doc_lint.config.json`), the `check-capacity.py` file and group size checker (config: `config/capacity.example.json`), the `scratch-overdue.py` delete-after marker checker, the `prose-lint.py` wrap, dash and commit-subject linter, plus a launcher |
 | `skills/` | skill files - thinking, git, review, and workflow tools |
 | `hooks/` | git hooks that keep private details out of commits, a `privacy-scan.sh history` pre-publish scan, plus an installer |
 

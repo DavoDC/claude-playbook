@@ -1,0 +1,5 @@
+# Full blob ids the history scan skips, one per line: "<blob id> <note>".
+# For old file versions that hold deliberate synthetic test fixtures and cannot be rewritten.
+# Add an id only after reading that blob by hand. Never use it for a real leak: rewrite or
+# remove the commit instead. Blank lines and # comments are ignored.
+aa4a3c13f5f58cf6ccdaff5ec963af72159c2653 early selftest_privacy.sh with a fake internal host fixture

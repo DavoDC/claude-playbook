@@ -146,6 +146,10 @@ binary_allowed() { # $1 repo path
     tr -d '\r' < "$ALLOW_DIR/binary-allowlist.txt" 2>/dev/null | grep -qxF -- "$1"
 }
 
+blob_allowed() { # $1 full blob id; reviewed synthetic fixtures kept in old history
+    grep -vE '^[[:space:]]*(#|$)' "$ALLOW_DIR/blob-allowlist.txt" 2>/dev/null | tr -d '\r' | cut -d' ' -f1 | grep -qxF -- "$1"
+}
+
 warn_terms() {
     if [ ! -s "$TERMS_FILE" ]; then
         {
@@ -263,6 +267,7 @@ history)
         | grep '^blob ' | sort -u -k2,2 > "$WORK/blobs"
     while read -r _ sha path; do
         [ -n "$path" ] || continue
+        blob_allowed "$sha" && continue
         short=${sha%"${sha#???????}"}
         printf '%s\n' "$path" > "$WORK/pname"
         if [ -n "$( { shape_lines "$WORK/pname"; term_hits < "$WORK/pname"; } | head -1)" ]; then
@@ -282,12 +287,22 @@ esac
 
 if [ "$FOUND" -ne 0 ]; then
     echo ""
-    echo "ERROR: generic privacy scan hit (a user path, email, IP, internal hostname, credential shape,"
-    echo "ticket id, URL host or repo link not on its allowlist, unlisted binary, commit identity not on"
-    echo "the author allowlist, or a term from your private-terms file). Locations are listed above;"
-    echo "the match is withheld on purpose. Use generic language or a placeholder (a user called name,"
-    echo "an example.com address). Legitimate public hosts, repos and ticket prefixes go in the"
-    echo "tracked allowlists in hooks/."
+    echo "ERROR: privacy scan hit. Locations are listed above."
+    echo "The match is withheld on purpose."
+    echo ""
+    echo "What it looks for:"
+    echo "- a user path, email, IP or internal hostname"
+    echo "- a credential shape or a ticket id"
+    echo "- a URL host or repo link not on its allowlist"
+    echo "- an unlisted binary"
+    echo "- a commit identity not on the author allowlist"
+    echo "- a term from your private-terms file"
+    echo ""
+    echo "Fix: use generic wording or a placeholder."
+    echo "Public hosts, repos and ticket prefixes go in the"
+    echo "tracked allowlists in hooks/. A reviewed synthetic"
+    echo "test fixture in old history goes in"
+    echo "hooks/blob-allowlist.txt (history scan only)."
     echo ""
     exit 1
 fi

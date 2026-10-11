@@ -1,0 +1,4 @@
+# Repo paths of binary files that may be committed, one exact path per line.
+# A staged binary cannot be scanned for paths, names or metadata (images carry EXIF, PDFs and
+# archives carry author fields), so the pre-commit scan blocks every staged binary that is not
+# listed here. Add a path only after checking the file by hand. Blank lines and # comments are ignored.

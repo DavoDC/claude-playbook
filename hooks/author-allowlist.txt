@@ -1,0 +1,6 @@
+# Commit identity emails that may be recorded, one extended regex per line. An author, committer or
+# tagger email must match a line IN FULL (the whole address), so no anchors are needed. The design has
+# no override switch on purpose: change this tracked file, in a reviewed commit, to change policy.
+# Only privacy-preserving noreply addresses are listed.
+([0-9]+\+)?[]A-Za-z0-9._[-]+@users\.noreply\.github\.com
+noreply@github\.com

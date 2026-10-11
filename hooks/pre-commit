@@ -17,6 +17,10 @@ GH_ROOT="${GH_ROOT:-$(dirname "$(git rev-parse --show-toplevel)")}"
 # per-machine private-terms file. It runs even when no .private-root marker exists.
 sh "$(dirname "$0")/privacy-scan.sh" staged || exit 1
 
+# Commit identity: refuse an author or committer email that is not an allowlisted noreply address
+# (hooks/author-allowlist.txt). There is deliberately no override switch.
+sh "$(dirname "$0")/privacy-scan.sh" author || exit 1
+
 PATTERN=""
 for t in $(
     for marker in "$GH_ROOT"/*/.private-root; do
@@ -41,12 +45,18 @@ done
 # private token this hook exists to contain - into the terminal, into any
 # CI log, and into the transcript of an assistant that commits on your
 # behalf. A file list is enough to act on, and costs nothing if it leaks.
-FILES=$(git diff --cached --name-only | while read -r f; do
+#
+# The name list is NUL-delimited (-z) and read one name per line, so a file name with a space
+# is scanned as one file, not split into pieces that match nothing.
+NAMELIST=$(mktemp)
+git diff --cached --name-only -z | tr '\0' '\n' > "$NAMELIST"
+FILES=$(while IFS= read -r f; do
     [ -n "$f" ] || continue
-    if git diff --cached -U0 -- "$f" | grep "^+" | grep -v "^+++" | grep -Eqi "$PATTERN"; then
+    if git diff --cached -U0 -- ":(literal)$f" | grep "^+" | grep -v "^+++" | grep -Eqi "$PATTERN"; then
         echo "  $f"
     fi
-done)
+done < "$NAMELIST")
+rm -f "$NAMELIST"
 
 if [ -n "$FILES" ]; then
     echo ""

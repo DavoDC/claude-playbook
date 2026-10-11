@@ -1,0 +1,7 @@
+# Public GitHub owner/repo pairs that may be linked from this repo, one per line (case-insensitive,
+# no .git suffix). A link to any other repo is a privacy-scan hit, so a private repo name cannot be
+# linked by accident. Blank lines and # comments are ignored.
+DavoDC/claude-playbook
+ericbuess/claude-code-docs
+MrLesk/Backlog.md
+conorbronsdon/avoid-ai-writing

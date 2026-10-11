@@ -1,0 +1,13 @@
+# Ticket-id prefixes that are not real tickets, one per line, written PREFIX-* (never list a real
+# id here: the id shape is itself a privacy-scan hit, which is the point). A prefix covers every
+# number after it. Synthetic examples and standards names belong here. Blank lines and # comments
+# are ignored.
+MS-*
+ISSUE-*
+ZZ-*
+DLT-*
+UTF-*
+SHA-*
+ISO-*
+RFC-*
+PEP-*

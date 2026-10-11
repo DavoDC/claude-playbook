@@ -1,0 +1,20 @@
+# Public URL hosts that may appear in this repo, one per line. Exact host, or *.suffix to allow
+# every subdomain. Any other http(s) host (including company-internal and single-label hosts) is a
+# privacy-scan hit. List public sites only; if a host looks private or company-specific, remove the
+# URL instead of listing it. Blank lines and # comments are ignored.
+github.com
+code.claude.com
+docs.claude.com
+anthropic.com
+www.anthropic.com
+docs.anthropic.com
+ko-fi.com
+www.romanpichler.com
+storiesonboard.com
+example.com
+example.org
+example.net
+*.example.com
+*.invalid
+localhost
+127.0.0.1

@@ -25,9 +25,13 @@
 #      the exceptions and the reason for each).
 #   9. the token-baseline and session-brief tools pass their built-in
 #      selftests, each including a positive control that must be flagged.
-#  10. the generic privacy scan passes its own positive and negative controls
-#      (including history mode), the installed hooks match the tracked ones,
-#      and the whole working tree is clean under it.
+#  10. the generic privacy scan passes its own numbered positive and negative
+#      controls (tools/selftest_privacy.sh: C1 file names with spaces, C2 staged
+#      binaries, C3 shapes, C4 URL host and repo allowlists, C5 commit identity
+#      plus tag and note scanning in history mode, C6 core.hooksPath install,
+#      missing-terms warning and pre-push range), the installed hooks match the
+#      tracked ones when hooksPath is not set, and the whole working tree is
+#      clean under it.
 #  11. the backlog tool's tests (tools/backlog_tests/run.py) all pass.
 #  12. the shorthand-term hook and its glossary template pass their tests
 #      (hooks/examples/test_shorthand_detector.py).

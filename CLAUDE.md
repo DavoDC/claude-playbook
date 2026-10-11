@@ -34,6 +34,12 @@ If you're unsure whether something is safe to include: don't include it.
 
 ---
 
+## Leak safety
+
+This repo is public, so write only generic, reusable guidance. Never include names of people (other than the repo owner), employers, clients, products, internal systems, private repos, hostnames, internal URLs, ticket ids, emails, absolute user paths, usernames, credentials, usage stats, personal anecdotes, or any reference to a private workspace or its paths and tools. Use placeholders and synthetic values (example.com, a user called name). Never bypass a hook with `--no-verify`. The hooks cannot read prose, so reread what you wrote as a stranger would; see [Part 11](docs/11-privacy-hooks-public-repo.md).
+
+---
+
 ## Practise what this repo publishes
 
 When you document a practice here, ask whether this repo can adopt it, and adopt it in the same change if it can. The privacy git hooks are the worked example: they are installed and active here, not just described, which is how a real leak in one of them was found. A snippet nobody runs is never wrong, and that is the problem with it.
@@ -50,7 +56,7 @@ Never update this repo automatically. Only when explicitly asked.
 
 ## Commit message hygiene
 
-Never include private source attribution in commit messages. Describe the content only. `hooks/commit-msg` blocks this: it derives its token list at runtime from `.private-root` markers on whatever machine it runs on, so no private term is hardcoded anywhere in this repo. It reports line numbers and withholds the match, because printing the token would be the leak. A generic layer, `hooks/privacy-scan.sh`, also blocks user paths, emails, IPs and internal hostnames, plus any term you list in `.git/private-terms.txt` (untracked, per machine); add your own names and employer terms there. Run `sh hooks/install.sh` once after cloning - `.git/hooks/` is not tracked, so a fresh clone has no protection until you do.
+Never include private source attribution in commit messages. Describe the content only. `hooks/commit-msg` blocks this: it derives its token list at runtime from `.private-root` markers on whatever machine it runs on, so no private term is hardcoded anywhere in this repo. It reports line numbers and withholds the match, because printing the token would be the leak. A generic layer, `hooks/privacy-scan.sh`, also blocks user paths, emails, IPs, internal hostnames, credential shapes, ticket ids, unlisted URL hosts and repo links, unlisted binaries and non-noreply commit identities, plus any term you list in `.git/private-terms.txt` (untracked, per machine); add your own names and employer terms there. Run `sh hooks/install.sh` once after cloning - it points `core.hooksPath` at the tracked `hooks/` folder, and git config is not tracked, so a fresh clone has no protection until you do.
 
 ---
 

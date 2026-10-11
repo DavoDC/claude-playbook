@@ -103,7 +103,7 @@ See `docs/12-workspace-repo.md` for the full explanation of why this matters.
 - [ ] Context budget monitor (warns before compaction)
 - [ ] Session logger (tracks skill usage)
 - [ ] Settings split: hooks in settings.json, permissions in settings.local.json
-- [ ] **Git hooks** - `sh hooks/install.sh` in this repo installs `pre-commit` and `commit-msg` into `.git/hooks/`, which block staged content or commit messages that reference a private sibling repo (derived at runtime from any `.private-root` marker under the parent folder - see `docs/11-privacy-hooks-public-repo.md`). `.git/hooks/` is never tracked by git, so this install step is required again after every fresh clone.
+- [ ] **Git hooks** - `sh hooks/install.sh` in this repo points `core.hooksPath` at the tracked `hooks/` folder, so `pre-commit`, `commit-msg` and `pre-push` run from there, and they block staged content or commit messages that reference a private sibling repo (derived at runtime from any `.private-root` marker under the parent folder - see `docs/11-privacy-hooks-public-repo.md`). Git config is never tracked, so this install step is required again after every fresh clone.
 
 ## The Feedback Habit
 

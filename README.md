@@ -57,7 +57,7 @@ The next time Claude does something you correct: write `memory/feedback/feedback
 
 **Step 5 - Install the privacy hooks (1 min)**
 
-Run `sh hooks/install.sh` once after cloning. `.git/hooks/` is never tracked, so a fresh clone has no protection until you do. Add your own private terms, one per line, to `.git/private-terms.txt`; that file stays on your machine.
+Run `sh hooks/install.sh` once after cloning. It points `core.hooksPath` at the tracked `hooks/` folder, and git config is never tracked, so a fresh clone has no protection until you do. Add your own private terms, one per line, to `.git/private-terms.txt`; that file stays on your machine.
 
 ---
 

@@ -148,9 +148,6 @@ The templates don't compound. The habit does.
 
 ---
 
-## Status and Licence
-
-Maintained and updated from daily use; the self-test runs on every push and weekly. Released under the [PolyForm Internal Use License 1.0.0](LICENSE): internal use is free, while redistribution or commercial resale needs a separate license from the author.
 ## Skill Files
 
 The `skills/` folder contains skills covering first-principles thinking (`/aristotle`, `/think`), git workflow (`/commit-chunks`, `/step-commits`, `/undo-commits`), code review (`/deep-dive`, `/cross-synth`), writing (`/human-voice`), and more.
@@ -160,3 +157,7 @@ To install: copy a skill folder to `.claude/skills/<name>/` in your workspace. C
 See `skills/README.md` for the full list and descriptions.
 
 ---
+
+## Status and Licence
+
+Maintained and updated from daily use; the self-test runs on every push and weekly. Released under the [PolyForm Internal Use License 1.0.0](LICENSE): internal use is free, while redistribution or commercial resale needs a separate license from the author.

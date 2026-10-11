@@ -7,6 +7,7 @@ code.claude.com
 docs.claude.com
 anthropic.com
 www.anthropic.com
+polyformproject.org
 docs.anthropic.com
 ko-fi.com
 www.romanpichler.com

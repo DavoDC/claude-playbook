@@ -46,8 +46,10 @@ fi
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
-SHAPES='[A-Za-z]:\\+Users\\+[A-Za-z0-9._-]+|/(home|Users)/[A-Za-z0-9._-]+|(^|[^A-Za-z0-9_~])~[A-Za-z_][A-Za-z0-9._-]*/|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b|\b[a-z0-9-]+\.(corp|internal|intranet|lan|local|home|localdomain)\b'
-ALLOW='[\\/](name|you|user|username|yourname|your-name|me|example)$|~(name|you|user|username|yourname|me|example)/$|:[A-Za-z0-9._%+-]+@users\.noreply\.github\.com$|:noreply@anthropic\.com$|@example\.|:(path|pathlib|os)\.home$|:(settings|config|env|application)\.local$|:(0\.0\.0\.0|127\.0\.0\.1|192\.0\.2\.[0-9]+|198\.51\.100\.[0-9]+|203\.0\.113\.[0-9]+)$'
+SHAPES='[A-Za-z]:\\+Users\\+[A-Za-z0-9._-]+|/(home|Users)/[A-Za-z0-9._-]+|(^|[^A-Za-z0-9_~])~[A-Za-z_][A-Za-z0-9._-]*/|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b|\b[a-z0-9-]+\.(corp|internal|intranet|lan|local|home|localdomain)\b|(%5[Cc]|%2[Ff])+(Users|home)(%5[Cc]|%2[Ff])+[A-Za-z0-9._-]+|(^|[^\\A-Za-z0-9:])(\\\\[A-Za-z0-9][A-Za-z0-9._-]+\\[A-Za-z0-9$][A-Za-z0-9$._-]*|\\\\\\\\[A-Za-z0-9][A-Za-z0-9._-]+\\\\[A-Za-z0-9$][A-Za-z0-9$._-]*)|\b([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}\b|\b([0-9a-f]{1,4}:){1,7}:([0-9a-f]{1,4}(:[0-9a-f]{1,4}){0,5})?|(^|[^:0-9a-z]):(:[0-9a-f]{1,4}){1,7}'
+# Bare company hosts (no scheme) on common SaaS suffixes; checked against url-allowlist.txt.
+BAREHOST='\b([a-z0-9-]+\.)+(atlassian\.net|slack\.com|sharepoint\.com|okta\.com|service-now\.com)\b'
+ALLOW='[\\/](name|you|user|username|yourname|your-name|me|example)$|(%5[Cc]|%2[Ff])(name|you|user|username|yourname|your-name|me|example)$|\\(name|server|host|hostname|example)\\+[A-Za-z0-9$._-]+$|(:|[^0-9a-f])::1$|:2001:0*db8[:0-9a-f]*$|~(name|you|user|username|yourname|me|example)/$|:[A-Za-z0-9._%+-]+@users\.noreply\.github\.com$|:noreply@anthropic\.com$|@example\.|:(path|pathlib|os)\.home$|:(settings|config|env|application)\.local$|:(0\.0\.0\.0|127\.0\.0\.1|192\.0\.2\.[0-9]+|198\.51\.100\.[0-9]+|203\.0\.113\.[0-9]+)$'
 # Case-sensitive credential shapes (AWS key id, Slack webhook and token, GitHub tokens, private key header).
 CRED='AKIA[0-9A-Z]{16}|hooks\.slack\.com/services|xox[baprs]-[A-Za-z0-9-]{10,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----'
 TICKET='\b[A-Z]{2,6}-[0-9]+\b'
@@ -75,12 +77,13 @@ not_allowed() {
 shape_lines() {
     # One cheap pass first: most text holds no candidate at all, and spawning the filters below is
     # what makes a whole-tree or whole-history scan slow. The gate is a superset of every shape.
-    grep -aqEi "$SHAPES|$CRED|$TICKET|$URLRE|$REPORE" "$1" 2>/dev/null || return 0
+    grep -aqEi "$SHAPES|$CRED|$TICKET|$URLRE|$REPORE|$BAREHOST" "$1" 2>/dev/null || return 0
     {
         grep -anoEi "$SHAPES" "$1" | grep -Eiv "$ALLOW" | cut -d: -f1
         grep -anoE "$CRED" "$1" | cut -d: -f1
-        grep -anoE "$TICKET" "$1" | not_allowed ticket "$ALLOW_DIR/ticket-allowlist.txt"
+        grep -anoEi "$TICKET" "$1" | not_allowed ticket "$ALLOW_DIR/ticket-allowlist.txt"
         grep -anoEi "$URLRE" "$1" | not_allowed host "$ALLOW_DIR/url-allowlist.txt"
+        grep -anoEi "$BAREHOST" "$1" | not_allowed host "$ALLOW_DIR/url-allowlist.txt"
         grep -anoEi "$REPORE" "$1" | not_allowed repo "$ALLOW_DIR/repo-allowlist.txt"
     } 2>/dev/null
 }
@@ -94,7 +97,7 @@ FOUND=0
 # Fast clean check on a file: succeeds when it holds no shape candidate and no private term, so the
 # common case costs two process spawns instead of dozens.
 quick_clean() {
-    grep -aqEi "$SHAPES|$CRED|$TICKET|$URLRE|$REPORE" "$1" 2>/dev/null && return 1
+    grep -aqEi "$SHAPES|$CRED|$TICKET|$URLRE|$REPORE|$BAREHOST" "$1" 2>/dev/null && return 1
     [ -s "$TERMS_FILE" ] && grep -aqFi -f "$TERMS_FILE" "$1" 2>/dev/null && return 1
     return 0
 }

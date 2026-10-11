@@ -37,7 +37,7 @@ First principles deconstruction. Strips all assumptions from a problem, finds th
 
 Pre-mortem risk analysis. Imagine the plan has already failed. Work backward to find every reason why.
 
-**The insight behind it:** prospective hindsight works better than forward-planning. "What could go wrong?" produces weak answers. "It failed - what happened?" produces specific, realistic ones. Gary Klein (HBR 2007); Kahneman called it his single most valuable decision-making technique.
+**The insight behind it:** prospective hindsight works better than forward-planning. "What could go wrong?" produces weak answers. "It failed - what happened?" produces specific, realistic ones. The technique comes from Gary Klein (HBR 2007), and Daniel Kahneman ranked it among the most valuable decision-making methods he knew.
 
 **The classification framework:**
 

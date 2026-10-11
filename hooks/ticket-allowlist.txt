@@ -11,3 +11,9 @@ SHA-*
 ISO-*
 RFC-*
 PEP-*
+# Ordinary words that precede a number (the shape is matched case-insensitively).
+SESS-*
+ROUND-*
+TOP-*
+OF-*
+SONNET-*

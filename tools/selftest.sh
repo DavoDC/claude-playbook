@@ -52,6 +52,9 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# The repo's accepted interpreter pattern (see check-budget.sh): never a bare python3, which on some
+# platforms is a Store alias that hangs.
+PY=$(command -v python || command -v python3)
 
 FAILED=0
 
@@ -103,7 +106,7 @@ SYNTHETIC_JSON='{
   "session_name": "selftest"
 }'
 
-STATUSLINE_OUTPUT=$(printf '%s' "$SYNTHETIC_JSON" | python3 "$SCRIPT_DIR/statusline.py" 2>&1)
+STATUSLINE_OUTPUT=$(printf '%s' "$SYNTHETIC_JSON" | "$PY" "$SCRIPT_DIR/statusline.py" 2>&1)
 STATUSLINE_EXIT=$?
 
 ASSERT1_OK=1
@@ -122,7 +125,7 @@ if [ ! -f "$CACHE_FILE" ]; then
 fi
 
 if [ "$ASSERT1_OK" = "1" ]; then
-    CACHE_CHECK=$(python3 - "$CACHE_FILE" << 'PYEOF'
+    CACHE_CHECK=$("$PY" - "$CACHE_FILE" << 'PYEOF'
 import json, sys
 path = sys.argv[1]
 try:
@@ -243,7 +246,7 @@ fi
 # Assertion 4: every settings.json snippet in the repo's docs uses only
 # real settings keys, checked against one canonical list.
 # ---------------------------------------------------------------------------
-SETTINGS_OUTPUT=$(python3 "$SCRIPT_DIR/selftest_settings.py" "$REPO_ROOT" 2>&1)
+SETTINGS_OUTPUT=$("$PY" "$SCRIPT_DIR/selftest_settings.py" "$REPO_ROOT" 2>&1)
 SETTINGS_EXIT=$?
 
 if [ "$SETTINGS_EXIT" -eq 0 ]; then
@@ -262,7 +265,7 @@ fi
 # key, a swapped value). This is the assertion that would have caught a
 # past bug where a settings key was written wrongly in more than one place.
 # ---------------------------------------------------------------------------
-STATUSLINE_OUTPUT=$(python3 "$SCRIPT_DIR/selftest_settings.py" "$REPO_ROOT" --statusline-agreement 2>&1)
+STATUSLINE_OUTPUT=$("$PY" "$SCRIPT_DIR/selftest_settings.py" "$REPO_ROOT" --statusline-agreement 2>&1)
 STATUSLINE_SETTINGS_EXIT=$?
 
 if [ "$STATUSLINE_SETTINGS_EXIT" -eq 0 ]; then
@@ -302,7 +305,7 @@ mkdir -p "$HOOKBLOCK_DIR"
 
 ASSERT6_OK=1
 
-BLOCKS_FOUND=$(python3 - "$HOOKBLOCK_DIR" "$HOOKS_DOC_1" "$HOOKS_DOC_2" << 'PYEOF'
+BLOCKS_FOUND=$("$PY" - "$HOOKBLOCK_DIR" "$HOOKS_DOC_1" "$HOOKS_DOC_2" << 'PYEOF'
 import re, sys, os
 
 out_dir = sys.argv[1]
@@ -354,7 +357,7 @@ if [ "$ASSERT6_OK" = "1" ]; then
     while IFS=$'\t' read -r BLOCK_PATH DOC_PATH LANG; do
         [ -z "$BLOCK_PATH" ] && continue
         if [ "$LANG" = "python" ]; then
-            BLOCK_ERR=$(python3 -m py_compile "$BLOCK_PATH" 2>&1)
+            BLOCK_ERR=$("$PY" -m py_compile "$BLOCK_PATH" 2>&1)
             BLOCK_RC=$?
         else
             BLOCK_ERR=$(bash -n "$BLOCK_PATH" 2>&1)
@@ -422,7 +425,7 @@ fi
 # scoped per exception to the exact files it was cleared between, so the
 # same sentence turning up in a third file still fails.
 # ---------------------------------------------------------------------------
-DEDUP_OUTPUT=$(python3 "$SCRIPT_DIR/selftest_dedup.py" "$REPO_ROOT" 2>&1)
+DEDUP_OUTPUT=$("$PY" "$SCRIPT_DIR/selftest_dedup.py" "$REPO_ROOT" 2>&1)
 DEDUP_EXIT=$?
 
 if [ "$DEDUP_EXIT" -eq 0 ]; then
@@ -439,7 +442,7 @@ fi
 # so a tool that silently stopped checking would fail here.
 # ---------------------------------------------------------------------------
 for TOOL in token-baseline.py session-brief.py; do
-    TOOL_OUTPUT=$(python3 "$SCRIPT_DIR/$TOOL" --selftest 2>&1)
+    TOOL_OUTPUT=$("$PY" "$SCRIPT_DIR/$TOOL" --selftest 2>&1)
     if [ $? -eq 0 ]; then
         echo "PASS: assertion 9 - $TOOL selftest ($TOOL_OUTPUT)"
     else
@@ -462,19 +465,39 @@ else
     FAILED=1
     echo "FAIL: assertion 10 - privacy scan controls ($PRIV_OUTPUT)"
 fi
-if TREE_OUTPUT=$(sh "$SCRIPT_DIR/../hooks/privacy-scan.sh" tree 2>&1); then
+# The tree scan reads the repo of the CURRENT directory, so every call goes through this function, which
+# enters the repo root first: running this script from another directory (even another git repo) must
+# still scan this repo.
+playbook_tree_scan() { (cd "$REPO_ROOT" && sh "$REPO_ROOT/hooks/privacy-scan.sh" tree 2>&1); }
+if TREE_OUTPUT=$(playbook_tree_scan); then
     echo "PASS: assertion 10 - working tree is clean under the generic privacy scan"
 else
     FAILED=1
     echo "FAIL: assertion 10 - generic privacy scan hit in the working tree"
     echo "$TREE_OUTPUT"
 fi
+# Control: from inside a different git repo that holds a leak, the unrooted scan finds the other repo
+# (positive control: the other repo is scannable), while playbook_tree_scan still scans this repo.
+OTHER_REPO="$TEST_TMPDIR/other-repo"
+mkdir -p "$OTHER_REPO"
+(cd "$OTHER_REPO" && git init -q . && printf 'ask jane.doe@%s\n' "acme-corp.org" > leak.txt && git add leak.txt) >/dev/null 2>&1
+UNROOTED=$(cd "$OTHER_REPO" && sh "$REPO_ROOT/hooks/privacy-scan.sh" tree 2>&1)
+ROOTED=$(cd "$OTHER_REPO" && playbook_tree_scan)
+ROOTED_EXIT=$?
+case "$UNROOTED" in *"leak.txt"*) UNROOTED_SEES_OTHER=1 ;; *) UNROOTED_SEES_OTHER=0 ;; esac
+case "$ROOTED" in *"leak.txt"*) ROOTED_SEES_OTHER=1 ;; *) ROOTED_SEES_OTHER=0 ;; esac
+if [ "$UNROOTED_SEES_OTHER" -eq 1 ] && [ "$ROOTED_SEES_OTHER" -eq 0 ] && [ "$ROOTED_EXIT" -eq 0 ]; then
+    echo "PASS: assertion 10 - tree scan is anchored to this repo when run from another git repo"
+else
+    FAILED=1
+    echo "FAIL: assertion 10 - tree scan anchoring (unrooted sees other=$UNROOTED_SEES_OTHER, rooted sees other=$ROOTED_SEES_OTHER, rooted exit=$ROOTED_EXIT)"
+fi
 
 # ---------------------------------------------------------------------------
 # Assertion 11: the backlog tool's own tests pass (stdlib runner, no pytest).
 # The runner exits non-zero when nothing ran, so an empty suite cannot pass.
 # ---------------------------------------------------------------------------
-BACKLOG_OUTPUT=$(python3 "$SCRIPT_DIR/backlog_tests/run.py" 2>&1)
+BACKLOG_OUTPUT=$("$PY" "$SCRIPT_DIR/backlog_tests/run.py" 2>&1)
 BACKLOG_EXIT=$?
 if [ "$BACKLOG_EXIT" -eq 0 ] && [ "$(printf '%s\n' "$BACKLOG_OUTPUT" | tail -1)" = "BACKLOG TESTS PASS" ]; then
     echo "PASS: assertion 11 - $(printf '%s\n' "$BACKLOG_OUTPUT" | tail -2 | head -1)"
@@ -489,7 +512,7 @@ fi
 # template (hit, miss, ignored paste/fence/frame, tip cap, fail-open) and the
 # template rows are well formed. Includes an empty-glossary control.
 # ---------------------------------------------------------------------------
-SHORTHAND_OUTPUT=$(python3 "$REPO_ROOT/hooks/examples/test_shorthand_detector.py" 2>&1)
+SHORTHAND_OUTPUT=$("$PY" "$REPO_ROOT/hooks/examples/test_shorthand_detector.py" 2>&1)
 if [ $? -eq 0 ]; then
     echo "PASS: assertion 12 - $SHORTHAND_OUTPUT"
 else
@@ -504,7 +527,7 @@ fi
 # include a positive control per check type, so a rule that stopped firing
 # fails here; the repo run proves the docs obey their own rules.
 # ---------------------------------------------------------------------------
-LINT_TEST_OUTPUT=$(cd "$SCRIPT_DIR/doc_lint" && python3 -m unittest test_doc_lint 2>&1)
+LINT_TEST_OUTPUT=$(cd "$SCRIPT_DIR/doc_lint" && "$PY" -m unittest test_doc_lint 2>&1)
 LINT_TEST_EXIT=$?
 if [ "$LINT_TEST_EXIT" -eq 0 ]; then
     echo "PASS: assertion 13 - doc_lint unit tests ($(printf '%s\n' "$LINT_TEST_OUTPUT" | grep -E '^Ran ' | head -1))"
@@ -513,7 +536,7 @@ else
     echo "FAIL: assertion 13 - doc_lint unit tests failed"
     echo "$LINT_TEST_OUTPUT"
 fi
-LINT_REPO_OUTPUT=$(python3 "$SCRIPT_DIR/doc_lint/doc_lint.py" --config "$SCRIPT_DIR/doc_lint/doc_lint.config.json" --root "$REPO_ROOT" 2>&1)
+LINT_REPO_OUTPUT=$("$PY" "$SCRIPT_DIR/doc_lint/doc_lint.py" --config "$SCRIPT_DIR/doc_lint/doc_lint.config.json" --root "$REPO_ROOT" 2>&1)
 if [ $? -eq 0 ]; then
     echo "PASS: assertion 13 - repo is clean under the shipped doc_lint ruleset"
 else
@@ -528,10 +551,10 @@ fi
 # group over budget fails while each member is under its own limit) and a
 # check that the shipped example config parses.
 # ---------------------------------------------------------------------------
-CAP_OUTPUT=$(python3 "$SCRIPT_DIR/check-capacity.py" --selftest 2>&1)
+CAP_OUTPUT=$("$PY" "$SCRIPT_DIR/check-capacity.py" --selftest 2>&1)
 CAP_EXIT=$?
 if [ "$CAP_EXIT" -eq 0 ]; then
-    CAP_CFG_OUTPUT=$(python3 "$SCRIPT_DIR/check-capacity.py" --config "$REPO_ROOT/config/capacity.example.json" --root "$TEST_TMPDIR" 2>&1)
+    CAP_CFG_OUTPUT=$("$PY" "$SCRIPT_DIR/check-capacity.py" --config "$REPO_ROOT/config/capacity.example.json" --root "$TEST_TMPDIR" 2>&1)
     CAP_CFG_EXIT=$?
 else
     CAP_CFG_EXIT=0
@@ -550,9 +573,9 @@ fi
 # date, an aged free-text condition and a missing marker are flagged; a
 # future date and a fresh entry are not) and exits 2 on a missing folder.
 # ---------------------------------------------------------------------------
-SCR_OUTPUT=$(python3 "$SCRIPT_DIR/scratch-overdue.py" --selftest 2>&1)
+SCR_OUTPUT=$("$PY" "$SCRIPT_DIR/scratch-overdue.py" --selftest 2>&1)
 SCR_EXIT=$?
-python3 "$SCRIPT_DIR/scratch-overdue.py" --dir "$TEST_TMPDIR/no-such-scratch-dir" >/dev/null 2>&1
+"$PY" "$SCRIPT_DIR/scratch-overdue.py" --dir "$TEST_TMPDIR/no-such-scratch-dir" >/dev/null 2>&1
 SCR_MISSING_EXIT=$?
 if [ "$SCR_EXIT" -eq 0 ] && [ "$SCR_MISSING_EXIT" -eq 2 ]; then
     echo "PASS: assertion 15 - scratch-overdue.py ($SCR_OUTPUT; missing folder exits 2)"
@@ -566,11 +589,11 @@ fi
 # Assertion 16: the prose and commit-message linter passes its selftest and
 # refuses a long subject, a wrapped paragraph and a dash character.
 # ---------------------------------------------------------------------------
-PL_OUTPUT=$(python3 "$SCRIPT_DIR/prose-lint.py" --selftest 2>&1)
+PL_OUTPUT=$("$PY" "$SCRIPT_DIR/prose-lint.py" --selftest 2>&1)
 PL_EXIT=$?
 PL_OUTPUT=$(echo "$PL_OUTPUT" | tail -1)
 printf 'Subject\n\nfirst short line\nsecond short line\n' > "$TEST_TMPDIR/pl-msg.txt"
-python3 "$SCRIPT_DIR/prose-lint.py" --commit-msg "$TEST_TMPDIR/pl-msg.txt" >/dev/null 2>&1
+"$PY" "$SCRIPT_DIR/prose-lint.py" --commit-msg "$TEST_TMPDIR/pl-msg.txt" >/dev/null 2>&1
 PL_BAD_EXIT=$?
 if [ "$PL_EXIT" -eq 0 ] && [ "$PL_BAD_EXIT" -eq 1 ]; then
     echo "PASS: assertion 16 - prose-lint.py ($PL_OUTPUT; wrapped message exits 1)"
@@ -586,9 +609,9 @@ fi
 # script, bad statusLine, disableAllHooks, unparseable settings) and passes a
 # clean file; the example hook suite, which drives it, also passes.
 # ---------------------------------------------------------------------------
-HH_OUTPUT=$(python3 "$REPO_ROOT/hooks/examples/check_hook_health.py" --selftest 2>&1)
+HH_OUTPUT=$("$PY" "$REPO_ROOT/hooks/examples/check_hook_health.py" --selftest 2>&1)
 HH_EXIT=$?
-HX_OUTPUT=$(python3 "$REPO_ROOT/hooks/examples/test_examples.py" 2>&1)
+HX_OUTPUT=$("$PY" "$REPO_ROOT/hooks/examples/test_examples.py" 2>&1)
 HX_EXIT=$?
 if [ "$HH_EXIT" -eq 0 ] && [ "$HX_EXIT" -eq 0 ]; then
     echo "PASS: assertion 17 - hook health ($HH_OUTPUT) and example hooks ($HX_OUTPUT)"

@@ -1,7 +1,7 @@
 # [Project Name]
 
 <!-- One line: what does this project do? -->
-[e.g. Python CLI that auto-manages OBS streaming when launching a known game.]
+[e.g. Python CLI that renames and sorts photos on import.]
 
 ---
 

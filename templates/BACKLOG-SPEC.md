@@ -53,7 +53,7 @@ People collapse the second and third rows, which is why a queue file grows to hu
 ## TIER 4 PARKED    explicit "do not build until told"
 ```
 
-Index row: `id | title | tier | size | state | owner | blocked-by`. States: `inbox`, `idea`, `ready`, `blocked`, `in-progress`; there is no `done` state, because done items leave. Ids carry an UPPERCASE theme prefix (`DLT-4`, never `dlt-4`): a stable handle for briefs, `blocked-by` cells and commit messages.
+Index row: `id | title | tier | size | state | owner | blocked-by`. States: `inbox`, `idea`, `ready`, `blocked`, `in-progress`; there is no `done` state, because done items leave. Ids carry an UPPERCASE theme prefix (`MS-4`, never `ms-4`): a stable handle for briefs, `blocked-by` cells and commit messages.
 
 **Item schema.** One `###` heading plus a short fixed body, about 25 lines at most; longer detail moves to a reference doc.
 

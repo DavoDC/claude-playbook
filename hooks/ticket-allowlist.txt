@@ -5,7 +5,6 @@
 MS-*
 ISSUE-*
 ZZ-*
-DLT-*
 UTF-*
 SHA-*
 ISO-*

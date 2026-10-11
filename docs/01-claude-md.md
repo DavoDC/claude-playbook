@@ -230,7 +230,7 @@ A project CLAUDE.md's scope is orientation and harm prevention only: what the re
 First line. What does this project do, in one sentence?
 
 ```
-Python CLI daemon that auto-manages OBS streaming when launching a known game.
+Python CLI that renames and sorts photos on import.
 ```
 
 ### Section 2: The Problem It Solves (the WHY)

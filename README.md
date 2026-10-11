@@ -130,7 +130,7 @@ Within `docs/`, each file is marked Core or Field note right under its heading (
 | [20 - Freeze the Consumer](docs/20-freeze-the-consumer.md) | Field note | Pause pending work before repairing the dependency it was waiting on |
 | [21 - CLAUDE.md Worked Examples](docs/21-claude-md-examples.md) | Field note | What a project note changes in practice |
 | [22 - Reframing Blocked Problems](docs/22-reframing-blocked-problems.md) | Field note | Restating a problem instead of pushing harder |
-| [23 - When To Stop Refining](docs/23-when-to-stop-refining.md) | Field note | Stopping rules for audits and deep dives that always find more |
+| [23 - When To Stop Refining](docs/23-when-to-stop-refining.md) | Field note | Stopping rules for any task: define done first, then core and optional stop tests |
 | [24 - Config-Driven Doc Linting](docs/24-config-driven-doc-linting.md) | Core | Turning prose rules about docs into JSON-configured checks: dashes, wrapping, indexes, links, numbering, private terms |
 | [25 - Bug Reports and PR Descriptions](docs/25-bug-reports-and-pr-descriptions.md) | Field note | Writing an upstream ticket and a pull request description a stranger can act on: evidence, minimal repro, expected and actual, what you tried |
 | [Checklist](docs/checklist.md) | Core | Building the full system - what to build in what order |
